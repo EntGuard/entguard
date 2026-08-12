@@ -38,6 +38,7 @@ import (
 	"github.com/entguard/entguard/pkg/crypto/aesgcm"
 	"github.com/entguard/entguard/pkg/db"
 	"github.com/entguard/entguard/pkg/mfa"
+	"github.com/entguard/entguard/pkg/passwords"
 	"github.com/entguard/entguard/service/api/v1"
 	"github.com/entguard/entguard/service/config"
 	"github.com/entguard/entguard/service/vcm"
@@ -1324,6 +1325,10 @@ func ValidatePassword(pwd string, minLen int, upper, lower, digit, symbol bool) 
 	}
 	if symbol && !symbolPresent {
 		return fmt.Errorf("%w: symbol character is not present", ErrBadPassword)
+	}
+	if passwords.IsCommon(pwd) {
+		return fmt.Errorf("%w: password is widely used and easy for hackers to guess, "+
+			"please choose a more unique password", ErrBadPassword)
 	}
 	return nil
 }

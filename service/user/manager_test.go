@@ -62,7 +62,7 @@ func TestValidatePassword(t *testing.T) {
 
 	failure("1hhhhA", 6, true, false, true, true)
 
-	success("1", 1, false, false, true, false)
+	success("9", 1, false, false, true, false)
 	success("!!!!v777", 8, false, true, true, true)
 	success("44*aA", 4, true, true, true, true)
 
@@ -70,14 +70,17 @@ func TestValidatePassword(t *testing.T) {
 	// recommended 15 characters; no limit on character composition, must allow
 	// at least 64 characters (in our implementation we use bcrypt which does
 	// not allow more than 72 characters)
-	failure("12345678901234", 15, false, false, false, false)
-	success("123456789012345", 15, false, false, false, false)
+	failure("123456789x1234", 15, false, false, false, false)
+	success("123456789x12345", 15, false, false, false, false)
 	success(strings.Repeat("12345678", 8), 15, false, false, false, false) // 8*8=64 chars
 	success("lowercaselettersonly", 15, false, false, false, false)
 
 	// special characters
 	success(" password with spaces ", 15, false, false, false, false)
 	success("ášďÁŠĎôÔäÄñÑ([{<`'\"\\世界", 15, false, false, false, false)
+
+	// too common password (see pkg/passwords package for listing of common passwords)
+	failure("123456789", 9, false, false, false, false)
 }
 
 func TestIntegrationGetAllUsers(t *testing.T) {
