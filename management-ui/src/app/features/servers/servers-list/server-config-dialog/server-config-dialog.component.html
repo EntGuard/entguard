@@ -1,0 +1,241 @@
+<div class="dialog-wrap" id="editInterfaceDialogWrapper">
+    <h3 class="dialog-h t-primary">
+        {{ "server-config-dialog.headerEditInterface" | translate }}
+    </h3>
+    <form
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        class="flex flex-col"
+        id="serverConfigForm"
+    >
+        <mat-form-field class="mb-2">
+            <mat-label>{{ "shared.labelInterfaceName" | translate }}</mat-label>
+            <input
+                matInput
+                formControlName="name"
+                id="nameInput"
+                matTooltip="{{ 'shared.tooltipInterfaceName' | translate }}"
+            />
+            <mat-error *ngIf="form.get('name').hasError('required')">
+                {{ "shared.errorNameRequired" | translate }}
+            </mat-error>
+        </mat-form-field>
+
+        <div class="flex w-full flex-nowrap items-center gap-2">
+            <mat-form-field class="mb-0 flex-1">
+                <mat-label>{{ "shared.labelPrivateKey" | translate }}</mat-label>
+                <input
+                    [type]="showPKChars ? 'text' : 'password'"
+                    matInput
+                    formControlName="privateKey"
+                    autocomplete="new-password"
+                    id="privateKeyInput"
+                    matTooltip="{{ 'server-config-dialog.tooltipPrivateKey' | translate }}"
+                />
+                <mat-error *ngIf="form.get('privateKey').hasError('required')">
+                    {{ "shared.errorPrivateKey" | translate }}
+                </mat-error>
+            </mat-form-field>
+
+            <div class="show-hide-chars self-center">
+                <button
+                    class="mini-fab-flat"
+                    (click)="toggleCharsShow()"
+                    id="togglePkCharsBtn"
+                    matTooltip="{{
+                        (showPKChars
+                            ? 'shared.tooltipHideCharacters'
+                            : 'shared.tooltipShowCharacters'
+                        ) | translate
+                    }}
+                        {{ 'shared.tooltipCharacters' | translate }}"
+                >
+                    <mat-icon [svgIcon]="showPKChars ? 'hide' : 'show'"></mat-icon>
+                </button>
+            </div>
+
+            <mat-form-field class="mb-0 flex-1">
+                <mat-label>{{ "shared.labelPublicKey" | translate }}</mat-label>
+                <input
+                    matInput
+                    formControlName="publicKey"
+                    id="publicKeyInput"
+                    matTooltip="{{ 'server-config-dialog.tooltipPublicKey' | translate }}"
+                />
+                <mat-error *ngIf="form.get('publicKey').hasError('required')">
+                    {{ "shared.errorPublicKey" | translate }}
+                </mat-error>
+            </mat-form-field>
+
+            <div id="autoGenDiv" class="self-center flex items-center">
+                <button
+                    (click)="autogenerateKeys()
+                    "
+                    mat-raised-button
+                    id="autogenerateKeysBtn"
+                    matTooltip="{{ 'shared.tooltipAutoGenKeys' | translate }}"
+                >
+                    {{ "shared.buttonAutoGenKeys" | translate }}
+                </button>
+            </div>
+        </div>
+        <mat-form-field
+            id="addressesChipsFormfield"
+            class="mb-2"
+            [ngClass]="{
+                'chips-wrapper-error':
+                    addresses.length === 0 &&
+                    addressFormControl.touched &&
+                    !addressFormControl.value
+            }"
+        >
+            <mat-label
+                [ngClass]="{
+                    error:
+                        addresses.length === 0 &&
+                        addressFormControl.touched &&
+                        addressFormControl.touched &&
+                        !addressFormControl.value
+                }"
+            >
+                {{ "shared.labelAddresses" | translate }}*
+            </mat-label>
+            <mat-chip-grid #chipList>
+                <mat-chip-row
+                    *ngFor="let add of addresses"
+                    [removable]="true"
+                    (removed)="onAddressRemove(add)"
+                >
+                    {{ add }}
+                    <mat-icon svgIcon="cancel" matChipRemove></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{ 'shared.placeholderNewAddress' | translate }}"
+                    #addressInput
+                    [formControl]="addressFormControl"
+                    [matChipInputFor]="chipList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onBlurAddress()"
+                    (matChipInputTokenEnd)="onAddressAdd($event)"
+                    (paste)="onAddressesPaste($event)"
+                    matTooltip="{{ 'shared.tooltipAddressServer' | translate }}"
+                />
+            </mat-chip-grid>
+
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="
+                    addresses.length === 0 &&
+                    addressFormControl.touched &&
+                    addressFormControl.touched &&
+                    !addressFormControl.value
+                "
+            >
+                {{ "shared.errorAddress" | translate }}
+            </mat-hint>
+
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="!addressFormControl.valid && addressFormControl.value"
+            >
+                {{ "shared.errorAddressFormat" | translate }}
+            </mat-hint>
+        </mat-form-field>
+
+        <div class="flex-1 flex">
+            <mat-form-field class="mb-2 w-full">
+                <mat-label>{{ "shared.labelListenPort" | translate }}</mat-label>
+                <input
+                    matInput
+                    formControlName="listenPort"
+                    id="listenPortInput"
+                    matTooltip="{{ 'server-config-dialog.tooltipListenPort' | translate }}"
+                />
+                <mat-error *ngIf="form.get('listenPort').hasError('required')">
+                    {{ "shared.errorListenPort" | translate }}
+                </mat-error>
+                <mat-error *ngIf="form.get('listenPort').hasError('pattern')">
+                    {{ "shared.errorListenPortFormat" | translate }}
+                </mat-error>
+            </mat-form-field>
+
+            <div class="w-4"></div>
+
+            <mat-form-field class="mb-2 w-full">
+                <mat-label>{{ "shared.labelMaximumTransmissionUnit" | translate }}</mat-label>
+                <input
+                    matInput
+                    formControlName="mtu"
+                    id="mtuInput"
+                    matTooltip="{{ 'shared.tooltipMaximumTransmissionUnit' | translate }}"
+                />
+                <mat-error
+                    *ngIf="
+                        form.get('mtu').hasError('pattern') ||
+                        form.get('mtu').hasError('min') ||
+                        form.get('mtu').hasError('max')
+                    "
+                >
+                    {{ "shared.errorMtu" | translate }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{ "shared.labelPersistentKeepalive" | translate }}</mat-label>
+            <input
+                matInput
+                formControlName="persistentKeepalive"
+                id="persistentKeepaliveInput"
+                matTooltip="{{ 'shared.tooltipPersistentKeepalive' | translate }}"
+                matTooltipPosition="below"
+            />
+            <mat-error
+                *ngIf="
+                    form.get('persistentKeepalive').hasError('pattern') ||
+                    form.get('persistentKeepalive').hasError('min') ||
+                    form.get('persistentKeepalive').hasError('max')
+                "
+            >
+                {{ "shared.errorNumber" | translate }}
+            </mat-error>
+        </mat-form-field>
+
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+        <div dir="rtl" class="flex items-center justify-end gap-2">
+            <button
+                mat-raised-button
+                id="serverConfigSubmitBtn"
+                [disabled]="
+                    form.invalid || (addresses.length === 0 && !addressFormControl.value)
+                "
+                type="button"
+                color="primary"
+                (click)="submit()"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+
+            <button
+                (click)="close()"
+                class="mr-4"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+
+            <div class="flex-1"></div>
+</div>
+    </form>
+</div>

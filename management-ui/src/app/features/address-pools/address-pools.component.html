@@ -1,0 +1,67 @@
+<div class="pt-4 flex flex-col h-full">
+    <div class="board w-100 position-relative flex flex-col flex-1">
+        <mat-progress-bar
+            *ngIf="loading"
+            mode="query"
+            class="absolute"
+        ></mat-progress-bar>
+
+        <p *ngIf="loading">{{ "address-pools.loadingPools" | translate }}</p>
+
+        <div class="flex flex-row justify-between" *ngIf="!loading">
+            <button
+                mat-raised-button
+                color="primary"
+                class="mb-3 text-decoration-none text-white"
+                (click)="onAddAddressPoolClick()"
+            >
+                {{ "address-pools.buttonAddPool" | translate }}
+            </button>
+        </div>
+
+        <div class="flex-1" *ngIf="!loading">
+            <app-ag-grid
+                tableId="addressPoolsList"
+                class="grid-height-adjusted"
+                entityName="{{ 'address-pools.paginationName' | translate }}"
+                entityNamePlural="{{ 'address-pools.paginationNamePlural' | translate }}"
+                [allColumnDefs]="addressPoolsCols"
+                [rowData]="addressPools"
+            >
+                <ng-template let-row #addressRangeColumnTemplate>
+                    <div class="cell-scroll" appHorizontalWheel>
+                        {{ row.addressRange }}
+                    </div>
+                </ng-template>
+
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex flex-row justify-end items-center">
+                        <button
+                            mat-icon-button
+                            id="editAddressPool"
+                            matTooltip="{{
+                                'address-pools.tooltipEditPool' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            (click)="onEditAddressPoolClick(row)"
+                        >
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="deleteAddressPool"
+                            matTooltip="{{
+                                'address-pools.tooltipDeletePool' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            (click)="onDeleteAddressPoolClick(row)"
+                        >
+                            <mat-icon svgIcon="delete"></mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </app-ag-grid>
+        </div>
+    </div>
+    <div class="flex flex-col h-0">&nbsp;</div>
+</div>

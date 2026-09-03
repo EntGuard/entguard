@@ -1,0 +1,6 @@
+/docker
+/docs
+
+govulncheck-results.txt
+osv-results.txt
+trivy-results.txt

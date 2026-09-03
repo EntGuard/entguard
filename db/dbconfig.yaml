@@ -1,0 +1,13 @@
+# This migration config is for development purposes only(create new scripts, run migrations).
+# Config for production is located here: provisioning/docker/dbconfig.yaml
+development:
+    dialect: postgres
+    datasource: dbname=entguard user=postgres password=postgres sslmode=disable
+    dir: db/migrations/postgres
+    table: migrations
+
+integration:
+    dialect: postgres
+    datasource: dbname=entguard_test user=entguard_test password=test host=testdb sslmode=disable
+    dir: /db/migrations/postgres
+    table: migrations

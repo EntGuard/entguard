@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package proto.v2;
+
+import "google/protobuf/empty.proto";
+import "proto/v2/common.proto";
+
+option go_package = "github.com/entguard/entguard/proto/v2;pbapi";
+
+service VpnServerService {
+  rpc GetConfiguration(google.protobuf.Empty) returns (GetConfigurationResponse) {}
+  rpc SubscribeWG(stream SubscribeWGRequest) returns (stream SubscribeWGResponse) {}
+  rpc SendTelemetry(stream SendTelemetryRequest) returns (google.protobuf.Empty) {}
+}
+
+service VpnClientService {
+  rpc GetConfiguration(VpnClientServiceGetConfigurationRequest) returns (VpnClientServiceGetConfigurationResponse) {}
+}
+
+message SubscribeWGRequest {
+  oneof data {
+    Subscribe subscribe = 1;
+    RPCStatus response = 2;
+  }
+}
+
+message GetConfigurationResponse {
+  enum Type {
+    TYPE_UNDEFINED_UNSPECIFIED = 0;
+    TYPE_WIREGUARD = 1;
+  }
+  Type type = 1;
+  bool telemetry_enabled = 2;
+
+  oneof vpn_proto {
+    WireGuard wg = 100;
+  }
+}
+
+message WireGuard {
+  string name = 1;
+  WireGuardInterface iface = 2;
+  repeated WireGuardPeer peers = 3;
+}
+
+message WireGuardInterface {
+  string private_key = 1;
+  repeated string addresses = 2;
+  string listen_port = 3;
+  repeated string dns = 4;
+  string mtu = 5;
+}
+
+message WireGuardPeer {
+  string public_key = 1;
+  string preshared_key = 2;
+  repeated string allowed_ips = 3;
+  string endpoint = 4;
+  string persistent_keepalive = 5;
+}
+
+message SubscribeWGResponse {
+  oneof data {
+    WireGuardPeerNotification peer_notification = 1;
+    WireGuard config_notification = 2;
+  }
+}
+
+message WireGuardPeerNotification {
+  enum Operation {
+    OPERATION_UNDEFINED_UNSPECIFIED = 0;
+    OPERATION_ADD_PEER = 1;
+    OPERATION_DEL_PEER = 2;
+  }
+  Operation operation = 1;
+  WireGuardPeer peer = 2;
+}
+
+message SendTelemetryRequest {
+  bytes data = 1;
+}
+
+message VpnClientServiceGetConfigurationRequest {
+  string external_device_id = 1;
+  string device_information = 2;
+}
+
+message VpnClientServiceGetConfigurationResponse {
+  GetConfigurationResponse configuration = 1;
+}

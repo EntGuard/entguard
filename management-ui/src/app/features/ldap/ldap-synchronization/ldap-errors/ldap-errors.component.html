@@ -1,0 +1,11 @@
+<div class="dialog-wrap" mat-dialog-content>
+    <div class="flex">
+        <h3 class="flex-1">{{ 'ldapconfigs-list.syncErrors' | translate }}</h3>
+    </div>
+    <textarea [value]="errorsStr" rows="25"  readonly class="errors-list mt-2 w-full"></textarea>
+    <div mat-dialog-actions class="flex" dir="rtl">
+        <button id="confirmation_close_button" class="mt-4 mr-2" mat-flat-button mat-dialog-close (click)="closeDialog()">{{ 'mfa-certificates-issuer-dialog.buttonClose' | translate }}</button>
+        <span class="flex-1"></span>
+    </div>
+</div>
+

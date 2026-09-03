@@ -1,0 +1,150 @@
+<div class="flex flex-col flex-1 min-h-0 w-full h-100 overflow-auto">
+    <div class="board w-100 position-relative flex-col flex-1 min-h-0 overflow-auto" id="synchronization-board">
+        <div>
+            <h3 class="flex-1">{{ 'ldapconfigs-list.headerLdapSyncStatus' | translate }}</h3>
+        </div>
+
+        <p *ngIf="loading">
+            {{ 'ldapconfigs-list.paragraphCheckSyncStatus' | translate }}
+        </p>
+
+        <p class="error" *ngIf="!loading && syncError">
+            {{ "ldapconfigs-list.syncError" | translate }}
+        </p>
+
+        <!-- Servers -->
+        <div class="flex mt-2 gap-12" *ngIf="!loading && syncStatus">
+            <div class="w-1/3 flex-none">
+                <h6 class="text-[#025da1]">Servers</h6>
+                <table id="serversTbl" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trLdapServsConfigured' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.ldapServersConfigured }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trLdapServsProcessed' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.ldapServersProcessed }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sync status -->
+        <div class="flex mt-5" *ngIf="!loading && syncStatus">
+            <h6 class="text-[#025da1]">Sync status</h6>
+        </div>
+        <div class="flex gap-12" *ngIf="!loading && syncStatus">
+            <div class="w-1/3 flex-none">
+                <table id="ldapSyncTbl1" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trSyncStart' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <span class="inline-flex">{{ syncStatus.startedAt | date:'medium' }}</span>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trProgress' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <span class="inline-flex" *ngIf="!syncStatus.inProgress">
+                                {{ 'ldapconfigs-list.trFinished' | translate }}
+                            </span>
+                            <mat-progress-spinner
+                                color="primary"
+                                mode="indeterminate"
+                                [diameter]="15"
+                                class="inline-flex ms-1 align-middle"
+                                *ngIf="syncStatus.inProgress">
+                            </mat-progress-spinner>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="w-1/3 flex-none">
+                <table id="ldapSyncTbl2" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trSyncDuration' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <span class="inline-flex" *ngIf="!syncStatus.inProgress">
+                                {{ syncStatus.syncDuration }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.errorCount' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <span class="inline-flex items-center gap-1" *ngIf="!syncStatus.inProgress">
+                                <span>{{ syncStatus.errorCount }}</span>
+                                <a
+                                    id="showErrorsLnk"
+                                    class="inline-flex items-center"
+                                    matTooltip="{{ 'ldapconfigs-list.showErrors' | translate}}"
+                                    matTooltipPosition="below"
+                                    (click)="onShowErrorClick()">
+                                    <mat-icon svgIcon="find_detail" class="w-5 h-5"></mat-icon>
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users & Relations -->
+        <div class="flex mt-5 gap-12" *ngIf="!loading && syncStatus">
+            <div class="w-1/3 flex-none">
+                <h6 class="text-[#025da1]">Users</h6>
+                <table id="interfaceTbl2" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trUsrRetrieved' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.usersRetrieved }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trUsrCreated' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.usersCreated }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trUsrUpdated' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.usersUpdated }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trUsrDeleted' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.usersDeleted }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="w-1/3 flex-none">
+                <h6 class="text-[#025da1]">Relations</h6>
+                <table id="interfaceTbl3" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trRelCreated' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.relationsCreated }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trRelUpdated' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.relationsUpdated }}</td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row">
+                        <td class="mat-cell mat-mdc-cell name-cell">{{ 'ldapconfigs-list.trRelDeleted' | translate }}</td>
+                        <td class="mat-cell mat-mdc-cell property-cell">{{ syncStatus.relationsDeleted }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <button
+                mat-raised-button
+                *ngIf="!loading"
+                [disabled]="syncStatus?.inProgress || syncProgress"
+                color="primary"
+                (click)="onSyncClick()"
+                id="submitConfigBtn"
+                class="no-underline text-white inline-flex items-center gap-2">
+                <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" *ngIf="syncProgress">
+                </mat-progress-spinner>
+                {{ 'ldapconfigs-list.buttonSyncManually' | translate }}
+            </button>
+        </div>
+    </div>
+</div>

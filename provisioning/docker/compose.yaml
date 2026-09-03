@@ -1,0 +1,147 @@
+volumes:
+  entguard_pgdata:
+  entguard_sockets:
+  grafana-data:
+
+services:
+  migrate:
+    container_name: eg-db-migrate
+    image: eg-db-migrate:1.14.1
+    command: "up -config=dbconfig.yaml -env='postgresdb'"
+    links:
+      - db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./dbconfig.yaml:/dbconfig.yaml
+  db:
+    container_name: eg-postgres
+    image: postgres:16.13-alpine
+    restart: unless-stopped
+    environment:
+      "LANG":                 "en_US.utf8"
+      "POSTGRES_INITDB_ARGS": "--locale-provider=icu --icu-locale=en-US"
+      "POSTGRES_DB":          "entguard"
+      "POSTGRES_USER":        "postgres"
+      "POSTGRES_PASSWORD":    "postgres"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    volumes:
+      - ./previous-db/:/docker-entrypoint-initdb.d/
+      - entguard_pgdata:/var/lib/postgresql/data
+  web:
+    container_name: eg-orchestrator
+    image: eg-orchestrator:1.14.1
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+    depends_on:
+      db:
+        condition: service_healthy
+      telegraf:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    environment:
+        "VPN_ORCHESTRATOR_REST_PORT":                  "8080"
+        "VPN_ORCHESTRATOR_RPC_PORT_VPN_S":             "8081"
+        "VPN_ORCHESTRATOR_RPC_PORT_VPN_C":             "8082"
+        "VPN_ORCHESTRATOR_RPC_PORT_HEALTH_CHECK":      "8083"
+        "VPN_HEALTH_CHECK_RPC_PORT_VPN_C":             "8084"
+        "VPN_ORCHESTRATOR_RPC_CERT_FILE":              "/etc/entguard/ssl/grpc-server-cert.pem"
+        "VPN_ORCHESTRATOR_RPC_KEY_FILE":               "/etc/entguard/ssl/grpc-server-key.pem"
+        "VPN_ORCHESTRATOR_ENCRYPTION_KEY_FILE":        "/etc/entguard/db-encryption-key/db-encryption-key.key"
+        "VPN_ORCHESTRATOR_RPC_RL_SIZE":                "500"
+        "VPN_ORCHESTRATOR_RPC_RL_RATE":                "10"
+        "VPN_ORCHESTRATOR_REST_RL_SIZE":               "500"
+        "VPN_ORCHESTRATOR_REST_RL_RATE":               "10"
+        "VPN_ORCHESTRATOR_RPC_REINIT_CERT_PROVIDER":   "false"
+        "VPN_ORCHESTRATOR_PWD_MIN_LEN":                "15"
+        "VPN_ORCHESTRATOR_PWD_LOWER":                  "false"
+        "VPN_ORCHESTRATOR_PWD_UPPER":                  "false"
+        "VPN_ORCHESTRATOR_PWD_DIGIT":                  "false"
+        "VPN_ORCHESTRATOR_PWD_SYMBOL":                 "false"
+        "VPN_ORCHESTRATOR_LOG_LEVEL":                  "info"
+        "VPN_ORCHESTRATOR_2FA_TOTP":                   "true"
+        "VPN_ORCHESTRATOR_2FA_CERTIFICATE":            "true"
+        "VPN_ORCHESTRATOR_AUTH_TOKEN_EXPIRATION":      "30m"
+        "VPN_ORCHESTRATOR_SESSION_EXPIRATION":         "168h"
+        "VPN_ORCHESTRATOR_SESSION_EXP_CHECK_INTERVAL": "1h"
+        # ----------------------------------------------------------
+        # Postgres configuration.
+        "PGHOST":     "db"
+        "PGPORT":     "5432"
+        "PGDATABASE": "entguard"
+        "PGUSER":     "postgres"
+        "PGPASSWORD": "postgres"
+        # ----------------------------------------------------------
+        # Uncomment following variables to have more logs from gRPC.
+        # "GRPC_TRACE":                  "all"
+        # "GRPC_VERBOSITY":              "DEBUG"
+        # "GRPC_GO_LOG_VERBOSITY_LEVEL": "99"
+        # "GRPC_GO_LOG_SEVERITY_LEVEL":  "info"
+    volumes:
+      - type: bind
+        source: "./dev-certs/grpc-server-cert.pem"
+        target: "/etc/entguard/ssl/grpc-server-cert.pem"
+      - type: bind
+        source: "./dev-certs/grpc-server-key.pem"
+        target: "/etc/entguard/ssl/grpc-server-key.pem"
+      - type: bind
+        source: "./db-encryption-key/db-encryption-key.key"
+        target: "/etc/entguard/db-encryption-key/db-encryption-key.key"
+      - type: volume
+        source: "entguard_sockets"
+        target: "/run/entguard/sockets/"
+  telegraf:
+    container_name: eg-telegraf
+    image: telegraf:1.38.2-alpine
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: "./telegraf/orchestrator/telegraf.conf"
+        target: "/etc/telegraf/telegraf.conf"
+      - type: volume
+        source: "entguard_sockets"
+        target: "/run/entguard/sockets/"
+    entrypoint: ""
+  tsdb:
+    container_name: eg-prometheus
+    image: prom/prometheus:v3.11.0
+    restart: unless-stopped
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yaml
+    depends_on:
+      telegraf:
+        condition: service_started
+    volumes:
+      - type: bind
+        source: "./prometheus/prometheus.yaml"
+        target: "/etc/prometheus/prometheus.yaml"
+  metrics-ui:
+    container_name: eg-grafana
+    image: grafana/grafana:12.4.2
+    restart: unless-stopped
+    command: --config=/etc/grafana/provisioning/conf/grafana.ini
+    depends_on:
+      tsdb:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    volumes:
+      - type: bind
+        source: "./grafana/"
+        target: "/etc/grafana/provisioning/"
+      - type: volume
+        source: "grafana-data"
+        target: "/var/lib/grafana"
+    environment:
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: admin

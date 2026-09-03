@@ -1,0 +1,286 @@
+<div class="flex flex-col flex-1 min-h-0 negative-mb">
+    <div *ngIf="selectedTemplate" class="breadcrumbs shrink-0">
+        <h5 class="component-h5 t-primary" routerLink="/ldap/templates">
+            {{ "ldapconfigs-list.headerLdapTemplates" | translate }}
+        </h5>
+        <h6 class="component-h6">
+            {{ "ldapconfigs-list.headerTemplate" | translate }}
+            {{ selectedTemplate.name }}
+        </h6>
+    </div>
+
+    <mat-error class="err" *ngIf="error">
+        {{ "ldapconfigs-list.headerTemplate" | translate }}
+        {{ "ldapconfigs-template-detail.errorLoading" | translate }}
+    </mat-error>
+
+    <div *ngIf="selectedTemplate" class="flex flex-col flex-1 min-h-0">
+        <div class="flex shrink-0 gap-12">
+            <div id="template-board" class="board w-full relative accent-min-size">
+                <mat-progress-bar *ngIf="loadingTemplate" mode="query" class="absolute"></mat-progress-bar>
+                <div class="flex">
+                    <h3 class="flex-1" id="userH3">
+                        {{ "ldapconfigs-list.headerTemplate" | translate }}
+                        {{ selectedTemplate.name }}
+                    </h3>
+                    <button
+                        mat-icon-button
+                        id="editSelectedTemplateBtn"
+                        class="side-button"
+                        matTooltip="{{ 'ldapconfigs-list.tooltipEditTemplate' | translate }}"
+                        matTooltipPosition="below"
+                        (click)="onEditSelectedTemplateClick(selectedTemplate)"
+                    >
+                        <mat-icon svgIcon="edit"></mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        id="deleteSelectedUserBtn"
+                        class="side-button"
+                        matTooltip="{{ 'ldapconfigs-list.tooltipDelTemplate' | translate }}"
+                        matTooltipPosition="below"
+                        (click)="onDeleteSelectedTemplateClick(selectedTemplate)"
+                    >
+                        <mat-icon svgIcon="delete"></mat-icon>
+                    </button>
+                </div>
+
+                <table id="selectedUserTbl" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row" id="isAdminRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "ldaptemplate-dialog.checkAdmin" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{ 'user-list.tooltipIsAdmin' | translate }}"
+                                matTooltipPosition="after"
+                            >
+                                {{ !!selectedTemplate.isAdmin }}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="mfaTypeRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "ldapconfigs-list.cellMFAType" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{ 'user-list.tooltipMfaType' | translate }}"
+                                matTooltipPosition="after"
+                            >
+                                <ng-container *ngIf="selectedTemplate.mfaType !== 'none'">
+                                    {{ selectedTemplate.mfaType }}
+                                </ng-container>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="filterRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "ldapconfigs-list.cellFilter" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{ 'ldapconfigs-list.tooltipFilter' | translate }}"
+                                matTooltipPosition="after"
+                            >
+                                {{ selectedTemplate.filter }}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="board w-full relative flex-col accent-min-size">
+                <mat-progress-bar *ngIf="loadingInterface" mode="query" class="absolute"></mat-progress-bar>
+                <div class="flex-1 w-full h-full flex flex-col">
+                    <div class="flex">
+                        <h3 class="flex-1">
+                            {{ "ldapconfigs-list.headerInterface" | translate }}
+                        </h3>
+                        <button
+                            mat-icon-button
+                            id="addUserVpnConfig"
+                            class="side-button"
+                            matTooltip="{{ 'user-list.tooltipAddVPNConfig' | translate }}"
+                            matTooltipPosition="below"
+                            *ngIf="!iface"
+                            (click)="onAddInterface()"
+                        >
+                            <mat-icon svgIcon="add"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="editUserVpnConfig"
+                            class="side-button"
+                            matTooltip="{{ 'user-list.tooltipEditVPNConfig' | translate }}"
+                            matTooltipPosition="below"
+                            *ngIf="iface"
+                            (click)="onEditInterface()"
+                        >
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                    </div>
+
+                    <p class="error" *ngIf="!iface && interfaceError">
+                        <br />{{ "user-list.messageNoVPN" | translate }}
+                    </p>
+
+                    <div class="flex flex-1 gap-4" *ngIf="iface">
+                        <table id="interfaceTbl" class="card-basic-table flex-1">
+                            <tr class="mat-row mat-mdc-row" id="nameRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "shared.labelInterfaceName" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    {{ iface.name }}
+                                </td>
+                            </tr>
+                            <tr class="mat-row mat-mdc-row" id="addressRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "shared.labelAddressRanges" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    <mat-chip-list *ngIf="iface.addresses?.length">
+                                        <mat-chip
+                                            *ngFor="let addr of iface.addresses"
+                                            class="m-1"
+                                            [matTooltip]="addr.tooltipText"
+                                            matTooltipPosition="above"
+                                            matDisableTooltipInteractivity="false"
+                                        >
+                                            {{ addr.name }}
+                                        </mat-chip>
+                                    </mat-chip-list>
+
+                                    <span *ngIf="!iface.addresses?.length">-</span>
+                                </td>
+                            </tr>
+                            <tr class="mat-row mat-mdc-row" id="listenPortRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "shared.labelListenPort" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    {{ iface.listenPort }}
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="flex-1">
+                            <table id="interfaceTbl2" class="card-basic-table w-full h-full">
+                                <tr class="mat-row mat-mdc-row" id="dnsRow">
+                                    <td class="mat-cell mat-mdc-cell name-cell">
+                                        {{ "user-list.cellDNS" | translate }}
+                                    </td>
+                                    <td class="mat-cell mat-mdc-cell property-cell">
+                                        {{ iface.dns }}
+                                    </td>
+                                </tr>
+                                <tr class="mat-row mat-mdc-row" id="mtuRow">
+                                    <td class="mat-cell mat-mdc-cell name-cell">
+                                        {{ "user-list.cellMaximumTransmissionUnit" | translate }}
+                                    </td>
+                                    <td class="mat-cell mat-mdc-cell property-cell">
+                                        {{ iface.mtu }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="board w-full min-h-0 flex flex-1 flex-col relative mt-25 grid-min-size">
+            <mat-progress-bar *ngIf="loadingServers" mode="query" class="absolute"></mat-progress-bar>
+            <div class="flex">
+                <h3 class="flex-1">{{ "ldapconfigs-template-detail-servers.header" | translate }}</h3>
+                <button
+                    mat-icon-button
+                    id="addUserBtn"
+                    class="side-button"
+                    matTooltip="{{ 'ldapconfigs-template-detail-servers.tooltipAdd' | translate }}"
+                    matTooltipPosition="below"
+                    *ngIf="servers"
+                    (click)="onAddServerClick()"
+                >
+                    <mat-icon svgIcon="add"></mat-icon>
+                </button>
+            </div>
+
+            <div class="flex-1 min-h-0">
+                <mat-error class="err" *ngIf="serversError">
+                    {{ "ldapconfigs-template-detail-servers.error" | translate }}
+                </mat-error>
+
+                <app-ag-grid
+                    class="grid-height-adjusted"
+                    tableId="userUsersTbl"
+                    entityName="{{ 'ldapconfigs-template-detail-servers.paginationName' | translate }}"
+                    entityNamePlural="{{ 'ldapconfigs-template-detail-servers.paginationNamePlural' | translate }}"
+                    [allColumnDefs]="serversCols"
+                    [rowData]="servers"
+                >
+                    <ng-template let-row #statusColumnTemplate>
+                        <div
+                            matTooltip="{{ 'ldapconfigs-template-detail-servers.tooltipStatusUnknown' | translate }}"
+                            matTooltipPosition="after"
+                        ></div>
+                    </ng-template>
+
+                    <ng-template let-row #serverColumnTemplate>
+                        <div class="flex items-center h-full gap-2">
+                            {{ row["name"] }}
+                            <button
+                                class="mini-fab-flat"
+                                [routerLink]="['/servers/' + row['id']]"
+                                matTooltip="{{ 'ldapconfigs-template-detail-servers.tooltipJump' | translate }}"
+                            >
+                                <mat-icon
+                                        class="slant-icon t-primary"
+                                        svgIcon="back-arrow"
+                                    ></mat-icon>
+                            </button>
+                        </div>
+                    </ng-template>
+
+                    <ng-template let-row #allowedIpsColumnTemplate>
+                        <div class="cell-scroll" appHorizontalWheel>
+                            <span *ngFor="let ip of (row.allowedIps && row.allowedIps.length > 0 ? row.allowedIps : []); let last = last">
+                                {{ ip }}<span *ngIf="!last">, </span>
+                            </span>
+                        </div>
+                    </ng-template>
+
+                    <ng-template let-row #usePresharedKeyColumnTemplate>
+                        <div class="cell-scroll" appHorizontalWheel>
+                            <span>{{ row.usePresharedKey ? 'Yes' : 'No' }}</span>
+                        </div>
+                    </ng-template>
+
+                    <ng-template let-row #actionsColumnTemplate>
+                        <div class="flex-1 flex items-center justify-end">
+                            <button
+                                mat-icon-button
+                                id="editLdapTemplateServerAdjBtn"
+                                matTooltip="{{ 'ldapconfigs-template-detail-servers.tooltipEdit' | translate }}"
+                                matTooltipPosition="below"
+                                (click)="onEditServerClick(row)"
+                            >
+                                <mat-icon svgIcon="edit"></mat-icon>
+                            </button>
+                            <button
+                                mat-icon-button
+                                id="deleteLdapTemplateServerAdjBtn"
+                                matTooltip="{{ 'ldapconfigs-template-detail-servers.tooltipDelete' | translate }}"
+                                matTooltipPosition="below"
+                                (click)="onDeleteServerClick(row)"
+                            >
+                                <mat-icon svgIcon="delete"></mat-icon>
+                            </button>
+                        </div>
+                    </ng-template>
+                </app-ag-grid>
+            </div>
+        </div>
+        <div class="flex flex-col">&nbsp;</div>
+    </div>
+</div>

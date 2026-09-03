@@ -1,0 +1,58 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "db/query.sql"
+    schema: "db/migrations/postgres"
+    gen:
+      go:
+        package: "db"
+        out: "db"
+        sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        overrides:
+          - db_type: "pg_catalog.int4"
+            go_type: "int"
+          - db_type: "pg_catalog.int4"
+            nullable: true
+            go_type:
+              type: "int"
+              pointer: true
+          - db_type: "serial"
+            go_type: "int"
+          - db_type: "int"
+            go_type: "int"
+          - db_type: "uuid"
+            go_type: "string"
+          - column: device_wg_iface_addresses.addr
+            go_type:
+              import: "net/netip"
+              type: "Prefix"
+          - column: server_wg_iface_addresses.addr
+            go_type:
+              import: "net/netip"
+              type: "Prefix"
+          # encrypted fields
+          - column: devices.private_key_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"
+          - column: server_wg_configs.private_key_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"
+          - column: root_ca.key_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"
+          - column: totp.key_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"
+          - column: ldaps.bind_pw_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"
+          - column: adjacencies.preshared_key_encrypted
+            go_type:
+              import: "github.com/entguard/entguard/pkg/crypto/aesgcm"
+              type: "Ciphertext"

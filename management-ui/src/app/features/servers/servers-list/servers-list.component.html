@@ -1,0 +1,394 @@
+<div [ngClass]="{'py-4': !selectedServer}" class="flex-auto">
+    <div class="breadcrumbs shrink-0" *ngIf="selectedServer">
+        <h5
+            class="component-h5 t-primary"
+            [routerLink]="['/servers']"
+            (click)="onDeselectServer()"
+        >
+            {{ "servers-list.headerServers" | translate }}
+        </h5>
+        <h6  class="component-h6" id="serverHeader">
+            {{ "servers-list.headerServer" | translate }}
+            {{ selectedServer.name }}
+        </h6>
+    </div>
+    <div
+        class="board w-full min-h-0 flex flex-col relative grid-min-size"
+        *ngIf="!selectedServer"
+    >
+        <mat-progress-bar
+            *ngIf="loading"
+            mode="query"
+        ></mat-progress-bar>
+
+        <p *ngIf="loading" id="loadingMsg">
+            {{ "servers-list.loadingServersList" | translate }}
+        </p>
+
+        <div *ngIf="!loading">
+            <button
+                mat-raised-button
+                color="primary"
+                class="mb-3 no-underline text-white"
+                id="addServerBtn"
+                (click)="onAddServerClick()"
+            >
+                {{ "servers-list.buttonAddServer" | translate }}
+            </button>
+        </div>
+
+        <div class="flex-1" *ngIf="!loading">
+            <app-ag-grid
+                tableId="serversList"
+                class="grid-height-adjusted"
+                entityName="{{ 'servers-list.paginationName' | translate }}"
+                entityNamePlural="{{ 'servers-list.paginationNamePlural' | translate }}"
+                [allColumnDefs]="serverCols"
+                [rowData]="servers"
+                #serversGrid
+            >
+                <ng-template let-row #vpnServerStatusColumnTemplate>
+                    <ng-container *ngIf="{ info: getServerStatus(row['id']) } as status">
+                        <div
+                            class="server-status status-margin"
+                            [ngClass]="'server-status-' + (status.info?.vpnServer?.status || '')"
+                            [matTooltip]="status.info
+                                ? (status.info?.vpnServer?.messageKey | translate) + ' ' + (status.info?.vpnServer?.messageArgs || []).join(', ')
+                                : 'service.statuses.unknown' | translate">
+                        </div>
+                    </ng-container>
+                </ng-template>
+
+                <ng-template let-row #healthcheckStatusColumnTemplate>
+                    <ng-container *ngIf="{ info: getServerStatus(row['id']) } as status">
+                        <div
+                            class="server-status status-margin"
+                            [ngClass]="'server-status-' + (status.info?.healthcheck.status || '')"
+                            [matTooltip]="status.info
+                                ? (status.info?.healthcheck.messageKey | translate) + ' ' + (status.info?.healthcheck.messageArgs || []).join(', ')
+                                : 'service.statuses.unknown' | translate">
+                        </div>
+                    </ng-container>
+                </ng-template>
+
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex items-center justify-end ltr">
+                        <button
+                            mat-icon-button
+                            id="editServerBtn"
+                            matTooltip="{{
+                                'servers-list.tooltipEditServer' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            (click)="onEditServerClick(row)"
+                        >
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="configureServerBtn"
+                            matTooltip="{{
+                                'servers-list.tooltipConfigServer' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            [routerLink]="['/servers/' + row['id']]"
+                        >
+                            <mat-icon svgIcon="cogs"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="deleteServerBtn"
+                            matTooltip="{{
+                                'servers-list.tooltipDeleteServer' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            (click)="onDeleteServerClick(row)"
+                        >
+                            <mat-icon svgIcon="delete"></mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </app-ag-grid>
+        </div>
+    </div>
+
+    <div *ngIf="selectedServer" class="flex flex-col flex-1 min-h-0">
+        <div class="flex shrink-0 gap-12">
+            <div class="board w-full">
+                <div class="flex">
+                    <h3 class="flex-1" id="selectedServerH3">
+                        {{ "servers-list.headerServer" | translate }}
+                        {{ selectedServer.name }}
+                    </h3>
+                    <button
+                        mat-icon-button
+                        id="editSelectedServerBtn"
+                        class="side-button"
+                        matTooltip="{{ 'servers-list.tooltipEditServer' | translate }}"
+                        matTooltipPosition="below"
+                        (click)="onEditServerClick(selectedServer)"
+                    >
+                        <mat-icon svgIcon="edit"></mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        id="deleteSelectedServerBtn"
+                        class="side-button"
+                        matTooltip="{{ 'servers-list.tooltipDeleteServer' | translate }}"
+                        matTooltipPosition="below"
+                        (click)="onDeleteServerClick(selectedServer)"
+                    >
+                        <mat-icon svgIcon="delete"></mat-icon>
+                    </button>
+                </div>
+
+                <table id="selectedServerTbl" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row" id="vpnServerStatusRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "servers-list.cellServerStatus" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div class="server-status" [ngClass]="'server-status-' + (getServerStatus(selectedServer.id)?.vpnServer?.status || '')"
+                                [matTooltip]="getServerStatus(selectedServer.id)
+                                    ? (((getServerStatus(selectedServer.id)?.vpnServer?.messageKey | translate))
+                                        + ' ' + (getServerStatus(selectedServer.id)?.vpnServer?.messageArgs || []).join(', '))
+                                    : 'service.statuses.unknown' | translate">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="endpointRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "servers-list.cellServerEndpoint" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            {{ selectedServer.endpoint }}
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="healthcheckStatusRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                          {{ "servers-list.cellHealthcheckStatus" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div class="server-status" [ngClass]="'server-status-' + (getServerStatus(selectedServer.id)?.healthcheck?.status || '')"
+                                 [matTooltip]="getServerStatus(selectedServer.id)
+                                    ? (((getServerStatus(selectedServer.id)?.healthcheck?.messageKey | translate))
+                                        + ' ' + (getServerStatus(selectedServer.id)?.healthcheck?.messageArgs || []).join(', '))
+                                    : 'service.statuses.unknown' | translate">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="healthcheckAddressRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "servers-list.cellHealthcheckAddress" | translate }}
+                        </td>
+                      <td class="mat-cell mat-mdc-cell property-cell">
+                            {{ selectedServer.healthcheckAddress }}
+                      </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="descriptionRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "servers-list.cellServerDesc" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            {{ selectedServer.description }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="board w-full relative flex-col">
+                <mat-progress-bar
+                    *ngIf="loadingServerConfig"
+                    mode="query"
+                    class="absolute"
+                ></mat-progress-bar>
+
+                <div class="flex-1 w-full h-full flex flex-col">
+                    <div class="flex">
+                        <h3 class="flex-1" id="interfaceH3">
+                            {{ "servers-list.headerInterface" | translate }}
+                        </h3>
+                        <button
+                            mat-icon-button
+                            id="editInterfaceBtn"
+                            class="side-button"
+                            matTooltip="{{ 'servers-list.tooltipAddInterfaceConfig' | translate }}"
+                            matTooltipPosition="below"
+                            *ngIf="!loadingServerConfig && !serverConfig"
+                            (click)="onAddInterfaceClick()"
+                        >
+                            <mat-icon svgIcon="add"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="editExistingInterfaceBtn"
+                            class="side-button"
+                            matTooltip="{{ 'servers-list.tooltipEditInterfaceConfig' | translate }}"
+                            matTooltipPosition="below"
+                            *ngIf="!loadingServerConfig && serverConfig"
+                            (click)="onEditInterfaceClick(serverConfig)"
+                        >
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                    </div>
+                    <p
+                        class="error"
+                        *ngIf="!loadingServerConfig && !serverConfig"
+                        id="noVpnConfigMsg"
+                    >
+                        <br />{{ "servers-list.messageNoVPN" | translate }}
+                    </p>
+
+                    <div class="flex flex-1 gap-4" *ngIf="!loadingServerConfig && serverConfig">
+                        <table id="interfaceTbl" class="card-basic-table flex-1">
+                            <tr class="mat-row mat-mdc-row" id="nameRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "servers-list.cellInterfaceName" | translate }}
+                            </td>
+                            <td class="mat-cell mat-mdc-cell property-cell">
+                                {{ serverConfig.interface.name }}
+                            </td>
+                        </tr>
+                        <tr class="mat-row mat-mdc-row" id="publicKeyRow">
+                            <td class="mat-cell mat-mdc-cell name-cell">
+                                {{ "servers-list.cellPublicKey" | translate }}
+                            </td>
+                            <td class="mat-cell mat-mdc-cell property-cell">
+                                {{ serverConfig.interface.publicKey }}
+                            </td>
+                        </tr>
+                        <tr class="mat-row mat-mdc-row" id="addressesRow">
+                            <td class="mat-cell mat-mdc-cell name-cell">
+                                {{ "servers-list.cellAddresses" | translate }}
+                            </td>
+                            <td class="mat-cell mat-mdc-cell property-cell">
+                                <div class="cell-scroll" appHorizontalWheel>
+                                    <ng-container *ngIf="serverConfig.interface.addresses?.length; else noInterfaceAddresses">
+                                        <span *ngFor="let address of serverConfig.interface.addresses; let last = last">
+                                            {{ address }}<span *ngIf="!last">, </span>
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #noInterfaceAddresses>-</ng-template>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="flex-1">
+                        <table id="interfaceTbl2" class="card-basic-table w-full h-full">
+                            <tr class="mat-row mat-mdc-row" id="listenPortRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "servers-list.cellListenPort" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    {{ serverConfig.interface.listenPort }}
+                                </td>
+                            </tr>
+                            <tr class="mat-row mat-mdc-row" id="persistentKeepaliveRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "servers-list.cellPersistentKeepalive" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    {{ serverConfig.interface.persistentKeepalive }}
+                                </td>
+                            </tr>
+                            <tr class="mat-row mat-mdc-row" id="mtuRow">
+                                <td class="mat-cell mat-mdc-cell name-cell">
+                                    {{ "servers-list.cellMTU" | translate }}
+                                </td>
+                                <td class="mat-cell mat-mdc-cell property-cell">
+                                    {{ serverConfig.interface.mtu }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="board w-full mt-25 relative flex flex-col flex-1 min-h-0 mb-4"
+        *ngIf="selectedServer"
+    >
+        <mat-progress-bar
+            *ngIf="loadingServerAdjacencies"
+            mode="query"
+            class="absolute"
+        ></mat-progress-bar>
+
+        <div class="flex">
+            <h3 class="flex-1" id="devicesH3">
+                {{ "servers-list.headerAdjacencies" | translate }}
+            </h3>
+        </div>
+
+        <div class="flex flex-col flex-1 min-h-0 grid-min-size">
+            <div class="flex flex-col flex-1">
+                <app-ag-grid
+                    class="flex-1 h-full"
+                    tableId="serverDevicesTbl"
+                    entityName="{{ 'user-list.adjacencyName' | translate }}"
+                    entityNamePlural="{{ 'user-list.adjacencyNamePlural' | translate }}"
+                    [allColumnDefs]="serverDeviceCols"
+                    [rowData]="serverAdjacencies"
+                >
+                    <ng-template let-row #deviceColumnTemplate>
+                        <div class="flex items-center gap-2">
+                            {{ row["device"]["id"] }}
+                            <!-- <button
+                                class="mini-fab-flat"
+                                [routerLink]="['/users/' + row['device']['id']]"
+                                [queryParams]="{ tab: 'devices' }"
+                        matTooltip="{{ 'servers-list.tooltipJumpDeviceConfig' | translate }}"
+                            >
+                                <mat-icon
+                                        class="slant-icon t-primary"
+                                        svgIcon="back-arrow"
+                                    ></mat-icon>
+                            </button> -->
+                        </div>
+                    </ng-template>
+
+                <ng-template let-row #allowedIpsColumnTemplate>
+                    <div class="cell-scroll" appHorizontalWheel>
+                        <span *ngFor="let ip of (row.allowedIps && row.allowedIps.length > 0 ? row.allowedIps : []); let last = last">
+                            {{ ip }}<span *ngIf="!last">, </span>
+                        </span>
+                    </div>
+                </ng-template>
+
+                <ng-template let-row #otherSideAllowedIpsColumnTemplate>
+                    <div class="cell-scroll" appHorizontalWheel>
+                        <span *ngFor="let ip of (row.otherSideAllowedIps && row.otherSideAllowedIps.length > 0 ? row.otherSideAllowedIps : []); let last = last">
+                            {{ ip }}<span *ngIf="!last">, </span>
+                        </span>
+                    </div>
+                </ng-template>
+
+                    <ng-template let-row #actionsColumnTemplate>
+                        <div class="flex items-center justify-end">
+                            <button
+                                mat-icon-button
+                                id="editServerAdjacencyBtn"
+                                matTooltip="{{ 'servers-list.tooltipEditServerAdj' | translate }}"
+                                matTooltipPosition="below"
+                                (click)="onEditServerAdjacencyClick(row)"
+                            >
+                                <mat-icon svgIcon="edit"></mat-icon>
+                            </button>
+                            <button
+                                mat-icon-button
+                                id="deleteServerAdjacencyBtn"
+                                matTooltip="{{ 'servers-list.tooltipDeleteServerAdj' | translate }}"
+                                matTooltipPosition="below"
+                                (click)="onDeleteServerAdjacencyClick(row)"
+                            >
+                                <mat-icon svgIcon="delete"></mat-icon>
+                            </button>
+                        </div>
+                    </ng-template>
+                </app-ag-grid>
+            </div>
+        </div>
+    </div>
+</div>

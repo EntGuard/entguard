@@ -1,0 +1,55 @@
+:host {
+
+    .login-container {
+        margin: 100px auto;
+    }
+
+    .login-board {
+        margin: 0 auto;
+        display: block;
+        max-width: 360px;
+        background-color: white;
+        border-radius: 5px;
+    }
+
+    .login-top {
+        height: 60px;
+        background: #0a2040;
+        border-radius: 5px 5px 0 0;
+
+        img {
+            width: 45px;
+            height: 45px;
+            margin-right: 7px;
+        }
+
+        span {
+            color: #ffffff;
+            padding-bottom: 2px;
+        }
+    }
+
+    .login-form-wrap {
+        padding: 30px;
+    }
+
+    .login-form {
+        width: 300px;
+    }
+
+    .version-info {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #a0a0a0;
+        padding-top: 5px;
+    }
+
+    /* Spinner inside login button now inherits global unified styles */
+
+    #loginBtn span {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+}

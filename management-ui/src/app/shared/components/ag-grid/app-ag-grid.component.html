@@ -1,0 +1,174 @@
+<div id="grid-wrapper-{{ tableId }}" class="grid-wrapper">
+    <div class="flex-1 min-h-0 h-full w-full ag-grid-container">
+    <ag-grid-angular
+        class="ag-theme-material grid-obj"
+        [id]="tableId"
+        [components]="components"
+        [gridOptions]="gridOptions"
+        [headerHeight]="headerHeight"
+        [rowHeight]="rowHeight"
+        [rowData]="rowData"
+        [pagination]="true"
+        [paginationPageSize]="paginationPageSize"
+        [suppressPaginationPanel]="true"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [rowSelection]="rowSelection"
+        [suppressRowClickSelection]="suppressRowClickSelection"
+        (gridReady)="onGridReady($event)"
+        (filterChanged)="saveFilterModel()"
+        (rowDataChanged)="onRowDataChanged()"
+        (gridSizeChanged)="onGridSizeChanged($event)"
+        (selectionChanged)="onSelectionChanged($event)"
+        (paginationChanged)="onPaginationChanged($event)"
+        (rowClicked)="onRowClicked($event)"
+        (sortChanged)="fitSize()"
+        (cellMouseOver)="onCellMouseOver($event)"
+        (cellMouseOut)="onCellMouseOut($event)"
+        *ngIf="columnDefs"
+    >
+    </ag-grid-angular>
+</div>
+
+    <div
+        class="custom-paging"
+        *ngIf="pagination && itemsCount > 0"
+    >
+        <div class="items-info flex items-center justify-start flex-shrink-0">
+            <span>
+                {{ "app-ag-grid.paginationDisplayed" | translate }}
+                {{ itemsFrom }}
+                <ng-container *ngIf="itemsCount > 1"
+                    >{{ "app-ag-grid.paginationItemsTo" | translate }}
+                    {{ itemsTo }}
+                    {{ "app-ag-grid.paginationOfItemsCount" | translate }}
+                    {{ itemsCount }}</ng-container
+                >
+                <ng-container *ngIf="entityName && entityNamePlural">
+                    {{ itemsCount > 1 ? entityNamePlural : entityName }}
+                </ng-container>
+                <ng-container *ngIf="!(entityName && entityNamePlural)">
+                    {{
+                        (itemsCount > 1
+                            ? "app-ag-grid.paginationItems"
+                            : "app-ag-grid.paginationItem"
+                        ) | translate
+                    }}
+                </ng-container>
+            </span>
+        </div>
+
+        <div class="flex items-center justify-center flex-shrink-0" *ngIf="itemsCount > 1">
+            <span class="items-per-page flex items-center"
+                >{{
+                    entityNamePlural
+                        ? entityNamePlural
+                        : ("app-ag-grid.paginationItemsCapital" | translate)
+                }}
+                {{ "app-ag-grid.paginationItemsPerPage" | translate }}:</span
+            >
+
+            <button
+                mat-button
+                (click)="itemsPerPageSelect.open()"
+                class="items-per-page-select-button"
+            >
+                {{ itemsPerPageNumber }}
+                <ng-container *ngIf="itemsPerPageNumber === 'auto'">
+                    ({{
+                        currentPageSize <= itemsCount
+                            ? currentPageSize
+                            : itemsCount
+                    }})
+                </ng-container>
+                <mat-form-field class="hidden-select">
+                    <mat-select
+                        #itemsPerPageSelect
+                        [(ngModel)]="itemsPerPageNumber"
+                        (selectionChange)="
+                            onItemsPerPageSelectionChanged($event)
+                        "
+                    >
+                        <mat-option
+                            [value]="val"
+                            *ngFor="let val of itemsPerPageOptions"
+                        >
+                            {{ val }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </button>
+        </div>
+
+        <div class="flex items-center justify-end flex-shrink-0">
+            <button
+                mat-icon-button
+                (click)="onFirstPageClick()"
+                matTooltip="{{ 'app-ag-grid.tooltipFirstPage' | translate }}"
+                [disabled]="currentPageNumber === 1"
+                matTooltipPosition="above"
+                class="first-page-btn"
+            >
+                <mat-icon svgIcon="first-page"></mat-icon>
+            </button>
+            <button
+                mat-icon-button
+                (click)="onPrevPageClick()"
+                matTooltip="{{ 'app-ag-grid.tooltipPrevPage' | translate }}"
+                [disabled]="currentPageNumber === 1"
+                matTooltipPosition="above"
+                class="previous-page-button"
+            >
+                <mat-icon svgIcon="previous-page"></mat-icon>
+            </button>
+
+            <span class="flex items-center">{{ 'app-ag-grid.labelPage' | translate }}</span>
+
+            <button
+                mat-button
+                (click)="pagesSelect.open()"
+                class="page-select-button"
+            >
+                {{ currentPageNumber }}
+                <mat-form-field class="hidden-select">
+                    <mat-select
+                        #pagesSelect
+                        [(ngModel)]="currentPageNumber"
+                        (selectionChange)="onPageSelectionChanged($event)"
+                    >
+                        <mat-option [value]="val" *ngFor="let val of pages">{{
+                            val
+                        }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </button>
+
+            <span class="flex items-center">{{ 'app-ag-grid.paginationOfItemsCount' | translate }}&nbsp; </span>
+
+            <span class="all-pages-count flex items-center">
+                {{ allPagesCount }}
+            </span>
+
+            <button
+                mat-icon-button
+                (click)="onNextPageClick()"
+                matTooltip="{{ 'app-ag-grid.tooltipNextPage' | translate }}"
+                [disabled]="currentPageNumber === allPagesCount"
+                matTooltipPosition="above"
+                class="next-page-button"
+            >
+                <mat-icon svgIcon="next-page"></mat-icon>
+            </button>
+            <button
+                mat-icon-button
+                (click)="onLastPageClick()"
+                matTooltip="{{ 'app-ag-grid.tooltipLastPage' | translate }}"
+                [disabled]="currentPageNumber === allPagesCount"
+                matTooltipPosition="above"
+                class="last-page-button"
+            >
+                <mat-icon svgIcon="last-page"></mat-icon>
+            </button>
+        </div>
+    </div>
+</div>

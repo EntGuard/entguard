@@ -1,0 +1,858 @@
+<div [ngClass]="{ 'pt-4': !selectedUser }" class="flex flex-col h-full">
+    <div class="breadcrumbs flex-shrink-0" *ngIf="selectedUser">
+        <h5
+            class="component-h5 t-primary"
+            [routerLink]="['/users']"
+            (click)="onDeselectUser()"
+            id="usersRootHeader"
+        >
+            {{ "user-list.header" | translate }}
+        </h5>
+        <h6 class="component-h6">
+            {{ "user-list.headerUsername" | translate }}
+            {{ selectedUser.username }}
+        </h6>
+    </div>
+    <div
+        class="board rounded p-4 shadow w-full relative flex flex-col flex-1 min-h-0 grid-min-size"
+        *ngIf="!selectedUser"
+    >
+        <mat-progress-bar
+            *ngIf="loading"
+            mode="query"
+            class="absolute"
+        ></mat-progress-bar>
+
+        <p *ngIf="loading">{{ "user-list.loadingUserList" | translate }}</p>
+
+        <div class="flex justify-between" *ngIf="!loading">
+            <button
+                mat-raised-button
+                color="primary"
+                class="no-underline text-white"
+                (click)="onAddUserClick()"
+            >
+                {{ "user-list.buttonAddUser" | translate }}
+            </button>
+            <mat-form-field class="w-1/5" floatLabel="never">
+                <mat-icon
+                    id="searchIcon"
+                    class="searchInputIcons"
+                    matPrefix
+                    svgIcon="search"
+                ></mat-icon>
+                <button
+                    matSuffix
+                    mat-icon-button
+                    matTooltip="{{
+                        'user-list.tooltipClearFilter' | translate
+                    }}"
+                    matTooltipPosition="below"
+                    (click)="onClearSearchClick()"
+                    *ngIf="searchInput.value"
+                >
+                    <mat-icon
+                        class="searchInputIcons"
+                        svgIcon="cancel"
+                    ></mat-icon>
+                </button>
+                <input
+                    #searchInput
+                    matInput
+                    id="searchInput"
+                    type="text"
+                    (keyup)="usersGrid.quickSearch($event.target.value)"
+                    placeholder="{{
+                        'user-list.placeholderSearch' | translate
+                    }}"
+                />
+            </mat-form-field>
+        </div>
+
+        <div class="flex-1 min-h-0" *ngIf="!loading">
+            <app-ag-grid
+                class="grid-height-adjusted"
+                tableId="usersList"
+                entityName="{{ 'user-list.paginationName' | translate }}"
+                entityNamePlural="{{
+                    'user-list.paginationNamePlural' | translate
+                }}"
+                [allColumnDefs]="userCols"
+                [rowData]="users"
+                #usersGrid
+            >
+                <ng-template let-row #authTypeColumnTemplate>
+                    {{ row.authType | translate }}
+                </ng-template>
+
+                <ng-template let-row #lastEditTimeColumnTemplate>
+                    {{ row.lastEditTime ? (row.lastEditTime | date : "medium") : '-' }}
+                </ng-template>
+
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex items-center justify-end">
+                        <button
+                            mat-icon-button
+                            id="editUser"
+                            matTooltip="{{
+                                'user-list.tooltipEditUser' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            matDisableTooltipInteractivity="false"
+                            [disabled]="
+                                currentUser.username === row['username']
+                            "
+                            (click)="onEditUserClick(row)"
+                        >
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="configureUser"
+                            matTooltip="{{
+                                'user-list.tooltipConfigUser' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            [routerLink]="['/users/' + row['id']]"
+                        >
+                            <mat-icon svgIcon="cogs"></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            id="deleteUser"
+                            matTooltip="{{
+                                'user-list.tooltipDeleteUser' | translate
+                            }}"
+                            matTooltipPosition="below"
+                            [disabled]="
+                                currentUser.username === row['username']
+                            "
+                            (click)="onDeleteUserClick(row)"
+                        >
+                            <mat-icon svgIcon="delete"></mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </app-ag-grid>
+        </div>
+    </div>
+
+    <div
+        *ngIf="selectedUser"
+        class="flex flex-col flex-1 min-h-0 h-full space-y-6 pb-6"
+    >
+        <div class="flex shrink-0 gap-12 accent-min-size">
+            <div class="board w-full">
+                <div class="flex">
+                    <h3 class="flex-1" id="userH3">
+                        {{ "user-list.headerUsername" | translate }}
+                        {{ selectedUser.username }}
+                    </h3>
+                    <button
+                        mat-icon-button
+                        id="editSelectedUserBtn"
+                        class="side-button"
+                        matTooltip="{{
+                            'user-list.tooltipEditUser' | translate
+                        }}"
+                        matTooltipPosition="below"
+                        [disabled]="
+                            currentUser.username === selectedUser.username
+                        "
+                        (click)="onEditUserClick(selectedUser)"
+                    >
+                        <mat-icon svgIcon="edit"></mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        id="passwdSelectedUserBtn"
+                        class="side-button"
+                        matTooltip="{{
+                            'user-list.tooltipChangePassword' | translate
+                        }}"
+                        matTooltipPosition="below"
+                        [disabled]="
+                            currentUser.username === selectedUser.username
+                        "
+                        (click)="onChangePasswordClick(selectedUser)"
+                    >
+                        <mat-icon svgIcon="lock"></mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        id="deleteSelectedUserBtn"
+                        class="side-button"
+                        matTooltip="{{
+                            'user-list.tooltipDeleteUser' | translate
+                        }}"
+                        matTooltipPosition="below"
+                        [disabled]="
+                            currentUser.username === selectedUser.username
+                        "
+                        (click)="onDeleteUserClick(selectedUser)"
+                    >
+                        <mat-icon svgIcon="delete"></mat-icon>
+                    </button>
+                </div>
+
+                <table id="selectedUserTbl" class="card-basic-table w-full">
+                    <tr class="mat-row mat-mdc-row" id="isAdminRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.cellIsAdmin" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{
+                                    'user-list.tooltipIsAdmin' | translate
+                                }}"
+                                matTooltipPosition="after"
+                            >
+                                {{ !!selectedUser.isAdmin }}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="authTypeRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.cellAuthType" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{
+                                    'user-list.tooltipAuthType' | translate
+                                }}"
+                                matTooltipPosition="after"
+                            >
+                                {{ selectedUser.authType | translate }}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="mfaTypeRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.cellMFAType" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{
+                                    'user-list.tooltipMfaType' | translate
+                                }}"
+                                matTooltipPosition="after"
+                            >
+                                <ng-container
+                                    *ngIf="selectedUser.mfaType !== 'none'"
+                                >
+                                    {{ selectedUser.mfaType }}
+                                </ng-container>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="notificationRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.cellNotification" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{
+                                    'user-list.tooltipNotification' | translate
+                                }}"
+                                matTooltipPosition="after"
+                            >
+                                {{ selectedUser.notification }}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="mat-row mat-mdc-row" id="lastEditTimeRow">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.cellLastEditTime" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div
+                                matTooltip="{{
+                                    'user-list.tooltipLastEditTime' | translate
+                                }}"
+                                matTooltipPosition="after"
+                            >
+                                {{
+                                    selectedUser.lastEditTime ? (selectedUser.lastEditTime | date : "medium") : '-'
+                                }}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="board w-full relative flex flex-col accent-min-size">
+                <mat-progress-bar
+                    *ngIf="loadingUserTotpSecret"
+                    mode="query"
+                    class="absolute"
+                ></mat-progress-bar>
+
+                <div class="flex">
+                    <h3 class="flex-1" id="userH3">
+                        {{ "user-list.headerTOTP" | translate }}
+                    </h3>
+                    <button
+                        *ngIf="!selectedUser.totpSecret"
+                        mat-icon-button
+                        id="createUserTotpSecret"
+                        class="side-button"
+                        matTooltip="{{ 'user-list.tooltipTOTP' | translate }}"
+                        (click)="onCreateUserTotpSecretClick()"
+                    >
+                        <mat-icon svgIcon="add"></mat-icon>
+                    </button>
+                    <button
+                        *ngIf="selectedUser.totpSecret"
+                        mat-icon-button
+                        id="updateUserTotpSecret"
+                        class="side-button"
+                        matTooltip="{{
+                            'user-list.tooltipRecreateTOTP' | translate
+                        }}"
+                        (click)="onPatchUserTotpSecretClick()"
+                    >
+                        <mat-icon svgIcon="reload"></mat-icon>
+                    </button>
+                </div>
+                <table
+                    *ngIf="selectedUser.totpSecret"
+                    id="selectedUserTbl"
+                    class="card-basic-table w-full"
+                >
+                    <tr class="mat-row mat-mdc-row" id="userTotpSecret">
+                        <td class="mat-cell mat-mdc-cell name-cell">
+                            {{ "user-list.headerTOTP" | translate }}
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <input
+                                id="showTotpSecretField"
+                                [type]="showTotpSecretChars ? 'text' : 'password'"
+                                [value]="selectedUser.totpSecret"
+                                disabled
+                            />
+                        </td>
+                        <td class="mat-cell mat-mdc-cell property-cell">
+                            <div class="flex items-center justify-end">
+                                <button
+                                    *ngIf="selectedUser.totpSecret"
+                                    mat-icon-button
+                                    class="side-button"
+                                    matTooltip="{{
+                                        'user-list.tooltipCopyTOTP' | translate
+                                    }}"
+                                    (click)="
+                                        onCopyTotpClick(selectedUser.totpSecret)
+                                    "
+                                >
+                                    <mat-icon svgIcon="content_copy"></mat-icon>
+                                </button>
+                                <button
+                                    *ngIf="selectedUser.totpSecret"
+                                    mat-icon-button
+                                    id="toggleUserTotpSecretShow"
+                                    class="side-button"
+                                    matTooltip="{{
+                                        'user-list.tooltipShowTOTP' | translate
+                                    }}"
+                                    (click)="onToggleTotpCharsShowClick()"
+                                >
+                                    <mat-icon
+                                        [svgIcon]="
+                                            showTotpSecretChars ? 'hide' : 'show'
+                                        "
+                                    ></mat-icon>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    <div
+        class="w-100 mt-25 position-relative flex flex-col"
+        *ngIf="selectedUser"
+    >
+        <!-- Tab Navigation -->
+        <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" class="mb-3">
+            <mat-tab label="{{ 'user-list.deviceNamePlural' | translate }}">
+                <div class="flex flex-row tall-section">
+                    <div class="board w-100 position-relative flex flex-col flex-1">
+                        <mat-progress-bar
+                            *ngIf="loadingDevices"
+                            mode="query"
+                            class="absolute"
+                        ></mat-progress-bar>
+
+                        <div class="flex flex-row">
+                            <h3 class="flex-1">{{ "user-list.deviceNamePlural" | translate }}</h3>
+                            <button
+                                mat-icon-button
+                                matTooltip="{{ 'user-list.buttonCreateDevice' | translate }}"
+                                matTooltipPosition="below"
+                                class="side-button mt-1"
+                                id="createDeviceBtn"
+                                [disabled]="!deviceTemplate"
+                                (click)="onCreateDevice()"
+                            >
+                            <mat-icon svgIcon="add"></mat-icon>
+                            </button>
+
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                id="syncDevicesBtn"
+                                class="mx-2"
+                                [disabled]="loadingDevices || !deviceTemplate"
+                                (click)="onSyncDevices()"
+                            >
+                                <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" *ngIf="loadingDevices">
+                                </mat-progress-spinner>
+                                {{ 'user-list.buttonSyncDevices' | translate }}
+                            </button>
+                        </div>
+
+                        <div class="flex-1 mt-3">
+                            <app-ag-grid
+                                tableId="devicesTbl"
+                                class="grid-height-adjusted-small"
+                                entityName="{{ 'user-list.deviceName' | translate }}"
+                                entityNamePlural="{{ 'user-list.deviceNamePlural' | translate }}"
+                                [allColumnDefs]="devicesCols"
+                                [rowData]="devices"
+                            >
+                                <ng-template let-row #addressesColumnTemplate>
+                                    <div class="cell-scroll" appHorizontalWheel>
+                                        <ng-container *ngIf="row.addresses?.length; else noDeviceAddresses">
+                                            <span *ngFor="let address of row.addresses; let last = last">
+                                                {{ address }}<span *ngIf="!last">, </span>
+                                            </span>
+                                        </ng-container>
+                                        <ng-template #noDeviceAddresses>-</ng-template>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template let-row #lastTimeConnectedColumnTemplate>
+                                    {{ row.lastTimeConnected ? (row.lastTimeConnected | date: 'medium') : '-' }}
+                                </ng-template>
+
+                                <ng-template let-row #actionsColumnTemplate>
+                                    <div class="flex flex-row flex-1 justify-end items-center">
+                                        <button
+                                            mat-icon-button
+                                            id="viewDeviceBtn"
+                                            matTooltip="{{
+                                                'user-list.tooltipViewDevice' | translate
+                                            }}"
+                                            matTooltipPosition="below"
+                                            (click)="onViewDevice(row)"
+                                        >
+                                            <mat-icon svgIcon="info"></mat-icon>
+                                        </button>
+                                        <button
+                                            mat-icon-button
+                                            id="editDeviceBtn"
+                                            matTooltip="{{
+                                                'user-list.tooltipEditDevice' | translate
+                                            }}"
+                                            matTooltipPosition="below"
+                                            (click)="onEditDevice(row)"
+                                        >
+                                            <mat-icon svgIcon="edit"></mat-icon>
+                                        </button>
+                                        <button
+                                            mat-icon-button
+                                            id="deleteDeviceBtn"
+                                            matTooltip="{{
+                                                'user-list.tooltipDeleteDevice' | translate
+                                            }}"
+                                            matTooltipPosition="below"
+                                            (click)="onDeleteDevice(row)"
+                                        >
+                                            <mat-icon svgIcon="delete"></mat-icon>
+                                        </button>
+                                    </div>
+                                </ng-template>
+                            </app-ag-grid>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Adjacencies Section -->
+                <div class="board w-100 mt-25 position-relative tall-section flex flex-1 flex-col">
+                    <mat-progress-bar
+                        *ngIf="loadingDeviceServers"
+                        mode="query"
+                        class="absolute"
+                    ></mat-progress-bar>
+
+                    <div class="flex flex-row">
+                        <h3 class="flex-1">{{ "user-list.headerAdjacencies" | translate }}</h3>
+                        <button
+                            mat-icon-button
+                            id="addAdjacencyBtn"
+                            class="side-button mt-1"
+                            matTooltip="{{ 'user-list.tooltipAddAdjacency' | translate }}"
+                            matTooltipPosition="below"
+                            (click)="onAddDeviceServer()"
+                        >
+                            <mat-icon svgIcon="add"></mat-icon>
+                        </button>
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            id="syncAdjacenciesBtn"
+                            class="mx-2"
+                            [disabled]="loadingDeviceServers"
+                            (click)="onSyncDeviceServers()"
+                        >
+                            <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" *ngIf="loadingDeviceServers">
+                            </mat-progress-spinner>
+                            {{ 'user-list.buttonSyncAdjacencies' | translate }}
+                        </button>
+                    </div>
+
+                    <div class="flex-1">
+                        <app-ag-grid
+                            tableId="adjacenciesTbl"
+                            class="grid-height-adjusted-small"
+                            entityName="{{ 'user-list.adjacencyName' | translate }}"
+                            entityNamePlural="{{ 'user-list.adjacencyNamePlural' | translate }}"
+                            [allColumnDefs]="deviceServersCols"
+                            [rowData]="deviceServers"
+                        >
+                            <ng-template let-row #statusColumnTemplate>
+                                <div
+                                    class="user-status-unknown"
+                                    matTooltip="{{
+                                        'user-list.tooltipDeviceServerStatusUnknown' | translate
+                                    }}"
+                                    matTooltipPosition="after"
+                                ></div>
+                            </ng-template>
+
+                            <ng-template let-row #serverColumnTemplate>
+                                <div class="flex items-center gap-2">
+                                    {{ row["server"]["name"] }}
+                                    <button
+                                        class="mini-fab-flat"
+                                        [routerLink]="['/servers/' + row['server']['id']]"
+                                        matTooltip="{{
+                                            'user-list.tooltipJumpServConfig' | translate
+                                        }}"
+                                    >
+                                        <mat-icon
+                                            class="slant-icon t-primary"
+                                            svgIcon="back-arrow"
+                                        ></mat-icon>
+                                    </button>
+                                </div>
+                            </ng-template>
+
+                            <ng-template let-row #allowedIpsColumnTemplate>
+                                <div class="cell-scroll" appHorizontalWheel>
+                                    <ng-container *ngIf="row.allowedIps?.length; else noDeviceAllowedIps">
+                                        <span *ngFor="let ip of row.allowedIps; let last = last">
+                                            {{ ip }}<span *ngIf="!last">, </span>
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #noDeviceAllowedIps>-</ng-template>
+                                </div>
+                            </ng-template>
+
+                            <ng-template let-row #otherSideAllowedIpsColumnTemplate>
+                                <div class="cell-scroll" appHorizontalWheel>
+                                    <ng-container *ngIf="row.otherSideAllowedIps?.length; else noDeviceOtherSideIps">
+                                        <span *ngFor="let ip of row.otherSideAllowedIps; let last = last">
+                                            {{ ip }}<span *ngIf="!last">, </span>
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #noDeviceOtherSideIps>-</ng-template>
+                                </div>
+                            </ng-template>
+
+                            <ng-template let-row #actionsColumnTemplate>
+                                <div class="flex flex-row flex-1 justify-end items-center">
+                                    <button
+                                        mat-icon-button
+                                        id="editAdjacencyBtn"
+                                        matTooltip="{{
+                                            'user-list.tooltipEditAdjacency' | translate
+                                        }}"
+                                        matTooltipPosition="below"
+                                        (click)="onEditDeviceServer(row)"
+                                    >
+                                        <mat-icon svgIcon="edit"></mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        id="deleteAdjacencyBtn"
+                                        matTooltip="{{
+                                            'user-list.tooltipDeleteAdjacency' | translate
+                                        }}"
+                                        matTooltipPosition="below"
+                                        (click)="onDeleteDeviceServer(row)"
+                                    >
+                                        <mat-icon svgIcon="delete"></mat-icon>
+                                    </button>
+                                </div>
+                            </ng-template>
+                        </app-ag-grid>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <mat-tab label="{{ 'user-list.tabTemplates' | translate }}">
+                <div class="flex flex-row">
+                    <div class="board w-100 position-relative flex flex-col">
+                        <mat-progress-bar
+                            *ngIf="loadingDeviceTemplate"
+                            mode="query"
+                            class="absolute"
+                            id="loadingUserProgress"
+                        >
+                        </mat-progress-bar>
+
+                        <div class="flex flex-row">
+                            <h3 class="flex-1">
+                                {{ 'user-list.deviceTemplateName' | translate }}
+                            </h3>
+                            <button
+                                mat-icon-button
+                                id="addDeviceTemplateTabBtn"
+                                class="side-button"
+                                matTooltip="{{
+                                    'user-list.tooltipAddDeviceTemplate' | translate
+                                }}"
+                                matTooltipPosition="below"
+                                *ngIf="!loadingDeviceTemplate && !deviceTemplate"
+                                (click)="onAddDeviceTemplate()"
+                            >
+                                <mat-icon svgIcon="add"></mat-icon>
+                            </button>
+                            <button
+                                mat-icon-button
+                                id="editDeviceTemplateTabBtn"
+                                class="side-button"
+                                matTooltip="{{
+                                    'user-list.tooltipEditDeviceTemplate' | translate
+                                }}"
+                                matTooltipPosition="below"
+                                *ngIf="!loadingDeviceTemplate && deviceTemplate"
+                                (click)="onEditDeviceTemplate()"
+                            >
+                                <mat-icon svgIcon="edit"></mat-icon>
+                            </button>
+                            <button
+                                mat-icon-button
+                                id="deleteDeviceTemplateTabBtn"
+                                class="side-button"
+                                matTooltip="{{
+                                    'user-list.tooltipDeleteDeviceTemplate' | translate
+                                }}"
+                                matTooltipPosition="below"
+                                *ngIf="!loadingDeviceTemplate && deviceTemplate"
+                                (click)="onDeleteDeviceTemplate()"
+                            >
+                                <mat-icon svgIcon="delete"></mat-icon>
+                            </button>
+                        </div>
+                        <p *ngIf="!loadingDeviceTemplate && !deviceTemplate && error">
+                            <br />{{ "user-list.messageNoDeviceTemplate" | translate }}
+                        </p>
+
+                        <div
+                            class="flex flex-row flex-1"
+                            *ngIf="!loadingDeviceTemplate && deviceTemplate"
+                        >
+                            <table
+                                id="interfaceTbl"
+                                class="card-basic-table w-1/2"
+                            >
+                                <tr class="mat-row mat-mdc-row" id="nameRow">
+                                    <td class="mat-cell mat-mdc-cell name-cell">
+                                        {{ "shared.labelInterfaceName" | translate }}
+                                    </td>
+                                    <td class="mat-cell mat-mdc-cell property-cell">
+                                        {{ deviceTemplate.interfaceName }}
+                                    </td>
+                                </tr>
+                                <tr class="mat-row mat-mdc-row" id="addressRow">
+                                    <td class="mat-cell mat-mdc-cell name-cell">
+                                        {{
+                                            "shared.labelAddressRanges"
+                                                | translate
+                                        }}
+                                    </td>
+                                    <td class="mat-cell mat-mdc-cell property-cell">
+                                        <mat-chip-list *ngIf="userInterfaceAddressPools.length > 0">
+                                            <mat-chip
+                                                *ngFor="let addr of userInterfaceAddressPools"
+                                                class="m-1"
+                                                [matTooltip]="addr.tooltipText"
+                                                matTooltipPosition="above"
+                                                matDisableTooltipInteractivity="false"
+                                            >
+                                                {{ addr.name }}
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                        <span *ngIf="userInterfaceAddressPools.length === 0">
+                                            -
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="wi-15"></div>
+                            <div class="w-1/2">
+                                <table id="interfaceTbl2" class="card-basic-table">
+                                    <tr class="mat-row mat-mdc-row" id="listenPortRow">
+                                        <td class="mat-cell mat-mdc-cell name-cell">
+                                            {{
+                                                "shared.labelListenPort"
+                                                    | translate
+                                            }}
+                                        </td>
+                                        <td class="mat-cell mat-mdc-cell property-cell">
+                                            {{ deviceTemplate.listenPort || '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr class="mat-row mat-mdc-row" id="dnsRow">
+                                        <td class="mat-cell mat-mdc-cell name-cell">
+                                            {{ "user-list.cellDNS" | translate }}
+                                        </td>
+                                        <td class="mat-cell mat-mdc-cell property-cell">
+                                            {{ deviceTemplate.dns?.length ? deviceTemplate.dns : '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr class="mat-row mat-mdc-row" id="mtuRow">
+                                        <td class="mat-cell mat-mdc-cell name-cell">
+                                            {{
+                                                "user-list.cellMaximumTransmissionUnit"
+                                                    | translate
+                                            }}
+                                        </td>
+                                        <td class="mat-cell mat-mdc-cell property-cell">
+                                            {{ deviceTemplate.mtu || '-' }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adjacency Templates Section -->
+                <div class="board w-100 mt-25 position-relative tall-section flex flex-1 flex-col">
+                    <mat-progress-bar
+                        *ngIf="loadingUserAdjacencies"
+                        mode="query"
+                        class="absolute"
+                    ></mat-progress-bar>
+
+                    <div class="flex flex-row">
+                        <h3 class="flex-1">{{ "user-list.headerAdjacencyTemplates" | translate }}</h3>
+                        <button
+                            mat-icon-button
+                            id="addAdjacencyTemplateBtn"
+                            class="side-button mt-1"
+                            matTooltip="{{ 'user-list.tooltipAddAdjacencyTemplate' | translate }}"
+                            matTooltipPosition="below"
+                            *ngIf="!loadingDeviceTemplate"
+                            (click)="onAddServerClick()"
+                        >
+                            <mat-icon svgIcon="add"></mat-icon>
+                        </button>
+                    </div>
+
+                    <div class="flex-1">
+                        <app-ag-grid
+                            tableId="adjacencyTemplatesTbl"
+                            class="grid-height-adjusted-small"
+                            entityName="{{ 'user-list.adjacencyTemplateName' | translate }}"
+                            entityNamePlural="{{ 'user-list.adjacencyTemplateNamePlural' | translate }}"
+                            [allColumnDefs]="userServersCols"
+                            [rowData]="userAdjacencies"
+                        >
+                            <ng-template let-row #statusColumnTemplate>
+                                <div
+                                    class="user-status-unknown"
+                                    matTooltip="{{
+                                        'user-list.tooltipUserStatusUnknown' | translate
+                                    }}"
+                                    matTooltipPosition="after"
+                                ></div>
+                            </ng-template>
+
+                        <ng-template let-row #serverColumnTemplate>
+                            <div class="flex items-center gap-2">
+                                {{ row["server"]["name"] }}
+                                <button
+                                    class="mini-fab-flat"
+                                    [routerLink]="[
+                                        '/servers/' + row['server']['id']
+                                    ]"
+                                    matTooltip="{{
+                                        'user-list.tooltipJumpServConfig'
+                                            | translate
+                                    }}"
+                                >
+                                    <mat-icon
+                                        class="slant-icon t-primary"
+                                        svgIcon="back-arrow"
+                                    ></mat-icon>
+                                </button>
+                            </div>
+                        </ng-template>
+
+                            <ng-template let-row #allowedIpsColumnTemplate>
+                                <div class="cell-scroll" appHorizontalWheel>
+                                    <ng-container *ngIf="row.allowedIps?.length; else noTemplateAllowedIps">
+                                        <span *ngFor="let ip of row.allowedIps; let last = last">
+                                            {{ ip }}<span *ngIf="!last">, </span>
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #noTemplateAllowedIps>-</ng-template>
+                                </div>
+                            </ng-template>
+
+                            <ng-template let-row #usePresharedKeyColumnTemplate>
+                                <span>{{ row.usePresharedKey ? 'Yes' : 'No' }}</span>
+                            </ng-template>
+
+                            <ng-template let-row #actionsColumnTemplate>
+                                <div class="flex flex-row flex-1 justify-end items-center">
+                                    <button
+                                        mat-icon-button
+                                        id="editAdjacencyTemplateBtn"
+                                        matTooltip="{{
+                                            'user-list.tooltipEditAdjacencyTemplate' | translate
+                                        }}"
+                                        matTooltipPosition="below"
+                                        (click)="onEditAdjacencyClick(row)"
+                                    >
+                                        <mat-icon svgIcon="edit"></mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        id="deleteAdjacencyTemplateBtn"
+                                        matTooltip="{{
+                                            'user-list.tooltipDeleteAdjacencyTemplate' | translate
+                                        }}"
+                                        matTooltipPosition="below"
+                                        (click)="onDeleteUserAdjacencyClick(row)"
+                                    >
+                                        <mat-icon svgIcon="delete"></mat-icon>
+                                    </button>
+                                </div>
+                            </ng-template>
+                        </app-ag-grid>
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+        <div class="flex flex-col h-0">&nbsp;</div>
+    </div>
+
+
+</div>
+<div class="flex flex-col h-0">&nbsp;</div>

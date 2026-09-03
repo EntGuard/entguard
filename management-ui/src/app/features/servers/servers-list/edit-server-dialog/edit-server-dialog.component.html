@@ -1,0 +1,90 @@
+<div class="dialog-wrap" id="editServerDialogWrapper">
+    <h3 class="dialog-h">
+        {{ "edit-server-dialog.headerEditServer" | translate }}
+    </h3>
+    <form
+        class="flex flex-col"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="addServerForm"
+    >
+        <mat-form-field class="mb-2">
+            <mat-label>{{
+                "edit-server-dialog.labelServerName" | translate
+            }}</mat-label>
+            <input matInput formControlName="name" id="nameInput" />
+            <mat-error *ngIf="form.get('name').hasError('required')">{{
+                "edit-server-dialog.errorServerName" | translate
+            }}</mat-error>
+        </mat-form-field>
+        <mat-form-field class="mb-2">
+            <mat-label>{{
+                "shared.labelServerEndpoint" | translate
+            }}</mat-label>
+            <input matInput formControlName="endpoint" id="endpointInput" />
+            <mat-error *ngIf="form.get('endpoint').hasError('required')">{{
+                "shared.errorEndpointRequired" | translate
+            }}</mat-error>
+            <mat-error *ngIf="form.get('endpoint').hasError('pattern')">{{
+                "shared.errorEndpointFormat" | translate
+            }}</mat-error>
+        </mat-form-field>
+        <mat-form-field class="mb-2 w-full">
+          <mat-label>{{"shared.labelHealthcheckAddress" | translate }}</mat-label>
+          <input
+            matInput
+            formControlName="healthcheckAddress"
+            id="healthcheckAddressInput"
+            matTooltip="{{'shared.tooltipHealthcheckAddress' | translate}}"
+            matTooltipPosition="below"
+          />
+          <mat-error
+            *ngIf="form.get('healthcheckAddress').hasError('pattern')">
+            {{ "shared.errorEndpointFormat" | translate }}
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{
+                "edit-server-dialog.labelDescription" | translate
+            }}</mat-label>
+            <textarea
+                matInput
+                formControlName="description"
+                id="descriptionInput"
+                maxlength="250"
+            ></textarea>
+        </mat-form-field>
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+        <div class="flex justify-end items-center mt-2 gap-2">
+            <button
+                (click)="close()"
+                class="mr-2"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <button
+                mat-raised-button
+                [disabled]="form.invalid"
+                class="ml-2"
+                type="button"
+                color="primary"
+                id="editServerSubmitBtn"
+                (click)="saveServer()"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    id="creatingServerProgress"
+                    *ngIf="savingServer"
+                    class="inline-block mr-2"
+                ></mat-progress-spinner>
+                {{ "edit-server-dialog.buttonSave" | translate }}
+            </button>
+        </div>
+    </form>
+</div>

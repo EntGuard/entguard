@@ -1,0 +1,5 @@
+postgresdb:
+    dialect: postgres
+    datasource: dbname=entguard user=postgres password=postgres host=db sslmode=disable
+    dir: migrations/postgres
+    table: migrations

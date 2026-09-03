@@ -1,0 +1,115 @@
+<div class="flex flex-col flex-1 min-h-0 pt-4 space-y-6 negative-mb">
+    <!-- First board -->
+    <div class="board flex flex-col flex-1 min-h-0 sync-panel relative grid-min-size">
+        <mat-progress-bar *ngIf="loadingCaCertificates" mode="query" class="absolute"></mat-progress-bar>
+
+        <div class="flex items-center justify-between w-full">
+            <h3>{{ 'mfa-certificates.headerCACerts' | translate }}</h3>
+            <button *ngIf="!loadingCaCertificates"
+                mat-icon-button
+                id="addCaCertificate"
+                class="side-button"
+                matTooltip="{{ 'mfa-certificates.tooltipAddCACertConfig' | translate }}"
+                matTooltipPosition="below"
+                (click)="onAddMfaCertificateClick('CA')">
+                <mat-icon svgIcon="add"></mat-icon>
+            </button>
+        </div>
+
+        <p *ngIf="loadingCaCertificates">
+            {{ 'mfa-certificates.loadingListOfCerts' | translate }}
+        </p>
+
+        <div *ngIf="!loadingCaCertificates" class="flex-1 min-h-0">
+            <app-ag-grid
+                class="grid-height-adjusted"
+                tableId="caCertificatesList"
+                entityName="{{ 'mfa-certificates.paginationCACert' | translate }}"
+                entityNamePlural="{{ 'mfa-certificates.paginationCACertPlural' | translate }}"
+                [allColumnDefs]="caCertificatesCols"
+                [rowData]="mfaCertificatesCa"
+                #caCertificatesGrid>
+
+                <ng-template let-row #notBeforeColumnTemplate>
+                    {{ row.notBefore | date : 'medium' }}
+                </ng-template>
+
+                <ng-template let-row #notAfterColumnTemplate>
+                    {{ row.notAfter | date : 'medium' }}
+                </ng-template>
+
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex items-center justify-end">
+                        <button mat-icon-button
+                            id="removeMfaCerificateCa"
+                            class="side-button"
+                            matTooltip="{{ 'mfa-certificates.tooltipRemoveCertif' | translate }}"
+                            matTooltipPosition="below">
+                            <mat-icon svgIcon="delete"
+                                (click)="onRemoveMfaCertificateClick(row, 'CA')">
+                            </mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </app-ag-grid>
+        </div>
+    </div>
+
+    <!-- Second board -->
+    <div class="board flex flex-col flex-1 min-h-0 relative grid-min-size mb-0">
+        <mat-progress-bar *ngIf="loadingCrlCertificates" mode="query" class="absolute"></mat-progress-bar>
+
+        <div class="flex items-center justify-between w-full">
+            <h3>{{ 'mfa-certificates.headerCRLCertifs' | translate }}</h3>
+            <button *ngIf="!loadingCrlCertificates"
+                mat-icon-button
+                id="addCrlCertificate"
+                class="side-button"
+                matTooltip="{{ 'mfa-certificates.tooltipAddCRLCertif' | translate }}"
+                matTooltipPosition="below"
+                (click)="onAddMfaCertificateClick('CRL')">
+                <mat-icon svgIcon="add"></mat-icon>
+            </button>
+        </div>
+
+        <p *ngIf="loadingCrlCertificates">
+            {{ 'mfa-certificates.loadingListMfaCrlCertifs' | translate }}
+        </p>
+
+        <div *ngIf="!loadingCrlCertificates" class="flex-1 min-h-0">
+            <app-ag-grid
+                class="grid-height-adjusted"
+                tableId="crlCertificatesList"
+                entityName="{{ 'mfa-certificates.paginationCRLCertif' | translate }}"
+                entityNamePlural="{{ 'mfa-certificates.paginationCRLCertifPlural' | translate }}"
+                [allColumnDefs]="crlCertificatesCols"
+                [rowData]="mfaCertificatesCrl"
+                #crlCertificatesGrid>
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex items-center justify-end">
+                        <button mat-icon-button
+                            id="showCertificateCrlIssuer"
+                            class="side-button"
+                            matTooltip="{{ 'mfa-certificates.tooltipShowCertifIssuer' | translate }}"
+                            matTooltipPosition="below">
+                            <mat-icon svgIcon="search"
+                                (click)="onShowIssuerDialogClick(row)">
+                            </mat-icon>
+                        </button>
+                        <button mat-icon-button
+                            id="removeMfaCerificateCrl"
+                            class="side-button"
+                            matTooltip="{{ 'mfa-certificates.tooltipRemoveMfaCertif' | translate }}"
+                            matTooltipPosition="below">
+                            <mat-icon svgIcon="delete"
+                                (click)="onRemoveMfaCertificateClick(row, 'CRL')">
+                            </mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </app-ag-grid>
+        </div>
+    </div>
+
+    <div class="flex flex-col bottom-spacer" aria-hidden="true"></div>
+</div>

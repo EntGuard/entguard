@@ -1,0 +1,48 @@
+@use 'src/scss/variables' as *;
+
+:host {
+    header {
+        height: $headerHeight;
+        background-color: #fff;
+        z-index: 500;
+
+        .logo-link {
+            top: 5px;
+            left: 2px;
+            img {
+                width: 29px;
+                height: 29px;
+                margin-left: 7px;
+            }
+        }
+
+        .nav-wrap {
+            padding-left: 60px;
+            padding-right: 30px;
+
+            nav {
+                .active-link {
+                    color: $primary!important;
+                }
+
+                a:hover {
+                    color: $primary!important;
+                }
+            }
+
+            .logout-icon {
+                height: 20px;
+            }
+
+            .user-info {
+                color: #014E88;
+
+                span {
+                    font-size: 14px;
+                    padding: 0 20px 0 5px;
+                }
+
+            }
+        }
+    }
+}

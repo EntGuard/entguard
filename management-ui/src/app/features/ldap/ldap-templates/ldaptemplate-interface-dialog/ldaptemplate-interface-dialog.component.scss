@@ -1,0 +1,19 @@
+::ng-deep .mat-chip-list-wrapper {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+::ng-deep #addressesChipsFormField .mat-mdc-form-field-subscript-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+::ng-deep #addressesChipsFormField .mat-mdc-form-field-hint-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+:host ::ng-deep #addressesChipsFormField .mat-mdc-form-field-hint.custom-error-hint {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    margin-top: 0;
+}

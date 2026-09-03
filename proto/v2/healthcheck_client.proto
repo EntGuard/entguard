@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package proto.v2;
+
+option go_package = "github.com/entguard/entguard/proto/v2;pbapi";
+
+service HealthcheckClientService {
+  rpc HealthcheckPing(HealthcheckPingRequest) returns (HealthcheckPingResponse) {}
+}
+
+message HealthcheckPingRequest {
+  string session = 1;
+}
+
+message HealthcheckPingResponse {
+  enum Status {
+    STATUS_UNDEFINED_UNSPECIFIED = 0;
+    STATUS_VALID_SESSION = 1;
+    STATUS_INVALID_SESSION = 2;
+    STATUS_NOT_INITIALIZED_SESSIONS = 3;
+  }
+  Status status = 1;
+}

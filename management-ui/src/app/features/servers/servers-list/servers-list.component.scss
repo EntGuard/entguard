@@ -1,0 +1,28 @@
+h6::before {
+    content: ">> ";
+}
+
+div.server-status {
+    width: 20px;
+    height: 20px;
+    background: silver;
+    border-radius: 15px;
+}
+
+div.server-status-GREEN {
+    background: green;
+}
+
+div.server-status-RED {
+    background: red;
+}
+
+.side-button.mat-mdc-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-margin {
+    margin-top: 13.5px;
+}

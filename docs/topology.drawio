@@ -1,0 +1,213 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0" version="26.1.0">
+  <diagram name="Page-1" id="n9m_zuYCPmFUzJ2BcQvm">
+    <mxGraphModel dx="1434" dy="718" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="7Z-ReCRAlYigAser6zvg-1" value="&lt;div&gt;Server deployment&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82b366;strokeWidth=2;dashed=1;align=left;verticalAlign=top;spacingTop=-25;spacingLeft=4;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="950" width="220" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-2" value="Orchestrator deployment" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#6c8ebf;glass=0;shadow=0;strokeWidth=2;verticalAlign=top;align=left;spacingTop=-25;spacingLeft=4;fillStyle=auto;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="930" width="690" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-3" value="EG Health check service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="1140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-4" value="EG Client" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="1410" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-5" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#d5e8d4;strokeColor=#82b366;labelBackgroundColor=none;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-4" target="7Z-ReCRAlYigAser6zvg-25">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1050" y="1500" as="sourcePoint" />
+            <mxPoint x="1100" y="1450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-6" value="&lt;div&gt;WireGuard&lt;br&gt;&lt;/div&gt;&lt;div&gt;VPN traffic&lt;/div&gt;&lt;div&gt;Ports customized in&lt;/div&gt;&lt;div&gt;admin UI, can be&lt;/div&gt;&lt;div&gt;different for Server&lt;/div&gt;&lt;div&gt;and Client&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-5">
+          <mxGeometry x="-0.2356" y="-2" relative="1" as="geometry">
+            <mxPoint x="45" y="-33" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-7" value="" style="endArrow=classic;startArrow=none;html=1;rounded=0;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startFill=0;fillColor=#d5e8d4;strokeColor=#82b366;labelBackgroundColor=none;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-4" target="7Z-ReCRAlYigAser6zvg-3">
+          <mxGeometry x="0.3231" y="-47" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1050" y="1500" as="sourcePoint" />
+            <mxPoint x="1100" y="1450" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-8" value="&lt;div&gt;gRPC&lt;/div&gt;&lt;div&gt;Health check ping&lt;br&gt;&lt;/div&gt;&lt;div&gt;Port 8084&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-7">
+          <mxGeometry x="-0.4231" y="2" relative="1" as="geometry">
+            <mxPoint x="73" y="-27" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-9" value="" style="endArrow=classic;startArrow=none;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;startFill=0;fillColor=#dae8fc;strokeColor=#6c8ebf;labelBackgroundColor=none;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-25" target="7Z-ReCRAlYigAser6zvg-19">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="880" y="1420" as="sourcePoint" />
+            <mxPoint x="720" y="1410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-10" value="&lt;div&gt;gRPC&lt;/div&gt;&lt;div&gt;Request for configuration,&lt;/div&gt;&lt;div&gt;sending telemetry&lt;br&gt;&lt;/div&gt;&lt;div&gt;Port 8081&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-9">
+          <mxGeometry x="-0.3302" y="-3" relative="1" as="geometry">
+            <mxPoint x="-11" y="-27" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-11" value="" style="endArrow=classic;startArrow=none;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;startFill=0;fillColor=#dae8fc;strokeColor=#6c8ebf;labelBackgroundColor=none;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-3" target="7Z-ReCRAlYigAser6zvg-19">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="990" y="1470" as="sourcePoint" />
+            <mxPoint x="920" y="1400" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1380" y="1170" />
+              <mxPoint x="1380" y="890" />
+              <mxPoint x="880" y="890" />
+              <mxPoint x="880" y="1155" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-12" value="&lt;div&gt;gRPC&lt;/div&gt;&lt;div&gt;Request for configuration&lt;/div&gt;&lt;div&gt;Port 8083&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-11">
+          <mxGeometry x="-0.1561" y="-2" relative="1" as="geometry">
+            <mxPoint x="-68" y="-21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-13" value="" style="endArrow=classic;startArrow=none;html=1;rounded=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;startFill=0;fillColor=#dae8fc;strokeColor=#6c8ebf;labelBackgroundColor=none;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-4" target="7Z-ReCRAlYigAser6zvg-19">
+          <mxGeometry x="-0.2727" y="-30" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="990" y="1470" as="sourcePoint" />
+            <mxPoint x="810" y="1390" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="880" y="1440" />
+              <mxPoint x="880" y="1185" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-14" value="&lt;div&gt;gRPC&lt;/div&gt;&lt;div&gt;Request for configuration&lt;br&gt;&lt;/div&gt;&lt;div&gt;Port 8082&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-13">
+          <mxGeometry x="-0.5107" y="-2" relative="1" as="geometry">
+            <mxPoint x="-2" y="-21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-15" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1290" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-16" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;spacingBottom=0;spacing=2;spacingRight=0;" edge="1" parent="1" target="7Z-ReCRAlYigAser6zvg-19">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="1320" as="sourcePoint" />
+            <mxPoint x="420" y="1490" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="730" y="1320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-17" value="&lt;div&gt;REST&lt;/div&gt;&lt;div&gt;Admin UI&lt;/div&gt;&lt;div&gt;Port 8080&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-16">
+          <mxGeometry x="-0.32" y="-1" relative="1" as="geometry">
+            <mxPoint x="-2" y="-24" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-18" value="End user" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="1480" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-19" value="EG Orchestrator" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-20" value="Grafana" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="190" y="1140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-21" value="&lt;div&gt;Telegraf&lt;br&gt;(reads data from unix socket, exposes it to Prometheus)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="670" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-22" value="Postgres" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1140" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-23" value="&lt;div&gt;DB migrate&lt;/div&gt;(applies DB migrations to Postgres, then stops running)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1020" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-24" value="Prometheus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="190" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-25" value="EG Server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="1140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-26" value="&lt;div&gt;Telegraf&lt;/div&gt;&lt;div&gt;(collects telemetry data from host machine, writes it to unix socket)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="970" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-27" value="" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fillColor=#d5e8d4;strokeColor=#82b366;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-25" target="7Z-ReCRAlYigAser6zvg-26">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1120" y="1100" as="sourcePoint" />
+            <mxPoint x="970" y="1170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-28" value="&lt;div&gt;Docker volume&lt;/div&gt;&lt;div&gt;containing unix socket&lt;/div&gt;&lt;div&gt;Passing telemetry data&lt;/div&gt;&lt;div&gt;from Telegraf to Server&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-27">
+          <mxGeometry x="-0.1059" y="2" relative="1" as="geometry">
+            <mxPoint x="62" y="-11" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-29" value="" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-19" target="7Z-ReCRAlYigAser6zvg-21">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="970" y="1040" as="sourcePoint" />
+            <mxPoint x="1020" y="990" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-30" value="&lt;div&gt;Docker volume&lt;/div&gt;&lt;div&gt;containing unix socket&lt;/div&gt;&lt;div&gt;Passing telemetry data&lt;/div&gt;&lt;div&gt;from Orchestrator&lt;/div&gt;&lt;div&gt;to Telegraf&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-29">
+          <mxGeometry x="-0.02" y="-4" relative="1" as="geometry">
+            <mxPoint x="56" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-31" value="" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-22" target="7Z-ReCRAlYigAser6zvg-19">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="820" y="920" as="sourcePoint" />
+            <mxPoint x="870" y="870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-32" value="&lt;div&gt;TCP&lt;/div&gt;&lt;div&gt;Storing and retrieving data&lt;br&gt;&lt;/div&gt;&lt;div&gt;Port 5432&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-31">
+          <mxGeometry x="-0.2821" y="-1" relative="1" as="geometry">
+            <mxPoint x="24" y="-24" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-33" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" target="7Z-ReCRAlYigAser6zvg-20">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="470" y="1320" as="sourcePoint" />
+            <mxPoint x="870" y="870" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="250" y="1320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-34" value="&lt;div&gt;Telemetry dashboard&lt;br&gt;&lt;/div&gt;&lt;div&gt;Port 3000&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-33">
+          <mxGeometry x="-0.3167" y="1" relative="1" as="geometry">
+            <mxPoint x="14" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-35" value="" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-20" target="7Z-ReCRAlYigAser6zvg-24">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="810" y="950" as="sourcePoint" />
+            <mxPoint x="860" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-36" value="Port 9090" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-35">
+          <mxGeometry x="0.3" relative="1" as="geometry">
+            <mxPoint x="26" y="15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-37" value="" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-24" target="7Z-ReCRAlYigAser6zvg-21">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="810" y="920" as="sourcePoint" />
+            <mxPoint x="610" y="980" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-38" value="Port 9273" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-37">
+          <mxGeometry x="0.2056" y="-1" relative="1" as="geometry">
+            <mxPoint x="-44" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-39" value="" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="7Z-ReCRAlYigAser6zvg-22" target="7Z-ReCRAlYigAser6zvg-23">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="840" y="950" as="sourcePoint" />
+            <mxPoint x="890" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7Z-ReCRAlYigAser6zvg-40" value="Port 5432" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="7Z-ReCRAlYigAser6zvg-39">
+          <mxGeometry x="-0.1333" y="-1" relative="1" as="geometry">
+            <mxPoint x="25" y="-4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

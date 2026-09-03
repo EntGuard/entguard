@@ -1,0 +1,92 @@
+name: eg-test-fuzz-rest
+
+services:
+  migrate:
+    container_name: eg-db-migrate-test
+    build:
+      context: ../..
+      target: migrate
+      dockerfile: ./docker/dbmigrate.Dockerfile
+    entrypoint: "sql-migrate"
+    command: "up -config=/db/dbconfig.yaml -env='integration'"
+    links:
+      - testdb
+    depends_on:
+      testdb:
+        condition: service_healthy
+  testdb:
+    container_name: eg-postgres-test
+    image: postgres:16.13-alpine
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      "LANG":                 "en_US.utf8"
+      "POSTGRES_INITDB_ARGS": "--locale-provider=icu --icu-locale=en-US"
+      "POSTGRES_DB":          "entguard_test"
+      "POSTGRES_USER":        "entguard_test"
+      "POSTGRES_PASSWORD":    "test"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U entguard_test" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+  testweb:
+    container_name: eg-orchestrator-test-fuzz-rest
+    image: eg-orchestrator:1.14.1
+    restart: unless-stopped
+    ports:
+      - "8180:8080"
+      - "8181:8081"
+      - "8182:8082"
+    depends_on:
+      testdb:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+        "VPN_ORCHESTRATOR_REST_PORT":                  "8080"
+        "VPN_ORCHESTRATOR_RPC_PORT_VPN_S":             "8081"
+        "VPN_ORCHESTRATOR_RPC_PORT_VPN_C":             "8082"
+        "VPN_ORCHESTRATOR_RPC_CERT_FILE":              "/etc/entguard/ssl/grpc-server-cert.pem"
+        "VPN_ORCHESTRATOR_RPC_KEY_FILE":               "/etc/entguard/ssl/grpc-server-key.pem"
+        "VPN_ORCHESTRATOR_ENCRYPTION_KEY_FILE":        "/etc/entguard/db-encryption-key/db-encryption-key.key"
+        "VPN_ORCHESTRATOR_RPC_RL_SIZE":                "500"
+        "VPN_ORCHESTRATOR_RPC_RL_RATE":                "10"
+        "VPN_ORCHESTRATOR_REST_RL_SIZE":               "500"
+        "VPN_ORCHESTRATOR_REST_RL_RATE":               "10"
+        "VPN_ORCHESTRATOR_RPC_REINIT_CERT_PROVIDER":   "false"
+        "VPN_ORCHESTRATOR_PWD_MIN_LEN":                "15"
+        "VPN_ORCHESTRATOR_PWD_LOWER":                  "false"
+        "VPN_ORCHESTRATOR_PWD_UPPER":                  "false"
+        "VPN_ORCHESTRATOR_PWD_DIGIT":                  "false"
+        "VPN_ORCHESTRATOR_PWD_SYMBOL":                 "false"
+        "VPN_ORCHESTRATOR_LOG_LEVEL":                  "info"
+        "VPN_ORCHESTRATOR_2FA_TOTP":                   "true"
+        "VPN_ORCHESTRATOR_2FA_CERTIFICATE":            "true"
+        "VPN_ORCHESTRATOR_AUTH_TOKEN_EXPIRATION":      "30m"
+        "VPN_ORCHESTRATOR_SESSION_EXPIRATION":         "168h"
+        "VPN_ORCHESTRATOR_SESSION_EXP_CHECK_INTERVAL": "1h"
+        # ----------------------------------------------------------
+        # Postgres configuration.
+        "PGHOST":     "testdb"
+        "PGPORT":     "5432"
+        "PGDATABASE": "entguard_test"
+        "PGUSER":     "entguard_test"
+        "PGPASSWORD": "test"
+        # ----------------------------------------------------------
+        # Uncomment following variables to have more logs from gRPC.
+        # "GRPC_TRACE":                  "all"
+        # "GRPC_VERBOSITY":              "DEBUG"
+        # "GRPC_GO_LOG_VERBOSITY_LEVEL": "99"
+        # "GRPC_GO_LOG_SEVERITY_LEVEL":  "info"
+    volumes:
+      - type: bind
+        source: "./dev-certs/grpc-server-cert.pem"
+        target: "/etc/entguard/ssl/grpc-server-cert.pem"
+      - type: bind
+        source: "./dev-certs/grpc-server-key.pem"
+        target: "/etc/entguard/ssl/grpc-server-key.pem"
+      - type: bind
+        source: "./db-encryption-key/db-encryption-key.key"
+        target: "/etc/entguard/db-encryption-key/db-encryption-key.key"

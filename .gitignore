@@ -1,0 +1,16 @@
+dev-certs
+tls-auth.json
+config.json
+vpp.config
+vpp-day0.config
+*.pdf
+*.zip
+.idea
+/provisioning/docker/info.json
+__debug_*
+.vscode
+.angular
+
+govulncheck-results.txt
+osv-results.txt
+trivy-results.txt

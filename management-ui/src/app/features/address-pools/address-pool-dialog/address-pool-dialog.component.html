@@ -1,0 +1,91 @@
+<div class="dialog-wrap">
+    <h3 class="dialog-h t-primary">
+        {{ "address-pool-dialog.header" | translate }}
+    </h3>
+
+    <form
+        class="position-relative user-form flex flex-col w-full"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="editAddressPoolForm"
+    >
+        <mat-form-field class="mb-2">
+            <mat-label>{{ "address-pool-dialog.labelName" | translate }}</mat-label>
+            <input matInput formControlName="name" id="nameInput" />
+            <mat-error *ngIf="form.get('name').hasError('required')">{{
+                "address-pool-dialog.errorName" | translate
+            }}</mat-error>
+        </mat-form-field>
+
+        <div class="flex flex-row gap-4 mb-2 mb-4">
+            <mat-form-field style="flex: 2">
+                <mat-label>{{ "address-pool-dialog.labelAddressStart" | translate }}</mat-label>
+                <input matInput formControlName="addressStart" id="addressStartInput" />
+                <mat-error *ngIf="form.get('addressStart').hasError('required')">{{
+                    "address-pool-dialog.errorAddressStart" | translate
+                }}</mat-error>
+                <mat-error *ngIf="form.get('addressStart').hasError('ipAddress')">{{
+                    "shared.errorAddressFormatSimple" | translate
+                }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field style="flex: 2">
+                <mat-label>{{ "address-pool-dialog.labelAddressEnd" | translate }}</mat-label>
+                <input matInput formControlName="addressEnd" id="addressEndInput" />
+                <mat-error *ngIf="form.get('addressEnd').hasError('required')">{{
+                    "address-pool-dialog.errorAddressEnd" | translate
+                }}</mat-error>
+                <mat-error *ngIf="form.get('addressEnd').hasError('ipAddress')">{{
+                    "shared.errorAddressFormatSimple" | translate
+                }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="flex-1">
+                <mat-label>{{ "address-pool-dialog.labelNetmask" | translate }}</mat-label>
+                <input matInput formControlName="netmask" id="netmaskInput" />
+                <mat-error *ngIf="form.get('netmask').hasError('required')">{{
+                    "address-pool-dialog.errorNetmask" | translate
+                }}</mat-error>
+                <mat-error *ngIf="form.get('netmask').hasError('pattern')">{{
+                    "address-pool-dialog.errorNetmaskFormat" | translate
+                }}</mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-form-field class="mt-4 mb-2 w-full">
+            <mat-label>{{ "address-pool-dialog.labelDescription" | translate }}</mat-label>
+            <textarea matInput formControlName="description" id="descriptionInput"></textarea>
+        </mat-form-field>
+
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+
+        <div class="flex flex-row justify-end items-center action-buttons mt-2 gap-2">
+            <button
+                (click)="close()"
+                class="mr-2"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <button
+                mat-raised-button
+                [disabled]="form.invalid"
+                type="button"
+                color="primary"
+                (click)="submit()"
+                id="submitAddressPoolBtn"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+        </div>
+    </form>
+</div>

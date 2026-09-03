@@ -1,0 +1,152 @@
+<div class="dialog-wrap" id="addLdapTemplateDialogWrapper">
+    <mat-horizontal-stepper class="horizontal-stepper w-full" linear #stepper id="TemplateStepperWrapper">
+        <ng-template matStepperIcon="edit">
+            <mat-icon class="icon-done" svgIcon="edit"></mat-icon>
+        </ng-template>
+
+        <mat-step label="Add Template" [editable]="true">
+            <div class="arrows">
+                <span></span>
+                <span></span>
+            </div>
+            <form [formGroup]="formTemplate" novalidate autocomplete="off" class="flex flex-col" id="editTemplateForm">
+                <mat-form-field class="mb-2 w-full">
+                    <mat-label>{{ 'ldaptemplate-dialog.labelName' | translate }}</mat-label>
+                    <input matInput formControlName="name" id="nameInput" />
+                    <mat-error *ngIf="formTemplate.get('name').hasError('required')">
+                        {{ 'ldaptemplate-dialog.errorName' | translate }}
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field class="mb-2 w-full">
+                    <mat-label>{{ 'ldaptemplate-dialog.labelFilter' | translate }}</mat-label>
+                    <input matInput formControlName="filter" id="filterInput" />
+                </mat-form-field>
+
+                <p>
+                    <mat-checkbox formControlName="isAdmin" id="isAdminCheckbox">
+                        {{ 'ldaptemplate-dialog.checkboxAdmin' | translate }}
+                    </mat-checkbox>
+                </p>
+
+                <mat-form-field *ngIf="mfaTypes" class="mb-2 w-full">
+                    <mat-label>{{ 'ldaptemplate-dialog.labelMfaType' | translate }}</mat-label>
+                    <mat-select *ngIf="!loading" matInput formControlName="mfa_type" id="mfaTypeInput">
+                        <mat-option></mat-option>
+                        <mat-option *ngFor="let type of mfaTypes" [value]="type">{{ type }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <p *ngIf="!mfaTypes && !mfaTypesError">{{ 'ldaptemplate-dialog.loadingOptions' | translate }}</p>
+                <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+                <p class="error" *ngIf="mfaTypesError" id="mfaTypeserrorMsg">{{ mfaTypesError }}</p>
+
+                <div dir="rtl" class="flex items-center justify-end gap-2">
+                    <button mat-raised-button [disabled]="formTemplate.invalid" matStepperNext type="button">Next</button>
+                    <button (click)="close()" class="mr-2" mat-raised-button type="button" id="cancelBtn">
+                        {{ 'shared.buttonCancel' | translate }}
+                    </button>
+                    <div class="flex-1"></div>
+                </div>
+            </form>
+        </mat-step>
+
+        <mat-step label="{{ 'ldaptemplate-dialog.labelConfigureInterface' | translate }}" editable="true" class="">
+            <div class="arrows">
+                <span></span>
+                <span></span>
+            </div>
+            <form [formGroup]="formInterface" novalidate autocomplete="off" class="flex flex-col"
+                id="editInterfaceForm">
+                <mat-form-field class="mb-2 w-full">
+                    <mat-label>{{ 'shared.labelInterfaceName' | translate }}</mat-label>
+                    <input matInput formControlName="name" id="nameInput" />
+                    <mat-error *ngIf="formInterface.get('name').hasError('required')">
+                        {{ 'shared.errorNameRequired' | translate }}
+                    </mat-error>
+                </mat-form-field>
+
+                <div class="mb-2 w-full" id="addressesSelectWrapper">
+                    <app-address-pool-multi-select [loading]="loadingAddressPools" [pools]="addressPools"
+                        [control]="addressesControl"></app-address-pool-multi-select>
+                </div>
+
+                <div class="flex w-full flex-nowrap items-center gap-2">
+                    <mat-form-field class="mb-2 flex-1">
+                        <mat-label>{{ 'user-config-dialog.labelListenPortOptional' | translate }}</mat-label>
+                        <input matInput formControlName="listenPort" id="listenPortInput"
+                            matTooltip="{{ 'user-config-dialog.tooltipListenPort' | translate }}" />
+                        <mat-error *ngIf="formInterface.get('listenPort').hasError('pattern')">
+                            {{ 'shared.errorListenPortFormat' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="mb-2 flex-1">
+                        <mat-label>{{ 'shared.labelMaximumTransmissionUnit' | translate }}</mat-label>
+                        <input matInput formControlName="mtu" id="mtuInput"
+                            matTooltip="{{ 'shared.tooltipMaximumTransmissionUnit' | translate }}" />
+                        <mat-error
+                            *ngIf="formInterface.get('mtu').hasError('pattern') || formInterface.get('mtu').hasError('min') || formInterface.get('mtu').hasError('max')">
+                            {{ 'shared.errorMtu' | translate }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+
+                <mat-form-field class="mb-2 w-full" id="dnsChipsFormField">
+                    <mat-label>{{ 'user-config-dialog.labelDns' | translate }}</mat-label>
+                    <mat-chip-grid #dnsList>
+                        <mat-chip-row *ngFor="let add of iface.dns" [removable]="true" (removed)="onDNSRemove(add)">
+                            {{ add }}
+                            <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                        </mat-chip-row>
+                        <input placeholder="{{ 'user-config-dialog.placeholderNewDns' | translate }}" #dnsInput
+                            [formControl]="dnsFormControl" [matChipInputFor]="dnsList"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (blur)="onDnsBlur()"
+                            (matChipInputTokenEnd)="onDnsAdd($event)" />
+                    </mat-chip-grid>
+                </mat-form-field>
+
+                <p class="error" *ngIf="error">{{ error }}</p>
+                <div dir="rtl" class="flex items-center justify-end gap-2">
+                    <button mat-raised-button [disabled]="formTemplate.invalid || formInterface.invalid"
+                        type="button" color="primary" (click)="onSubmitTemplate()" id="createTemplateSubmitBtn">
+                        <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" *ngIf="savingProgress">
+                        </mat-progress-spinner>
+                        {{ 'ldaptemplate-dialog.buttonCreateTemplate' | translate }}
+                    </button>
+
+                    <button class="mr-2" mat-raised-button matStepperPrevious type="button">Back</button>
+
+                    <button (click)="close()" class="mr-4" mat-raised-button type="button" id="cancelBtn">
+                        {{ 'shared.buttonCancel' | translate }}
+                    </button>
+
+                    <div class="flex-1"></div>
+                </div>
+            </form>
+        </mat-step>
+
+        <mat-step label="{{ 'ldaptemplate-dialog.labelDone' | translate }}">
+            <div class="arrows">
+                <span></span>
+                <span></span>
+            </div>
+            <p *ngIf="templateCreated" id="okMessage">
+                {{ 'ldaptemplate-dialog.messageTemplateCreatedConfigured' | translate }}
+            </p>
+            <p class="error" *ngIf="error" id="errorMsg">
+                {{ 'ldaptemplate-dialog.error' | translate }}
+            </p>
+            <div class="flex items-center gap-2">
+                <div class="flex-1"></div>
+                <button class="order-last mr-2" *ngIf="!templateCreated" mat-raised-button
+                    matStepperPrevious>Back</button>
+                <button *ngIf="templateCreated" mat-raised-button class="mr-2" (click)="onConfigureTemplate()"
+                    id="configureBtn">
+                    {{ 'ldaptemplate-dialog.buttonConfigDetails' | translate }}
+                </button>
+                <button mat-raised-button color="primary" (click)="close()" id="closeBtn">
+                    {{ 'ldaptemplate-dialog.buttonClose' | translate }}
+                </button>
+            </div>
+        </mat-step>
+    </mat-horizontal-stepper>
+</div>

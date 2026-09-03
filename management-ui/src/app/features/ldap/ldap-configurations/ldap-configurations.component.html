@@ -1,0 +1,52 @@
+<div class="flex flex-col flex-1 min-h-0 negative-mb">
+    <div class="board flex flex-col flex-1 min-h-0 relative grid-min-size" id="config-board">
+        <mat-progress-bar *ngIf="loadingConfigs || loadingTemplates" mode="query" class="absolute"></mat-progress-bar>
+
+        <div class="flex items-center justify-between w-full">
+            <h3>{{ 'ldapconfigs-list.headerLdapConfigs' | translate }}</h3>
+            <button *ngIf="!loadingConfigs && !loadingTemplates"
+                mat-icon-button
+                class="side-button"
+                matTooltip="{{ 'ldapconfigs-list.tooltipAddLdapConfig' | translate }}"
+                matTooltipPosition="below"
+                (click)="onAddConfigurationClick()">
+                <mat-icon svgIcon="add"></mat-icon>
+            </button>
+        </div>
+
+        <p *ngIf="loadingConfigs">
+            {{ 'ldapconfigs-list.paragraphLoadListOfConfigs' | translate }}
+        </p>
+
+        <div *ngIf="!loadingConfigs && !loadingTemplates" class="flex-1 min-h-0">
+            <mat-error class="err" *ngIf="error">{{
+                "ldapconfigs-list.errorConfigs" | translate
+            }}</mat-error>
+            <app-ag-grid tableId="configurationsList"
+                class="grid-height-adjusted"
+                entityName="{{ 'ldapconfigs-list.paginationConfig' | translate }}"
+                entityNamePlural="{{ 'ldapconfigs-list.paginationConfigPlural' | translate }}"
+                [allColumnDefs]="configCols" [rowData]="configs">
+
+                <ng-template let-row #actionsColumnTemplate>
+                    <div class="flex items-center justify-end">
+                        <button mat-icon-button id="editConfig"
+                            class="side-button"
+                            matTooltip="{{ 'ldapconfigs-list.tooltipEditConfig' | translate }}"
+                            matTooltipPosition="below" (click)="onEditConfigurationClick(row)">
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </button>
+                        <button mat-icon-button id="deleteConfig"
+                            class="side-button"
+                            matTooltip="{{ 'ldapconfigs-list.tooltipDelConfig' | translate }}"
+                            matTooltipPosition="below" (click)="onDeleteConfigClick(row)">
+                            <mat-icon svgIcon="delete"></mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+
+            </app-ag-grid>
+        </div>
+    </div>
+    <div class="flex flex-col">&nbsp;</div>
+</div>

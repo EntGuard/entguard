@@ -1,0 +1,184 @@
+:host {
+    display: block;
+    width: 100%;
+
+    ::ng-deep .mat-mdc-select-trigger {
+        min-height: auto;
+        padding: 4px 0;
+    }
+
+    ::ng-deep .mat-mdc-form-field-infix {
+        min-height: auto;
+    }
+}
+
+.trigger-chips-container {
+    width: 100%;
+    min-height: 24px;
+}
+
+.chips-scroll-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 76px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 2px 2px 0;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+}
+
+.address-pool-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    background: #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    line-height: 1.3;
+    max-width: 100%;
+    cursor: default;
+    height: 32px;
+    box-sizing: border-box;
+
+    .chip-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
+    }
+
+    .chip-remove-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 2px;
+        opacity: 0.7;
+        transition: opacity 0.15s ease;
+        flex-shrink: 0;
+
+        &:hover:not(:disabled) {
+            opacity: 1;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        mat-icon {
+            width: 1rem;
+            height: 1rem;
+            font-size: 1rem;
+        }
+    }
+}
+
+.address-pool-multi-select-field {
+    width: 100%;
+}
+
+.trigger-text {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+}
+
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0 16px;
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    background: var(--mat-select-panel-background-color, #fff);
+    z-index: 10;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        background: var(--mat-select-panel-background-color, #fff);
+    }
+}
+
+.select-all-checkbox {
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    padding: 0.25rem 0;
+    min-width: 0;
+}
+
+.clear-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.search-hint {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.option-name {
+    font-weight: 600;
+}
+
+.option-range {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.loading-option {
+    display: flex;
+    justify-content: center;
+}
+
+.address-pool-multi-select-panel {
+    max-height: 320px !important;
+}
+
+.hidden-option {
+    display: none !important;
+}

@@ -1,0 +1,19 @@
+#autoGenDiv {
+    height: 20px;
+    margin-top: 8px;
+}
+
+::ng-deep #addressesChipsFormfield .mat-mdc-form-field-subscript-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+::ng-deep #addressesChipsFormfield .mat-mdc-form-field-hint-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+:host ::ng-deep #addressesChipsFormfield .mat-mdc-form-field-hint.custom-error-hint {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    margin-top: 0;
+}

@@ -1,0 +1,13 @@
+apiVersion: 1
+deleteDatasources:
+  - name: EG-Prometheus
+    orgId: 1
+datasources:
+  - name: EG-Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    uid: prom_uid
+    url: http://eg-prometheus:9090
+    version: 1
+    editable: true

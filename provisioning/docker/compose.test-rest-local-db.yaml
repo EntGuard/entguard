@@ -1,0 +1,31 @@
+services:
+  migrate:
+    container_name: eg-db-migrate-test
+    build:
+      context: ../..
+      target: migrate
+      dockerfile: ./docker/dbmigrate.Dockerfile
+    entrypoint: "sql-migrate"
+    command: "up -config=/db/dbconfig.yaml -env='integration'"
+    links:
+      - testdb
+    depends_on:
+      testdb:
+        condition: service_healthy
+  testdb:
+    container_name: eg-postgres-test
+    image: postgres:16.13-alpine
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      "LANG":                 "en_US.utf8"
+      "POSTGRES_INITDB_ARGS": "--locale-provider=icu --icu-locale=en-US"
+      "POSTGRES_DB":          "entguard_test"
+      "POSTGRES_USER":        "entguard_test"
+      "POSTGRES_PASSWORD":    "test"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U entguard_test" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5

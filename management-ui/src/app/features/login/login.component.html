@@ -1,0 +1,39 @@
+<div class="login-container">
+    <div class="login-board small-shadow">
+        <div class="login-top d-flex justify-content-center align-items-center">
+            <img src="../../../assets/img/entguard.png"
+                alt="{{ 'title.imageAltLogo' | translate }}" id="logoImg">
+
+            <span id="appName">{{ "title.entguard" | translate }}</span>
+        </div>
+        <div class="login-form-wrap">
+            <form class="login-form" (ngSubmit)="submitForm()" [formGroup]="form" novalidate autocomplete="off" id="loginForm">
+                <mat-form-field class="w-100 mb-3 no-required-star">
+                    <mat-label>{{ "login.username" | translate }}</mat-label>
+                    <input matInput type="text" formControlName="username" id="usernameInput">
+                    <mat-error *ngIf="form.get('username').hasError('required')">{{ "login.errorRequired" | translate }}</mat-error>
+                </mat-form-field>
+                <br>
+                <mat-form-field class="w-100 mb-3 no-required-star">
+                    <mat-label>{{ "login.password" | translate }}</mat-label>
+                    <input matInput type="password" formControlName="password" id="passwordInput" autocomplete="off">
+                    <mat-error *ngIf="form.get('password').hasError('required')">{{ "login.errorRequired" | translate }}</mat-error>
+                </mat-form-field>
+                <p class="error" *ngIf="error" id="loginErrorMsg">{{ error }}<br></p>
+                <div class="d-flex justify-content-center mb-3">
+                    <button mat-raised-button type="submit" color="primary" id="loginBtn" [disabled]="form.invalid">
+                        <span class="d-flex align-items-center">
+                            <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" id="loginProgress" *ngIf="loading"></mat-progress-spinner>
+                            {{ "login.buttonLogIn" | translate }}
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="version-info">
+        <p>© PANTHEON.tech s.r.o. <br>
+            EntGuard<sup>®</sup> <span> v{{appVersion}}</span>
+        </p>
+    </div>
+</div>

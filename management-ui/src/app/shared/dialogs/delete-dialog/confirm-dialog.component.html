@@ -1,0 +1,32 @@
+<div class="p-6 max-w-xl dialog-wrap" mat-dialog-content>
+    {{ confirmMsg }}
+    <p class="warning-text" *ngIf="warningMsg">{{ warningMsg }}</p>
+    <p class="error" *ngIf="error">{{ "confirm-dialog.errorMessage" | translate }}</p>
+</div>
+<div mat-dialog-actions class="flex" dir="rtl">
+    <button
+        id="confirmation_yes_button"
+        mat-raised-button
+        color="primary"
+        (click)="submit()"
+    >
+        <span class="d-flex align-items-center" dir="ltr">
+            <mat-progress-spinner
+                color="white"
+                mode="indeterminate"
+                [diameter]="15"
+                *ngIf="savingProgress"
+            ></mat-progress-spinner>
+            {{ "shared.buttonOk" | translate }}
+        </span>
+    </button>
+    <button
+        id="confirmation_close_button"
+        class="me-2"
+        mat-flat-button
+        mat-dialog-close
+    >
+        {{ "shared.buttonCancel" | translate }}
+    </button>
+    <span class="flex-1"></span>
+</div>

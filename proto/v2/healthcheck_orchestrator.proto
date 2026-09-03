@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package proto.v2;
+
+import "proto/v2/common.proto";
+
+option go_package = "github.com/entguard/entguard/proto/v2;pbapi";
+
+service HealthcheckOrchestratorService {
+  rpc GetAllSessions(GetAllSessionsRequest) returns (GetAllSessionsResponse) {}
+  rpc SubscribeForSessionsUpdates(stream SubscribeForSessionsUpdatesRequest) returns (stream SubscribeForSessionsUpdatesResponse) {}
+}
+
+message GetAllSessionsResponse {
+  repeated string sessions = 1;
+}
+
+message SubscribeForSessionsUpdatesRequest {
+  oneof data {
+    Subscribe subscribe = 1;
+    RPCStatus response = 2;
+  }
+}
+
+message SubscribeForSessionsUpdatesResponse {
+  enum Operation {
+    OPERATION_UNDEFINED_UNSPECIFIED = 0;
+    OPERATION_ADD_SESSION = 1;
+    OPERATION_DELETE_SESSION = 2;
+  }
+  Operation operation = 1;
+  string session = 2;
+}
+
+message GetAllSessionsRequest {}

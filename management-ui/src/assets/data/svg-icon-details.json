@@ -1,0 +1,370 @@
+[
+    {
+        "iconName": "done",
+        "svgFilePath": "assets/icons/ic_done_24px.svg"
+    },
+    {
+        "iconName": "server",
+        "svgFilePath": "assets/icons/server.svg"
+    },
+    {
+        "iconName": "cogs",
+        "svgFilePath": "assets/icons/cogs.svg"
+    },
+    {
+        "iconName": "content_copy",
+        "svgFilePath": "assets/icons/content_copy.svg"
+    },
+    {
+        "iconName": "sign-out",
+        "svgFilePath": "assets/icons/sign-out.svg"
+    },
+    {
+        "iconName": "up",
+        "svgFilePath": "assets/icons/arrow-up.svg"
+    },
+    {
+        "iconName": "down",
+        "svgFilePath": "assets/icons/arrow-down.svg"
+    },
+    {
+        "iconName": "list",
+        "svgFilePath": "assets/icons/ic_list_48px.svg"
+    },
+    {
+        "iconName": "list-add",
+        "svgFilePath": "assets/icons/ic_playlist_add_48px.svg"
+    },
+    {
+        "iconName": "list-check",
+        "svgFilePath": "assets/icons/ic_playlist_add_check_48px.svg"
+    },
+    {
+        "iconName": "delete",
+        "svgFilePath": "assets/icons/ic_delete_48px.svg"
+    },
+    {
+        "iconName": "securedDelete",
+        "svgFilePath": "assets/icons/ic_delete_48px.svg"
+    },
+    {
+        "iconName": "close",
+        "svgFilePath": "assets/icons/ic_close_48px.svg"
+    },
+    {
+        "iconName": "edit",
+        "svgFilePath": "assets/icons/ic_mode_edit_48px.svg"
+    },
+    {
+        "iconName": "account-circle",
+        "svgFilePath": "assets/icons/ic_account_circle_48px.svg"
+    },
+    {
+        "iconName": "info",
+        "svgFilePath": "assets/icons/ic_info_outline_48px_modified.svg"
+    },
+    {
+        "iconName": "menu",
+        "svgFilePath": "assets/icons/ic_menu_48px.svg"
+    },
+    {
+        "iconName": "power-off",
+        "svgFilePath": "assets/icons/ic_power_settings_new_48px.svg"
+    },
+    {
+        "iconName": "arrow-right",
+        "svgFilePath": "assets/icons/ic_keyboard_arrow_right_24px.svg"
+    },
+    {
+        "iconName": "arrow-left",
+        "svgFilePath": "assets/icons/ic_keyboard_arrow_left_48px.svg"
+    },
+    {
+        "iconName": "device",
+        "svgFilePath": "assets/icons/server_device.svg"
+    },
+    {
+        "iconName": "timeline",
+        "svgFilePath": "assets/icons/ic_timeline_48px.svg"
+    },
+    {
+        "iconName": "rotateLeft",
+        "svgFilePath": "assets/icons/ic_rotate_left_48px.svg"
+    },
+    {
+        "iconName": "rotateRight",
+        "svgFilePath": "assets/icons/ic_rotate_right_48px.svg"
+    },
+    {
+        "iconName": "add",
+        "svgFilePath": "assets/icons/ic_add_circle_48px.svg"
+    },
+    {
+        "iconName": "fullscreen",
+        "svgFilePath": "assets/icons/ic_fullscreen_48px.svg"
+    },
+    {
+        "iconName": "fullscreenExit",
+        "svgFilePath": "assets/icons/ic_fullscreen_exit_48px.svg"
+    },
+    {
+        "iconName": "server-curves",
+        "svgFilePath": "assets/icons/server-curves.svg"
+    },
+    {
+        "iconName": "switch-curves",
+        "svgFilePath": "assets/icons/switch-curves.svg"
+    },
+    {
+        "iconName": "router-curves",
+        "svgFilePath": "assets/icons/router-curves.svg"
+    },
+    {
+        "iconName": "device-hub",
+        "svgFilePath": "assets/icons/ic_device_hub_48px.svg"
+    },
+    {
+        "iconName": "filterList",
+        "svgFilePath": "assets/icons/ic_filter_list_48px.svg"
+    },
+    {
+        "iconName": "alarm",
+        "svgFilePath": "assets/icons/ic_alarm_48px.svg"
+    },
+    {
+        "iconName": "reload",
+        "svgFilePath": "assets/icons/ic_cached_48px.svg"
+    },
+    {
+        "iconName": "info-outline",
+        "svgFilePath": "assets/icons/ic_info_outline_48px.svg"
+    },
+    {
+        "iconName": "info-filled",
+        "svgFilePath": "assets/icons/ic_info_48px.svg"
+    },
+    {
+        "iconName": "open-with",
+        "svgFilePath": "assets/icons/ic_open_with_48px.svg"
+    },
+    {
+        "iconName": "back-arrow",
+        "svgFilePath": "assets/icons/ic_arrow_back_48px.svg"
+    },
+    {
+        "iconName": "warning",
+        "svgFilePath": "assets/icons/ic_warning_48px.svg"
+    },
+    {
+        "iconName": "loopback",
+        "svgFilePath": "assets/icons/ic_loopback_48px.svg"
+    },
+    {
+        "iconName": "notifications",
+        "svgFilePath": "assets/icons/outline-notification_24px.svg"
+    },
+    {
+        "iconName": "statistics",
+        "svgFilePath": "assets/icons/ic_multiline_chart_48px.svg"
+    },
+    {
+        "iconName": "lock-open",
+        "svgFilePath": "assets/icons/ic_lock_open_48px.svg"
+    },
+    {
+        "iconName": "lock",
+        "svgFilePath": "assets/icons/lock_black_24dp.svg"
+    },
+    {
+        "iconName": "control-point",
+        "svgFilePath": "assets/icons/ic_control_point_48px.svg"
+    },
+    {
+        "iconName": "filter",
+        "svgFilePath": "assets/icons/if_filter_2561439.svg"
+    },
+    {
+        "iconName": "spreadsheet",
+        "svgFilePath": "assets/icons/ic_get_app_48px.svg"
+    },
+    {
+        "iconName": "location_search",
+        "svgFilePath": "assets/icons/ic_location_searching_48px.svg"
+    },
+    {
+        "iconName": "delete-sweep",
+        "svgFilePath": "assets/icons/ic_delete_sweep_48px.svg"
+    },
+    {
+        "iconName": "settings",
+        "svgFilePath": "assets/icons/ic_settings_48px.svg"
+    },
+    {
+        "iconName": "show_chart",
+        "svgFilePath": "assets/icons/ic_show_chart_48px.svg"
+    },
+    {
+        "iconName": "check",
+        "svgFilePath": "assets/icons/ic_check_48px.svg"
+    },
+    {
+        "iconName": "chain",
+        "svgFilePath": "assets/icons/chain.svg"
+    },
+    {
+        "iconName": "no-persistence",
+        "svgFilePath": "assets/icons/no_persistence_48px.svg"
+    },
+    {
+        "iconName": "help",
+        "svgFilePath": "assets/icons/ic_help_outline_24px.svg"
+    },
+    {
+        "iconName": "search",
+        "svgFilePath": "assets/icons/ic_search_48px.svg"
+    },
+    {
+        "iconName": "arrow-down",
+        "svgFilePath": "assets/icons/ic_keyboard_arrow_down_48px.svg"
+    },
+    {
+        "iconName": "arrow-up",
+        "svgFilePath": "assets/icons/ic_keyboard_arrow_up_48px.svg"
+    },
+    {
+        "iconName": "backup",
+        "svgFilePath": "assets/icons/ic_backup_48px.svg"
+    },
+    {
+        "iconName": "download",
+        "svgFilePath": "assets/icons/ic_file_download_48px.svg"
+    },
+    {
+        "iconName": "restore",
+        "svgFilePath": "assets/icons/ic_restore_48px.svg"
+    },
+    {
+        "iconName": "attach",
+        "svgFilePath": "assets/icons/ic_attach_file_48px.svg"
+    },
+    {
+        "iconName": "upload",
+        "svgFilePath": "assets/icons/ic_file_upload_48px.svg"
+    },
+    {
+        "iconName": "ping",
+        "svgFilePath": "assets/icons/ping.svg"
+    },
+    {
+        "iconName": "traceroute",
+        "svgFilePath": "assets/icons/traceroute.svg"
+    },
+    {
+        "iconName": "cancel",
+        "svgFilePath": "assets/icons/ic_cancel_48px.svg"
+    },
+    {
+        "iconName": "first-page",
+        "svgFilePath": "assets/icons/ic_skip_previous_48px.svg"
+    },
+    {
+        "iconName": "last-page",
+        "svgFilePath": "assets/icons/ic_skip_next_48px.svg"
+    },
+    {
+        "iconName": "next-page",
+        "svgFilePath": "assets/icons/ic_play_arrow_48px.svg"
+    },
+    {
+        "iconName": "previous-page",
+        "svgFilePath": "assets/icons/ic_play_arrow_mirrored_48px.svg"
+    },
+    {
+        "iconName": "pause-notifications",
+        "svgFilePath": "assets/icons/outline-notifications_paused-24px.svg"
+    },
+    {
+        "iconName": "notifications-off",
+        "svgFilePath": "assets/icons/outline-notifications_off-24px.svg"
+    },
+    {
+        "iconName": "clone",
+        "svgFilePath": "assets/icons/ic_content_copy_48px.svg"
+    },
+    {
+        "iconName": "lag",
+        "svgFilePath": "assets/icons/lag.svg"
+    },
+    {
+        "iconName": "add-outline",
+        "svgFilePath": "assets/icons/ic_add_circle_outline_48px.svg"
+    },
+    {
+        "iconName": "settings-application",
+        "svgFilePath": "assets/icons/settings_applications-24px.svg"
+    },
+    {
+        "iconName": "settings-outline",
+        "svgFilePath": "assets/icons/settings-outline.svg"
+    },
+    {
+        "iconName": "rotate-right",
+        "svgFilePath": "assets/icons/rotate-right.svg"
+    },
+    {
+        "iconName": "rotate-left",
+        "svgFilePath": "assets/icons/rotate-left.svg"
+    },
+    {
+        "iconName": "clear",
+        "svgFilePath": "assets/icons/clear_24px.svg"
+    },
+    {
+        "iconName": "reset",
+        "svgFilePath": "assets/icons/reset.svg"
+    },
+    {
+        "iconName": "autorefresh",
+        "svgFilePath": "assets/icons/autorefresh.svg"
+    },
+    {
+        "iconName": "fix",
+        "svgFilePath": "assets/icons/fix-24px.svg"
+    },
+    {
+        "iconName": "find_detail",
+        "svgFilePath": "assets/icons/find_detail.svg"
+    },
+    {
+        "iconName": "summary",
+        "svgFilePath": "assets/icons/summary.svg"
+    },
+    {
+        "iconName": "upf",
+        "svgFilePath": "assets/icons/5G_2.svg"
+    },
+    {
+        "iconName": "attach-resource",
+        "svgFilePath": "assets/icons/link-24px.svg"
+    },
+    {
+        "iconName": "detach-resource",
+        "svgFilePath": "assets/icons/link_off-24px.svg"
+    },
+    {
+        "iconName": "show",
+        "svgFilePath": "assets/icons/visibility-24px.svg"
+    },
+    {
+        "iconName": "hide",
+        "svgFilePath": "assets/icons/visibility_off-24px.svg"
+    },
+    {
+        "iconName": "one",
+        "svgFilePath": "assets/icons/looks_one-24px.svg"
+    },
+    {
+        "iconName": "two",
+        "svgFilePath": "assets/icons/looks_two-24px.svg"
+    }
+]

@@ -1,0 +1,54 @@
+<div class="flex flex-col flex-1 min-h-0 negative-mb">
+	<div class="board flex flex-col flex-1 min-h-0 relative grid-min-size" id="templates-board">
+		<mat-progress-bar *ngIf="loading" mode="query" class="absolute"></mat-progress-bar>
+
+		<div class="flex items-center justify-between w-full">
+			<h3>{{ 'ldapconfigs-list.headerLdapTemplates' | translate }}</h3>
+			<button *ngIf="!loading"
+				mat-icon-button
+				class="side-button"
+				matTooltip="{{ 'ldapconfigs-list.tooltipAddLdapTemplate' | translate }}"
+				(click)="onAddTemplateClick()">
+				<mat-icon svgIcon="add"></mat-icon>
+			</button>
+		</div>
+
+		<p *ngIf="loading">
+			{{ 'ldapconfigs-list.paragraphLoadListOfTemplates' | translate }}
+		</p>
+
+		<div class="flex-1 min-h-0" *ngIf="!loading">
+			<mat-error class="err" *ngIf="error">{{
+				"ldapconfigs-list.errorTemplates" | translate
+			}}</mat-error>
+			<app-ag-grid tableId="templatesList"
+				class="grid-height-adjusted"
+				entityName="{{ 'ldapconfigs-list.paginationTemplate' | translate }}"
+				entityNamePlural="{{ 'ldapconfigs-list.paginationTemplatePlural' | translate }}"
+				[allColumnDefs]="templateCols" [rowData]="templates" #templatesGrid>
+
+				<ng-template let-row #actionsColumnTemplate>
+					<div class="flex items-center justify-end">
+						<button mat-icon-button id="editTemplate"
+							matTooltip="{{ 'ldapconfigs-list.tooltipEditTemplate' | translate }}"
+							matTooltipPosition="below" (click)="onEditTemplateClick(row)">
+							<mat-icon svgIcon="edit"></mat-icon>
+						</button>
+						<button mat-icon-button id="configureTemplate" matTooltip="{{
+							'ldapconfigs-list.tooltipConfigTemplate' | translate
+						}}" matTooltipPosition="below" [routerLink]="['/ldap', 'templates', row['id'], 'servers']">
+							<mat-icon svgIcon="cogs"></mat-icon>
+						</button>
+						<button mat-icon-button id="deleteTemplate"
+							matTooltip="{{ 'ldapconfigs-list.tooltipDelTemplate' | translate }}"
+							matTooltipPosition="below" (click)="onDeleteTemplateClick(row)">
+							<mat-icon svgIcon="delete"></mat-icon>
+						</button>
+					</div>
+				</ng-template>
+
+			</app-ag-grid>
+		</div>
+	</div>
+    <div class="flex flex-col">&nbsp;</div>
+</div>

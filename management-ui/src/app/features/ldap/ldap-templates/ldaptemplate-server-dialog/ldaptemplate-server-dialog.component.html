@@ -1,0 +1,156 @@
+<div class="dialog-wrap">
+    <h3 class="dialog-h t-primary">
+        {{ "user-adjacency-dialog.header" + (editing ?  "Edit" : "Add") + "Server" | translate }}
+    </h3>
+    <form
+        class="dialog_form flex flex-col"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="userAdjForm"
+    >
+        <mat-form-field
+            class="mb-2 w-full"
+            *ngIf="!loadingServers && servers.length > 0"
+        >
+            <mat-label>
+                {{ "user-adjacency-dialog.labelServer" | translate }}
+            </mat-label>
+            <mat-select
+                matInput
+                id="server"
+                placeholder="{{
+                    'user-adjacency-dialog.labelServer' | translate
+                }}"
+                formControlName="server"
+                id="serverInput"
+            >
+                <mat-option
+                    [value]="server.name"
+                    *ngFor="let server of servers"
+                    id="serverInputOpt_{{ server.name }}"
+                >
+                    {{ server.name }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('server').hasError('required')">
+                {{ "user-adjacency-dialog.errorServer" | translate }}
+            </mat-error>
+        </mat-form-field>
+
+        <mat-error *ngIf="error && loadingServers">
+            <p>{{ "user-adjacency-dialog.serversFail" | translate }}</p>
+        </mat-error>
+
+        <p *ngIf="loadingServers && !error" id="loadingMsg">
+            {{ "user-adjacency-dialog.loadingListServers" | translate }}
+        </p>
+
+        <mat-error *ngIf="!loadingServers && servers.length === 0">
+            <p>{{ "user-adjacency-dialog.errorListServers" | translate }}</p>
+        </mat-error>
+
+        <mat-form-field
+            class="mb-3 w-full"
+            [ngClass]="{
+                'chips-wrapper-error':
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+            }"
+            id="addressesChipsFormField"
+        >
+            <mat-label
+                [ngClass]="{
+                    error:
+                        addresses.length === 0 &&
+                        allowedAddressFC.touched &&
+                        !allowedAddressFC.value
+                }"
+            >
+                {{ "user-adjacency-dialog.labelAllowedIps" | translate }} *
+            </mat-label>
+            <mat-chip-grid #allowedIpList>
+                <mat-chip-row
+                    *ngFor="let add of addresses"
+                    [removable]="true"
+                    (removed)="onAllowedAddressRemove(add)"
+                >
+                    {{ add }}
+                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{
+                        'shared.placeholderNewAddress' | translate
+                    }}"
+                    #allowedAddressInput
+                    [formControl]="allowedAddressFC"
+                    [matChipInputFor]="allowedIpList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onAddressBlur()"
+                    (matChipInputTokenEnd)="onAddressAdd($event)"
+                    (paste)="onAddressesPaste($event)"
+                />
+            </mat-chip-grid>
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+                "
+            >
+                {{ "shared.errorAddress" | translate }}
+            </mat-hint>
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="!allowedAddressFC.valid && allowedAddressFC.value"
+            >
+                {{ "shared.errorAddressFormatAdjacency" | translate }}
+            </mat-hint>
+        </mat-form-field>
+
+        <mat-checkbox
+            formControlName="usePresharedKey"
+            id="usePresharedKeyInput"
+            *ngIf="!loadingServers && servers.length"
+            class="mb-2"
+        >
+            {{ "user-adjacency-dialog.labelUsePresharedKey" | translate }}
+        </mat-checkbox>
+
+        <p class="error" *ngIf="error && !loadingServers" id="errorMsg">{{ error }}</p>
+
+        <div class="flex items-center justify-end gap-2 mt-2">
+            <button
+                (click)="close()"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <button
+                mat-raised-button
+                [disabled]="
+                    form.invalid ||
+                    (addresses.length === 0 && !allowedAddressFC.value)
+                "
+                type="button"
+                color="primary"
+                (click)="submit()"
+                id="userAdjacencySubmitBtn"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+        </div>
+    </form>
+</div>

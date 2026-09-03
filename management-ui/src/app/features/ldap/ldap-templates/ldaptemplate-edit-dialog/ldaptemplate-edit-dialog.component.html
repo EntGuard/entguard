@@ -1,0 +1,62 @@
+<div class="dialog-wrap" id="editLdapTemplateDialogWrapper">
+    <h3 class="dialog-h t-primary">
+        {{ "ldaptemplate-dialog.ldapTemplate" | translate }}
+    </h3>
+
+    <form
+        class="dialog_form position-relative user-form flex flex-col"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="editUserForm">
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{ "ldaptemplate-dialog.labelName" | translate }}</mat-label>
+            <input matInput formControlName="name" id="nameInput" />
+            <mat-error *ngIf="form.get('name').hasError('required')">{{
+                "ldaptemplate-dialog.errorName" | translate
+                }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{ "ldaptemplate-dialog.labelFilter" | translate }}</mat-label>
+            <input matInput formControlName="filter" id="filterInput" />
+        </mat-form-field>
+
+        <p>
+            <mat-checkbox formControlName="isAdmin" id="isAdminCheckbox">{{
+                "ldaptemplate-dialog.checkboxAdmin" | translate
+                }}</mat-checkbox>
+        </p>
+
+        <mat-form-field *ngIf="mfaTypes" class="mb-2 w-full">
+            <mat-label>{{ "ldaptemplate-dialog.labelMfaType" | translate }}</mat-label>
+            <mat-select *ngIf="!loading" matInput formControlName="mfa_type" id="mfaTypeInput">
+                <mat-option></mat-option>
+                <mat-option *ngFor="let type of mfaTypes" [value]="type">{{
+                    type
+                    }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <p *ngIf="!mfaTypes && !mfaTypesError">
+            {{ "ldaptemplate-dialog.loadingOptions" | translate }}
+        </p>
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+        <p class="error" *ngIf="mfaTypesError" id="mfaTypeserrorMsg">
+            {{ mfaTypesError }}
+        </p>
+
+        <div dir="rtl" class="flex items-center justify-end gap-2 mt-2">
+            <button mat-raised-button [disabled]="form.invalid" type="button" color="primary" (click)="submit()"
+                id="submitUserBtn">
+                <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15" *ngIf="savingProgress">
+                </mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+            <button (click)="close()" class="mr-2" mat-raised-button type="button" id="cancelBtn">
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <div class="flex-1"></div>
+        </div>
+    </form>
+</div>

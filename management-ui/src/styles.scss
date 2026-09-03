@@ -1,0 +1,368 @@
+/* You can add global styles to this file, and also import other style files */
+@use "variables" as *;
+@use "mixins" as *;
+@use "acl-shared" as *;
+@use "tailwindcss";
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-material.css";
+
+@font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/roboto/Roboto-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/roboto/Roboto-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/roboto/Roboto-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    height: 100% !important;
+    width: 100%;
+    min-height: 100% !important;
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    background-color: $bgc;
+}
+
+.small-shadow {
+    box-shadow: $shadow;
+}
+
+.board {
+    display: inline-block;
+    background-color: white;
+    padding: 30px;
+    box-shadow: $shadow;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+
+.t0 {
+    top: 0;
+}
+
+.b0 {
+    bottom: 0;
+}
+
+.l0 {
+    left: 0;
+}
+
+.r0 {
+    right: 0;
+}
+
+.dialog-wrap {
+    padding: 30px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.dialog_form {
+    width: 360px;
+}
+
+.delete-disabled {
+    color: grey;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.t-primary {
+    color: $primary !important;
+}
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.component-h5,
+.component-h6 {
+    display: inline;
+    cursor: pointer;
+    color: #024d86;
+}
+
+.component-h5 {
+    font-size: 18px;
+}
+
+.component-h6 {
+    font-size: 15px;
+    font-weight: 300;
+    margin-left: 5px;
+}
+
+.dialog-h {
+    font-size: 26px;
+    font-weight: 300;
+}
+
+@for $i from 10 through 15 {
+    .fs-#{$i} {
+        @include generateRule("font-size", $i + px);
+    }
+}
+
+.error {
+    color: red;
+}
+
+.ag-theme-material .ag-ltr .ag-cell-focus {
+    border: none !important;
+}
+
+mat-form-field {
+    --mat-form-field-filled-container-color: transparent !important;
+
+    .mat-mdc-text-field-wrapper .mat-mdc-form-field-focus-overlay {
+        background-color: transparent !important;
+    }
+}
+
+.no-required-star {
+    .mat-mdc-form-field-required-marker {
+        display: none !important;
+    }
+}
+
+button mat-progress-spinner {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    --mat-progress-spinner-active-indicator-color: #ffffff;
+}
+
+button mat-progress-spinner circle {
+    stroke: #ffffff !important;
+}
+
+button mat-progress-spinner.dark {
+    --mat-progress-spinner-active-indicator-color: rgba(0, 0, 0, 0.87);
+}
+button mat-progress-spinner.dark circle {
+    stroke: rgba(0, 0, 0, 0.87) !important;
+}
+
+.mat-button-wrapper mat-progress-spinner {
+    float: none;
+    margin: 0 8px 0 0;
+}
+
+mat-progress-bar {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+.wi-50 {
+    width: 50px;
+}
+
+.card-basic-table {
+    border-spacing: 0;
+
+    .mat-mdc-row:hover {
+        background: #f6f6f6;
+    }
+
+    tr.mat-mdc-footer-row,
+    tr.mat-mdc-row {
+        height: 48px;
+    }
+
+    td.mat-mdc-cell,
+    td.mat-mdc-footer-cell,
+    th.mat-mdc-header-cell {
+        padding: 0;
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+        border-bottom-color: var(--ag-border-color, #dde2eb);
+        font-size: 14px;
+    }
+
+    .property-cell {
+        padding-left: 14px !important;
+        line-break: anywhere;
+    }
+}
+
+.card-basic-table .mat-mdc-row:last-child {
+    border: none;
+}
+
+h3 {
+    color: #025da1;
+    font-weight: initial;
+    font-size: 22px;
+}
+
+.wi-15 {
+    width: 15px;
+}
+
+.mt-25 {
+    margin-top: 25px;
+}
+
+.mini-fab-flat {
+    border-radius: 45px;
+    border: none;
+    width: 40px;
+    height: 39px;
+    background: none;
+    outline: none;
+}
+
+.show-hide-chars {
+    width: 40px;
+    padding: 10px 1px;
+    outline: 0 !important;
+}
+
+button.mini-fab-flat:focus {
+    outline: 0 !important;
+}
+
+.slant-icon {
+    svg {
+        transform: rotate(140deg) scale(0.9);
+    }
+}
+
+.chips-wrapper-error {
+    .mat-form-field-underline {
+        background-color: red !important;
+    }
+}
+
+.chips-error {
+    margin-top: 27px !important;
+}
+
+.relative {
+    position: relative;
+}
+
+mat-horizontal-stepper {
+    position: relative;
+}
+
+mat-horizontal-stepper
+    div.mat-horizontal-stepper-header-container
+    .mat-stepper-horizontal-line {
+    border-top: none;
+}
+
+.mat-horizontal-stepper-header {
+    pointer-events: none !important;
+}
+
+.mat-step-header.cdk-keyboard-focused,
+.mat-step-header.cdk-program-focused,
+.mat-step-header:hover {
+    background-color: transparent !important;
+}
+
+.ag-layout-normal {
+    height: 100% !important;
+}
+
+.mdc-text-field {
+    padding: 0 !important;
+}
+
+.mat-mdc-form-field-error-wrapper {
+    padding: 0 !important;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    margin-top: 0;
+}
+
+/* Ensure all Material buttons render an inline spinner on the left side */
+button.mat-mdc-button,
+button.mat-mdc-raised-button,
+button.mat-mdc-outlined-button,
+button.mat-mdc-unelevated-button,
+button.mat-mdc-fab,
+button.mat-mdc-mini-fab {
+    .mat-mdc-button-label {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    mat-progress-spinner,
+    .mat-mdc-progress-spinner {
+        order: -1;
+        margin-right: 8px;
+        margin-left: 0;
+        display: inline-block;
+        vertical-align: middle;
+    }
+}
+
+.cell-scroll {
+    max-height: 48px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.grid-min-size {
+    min-width: 300px;
+    min-height: 350px;
+}
+
+.negative-mb {
+    margin-bottom: -30px;
+}
+
+/* Multi-line tooltip support */
+.mat-mdc-tooltip .mdc-tooltip__surface {
+    white-space: pre-line;
+}
+
+.mat-tooltip-interactable {
+    pointer-events: auto !important;
+}

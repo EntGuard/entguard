@@ -1,0 +1,3 @@
+@mixin generateRule($property, $value) {
+    #{$property}: $value;
+}

@@ -1,0 +1,168 @@
+<div class="p-6 bg-white dark:bg-gray-800 rounded-md shadow max-w-xl dialog-wrap">
+    <h3 class="text-xl font-semibold text-blue-600 mb-4">
+        {{ "user-adjacency-dialog.header" + (editing ?  "Edit" : "Add") + "AdjacencyTemplate" | translate }}
+    </h3>
+    <form
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="userAdjForm"
+        class="flex flex-col space-y-4"
+    >
+        <!-- Server select -->
+        <mat-form-field
+            class="mb-2 w-full"
+            *ngIf="!loadingServers && servers.length > 0"
+        >
+            <mat-label>
+                {{ "user-adjacency-dialog.labelServer" | translate }}
+            </mat-label>
+            <mat-select
+                matInput
+                id="server"
+                placeholder="{{
+                    'user-adjacency-dialog.labelServer' | translate
+                }}"
+                formControlName="server"
+                id="serverInput"
+            >
+                <mat-option
+                    [value]="server.name"
+                    *ngFor="let server of servers"
+                    id="serverInputOpt_{{ server.name }}"
+                >
+                    {{ server.name }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('server').hasError('required')">
+                {{ "user-adjacency-dialog.errorServer" | translate }}
+            </mat-error>
+        </mat-form-field>
+
+        <p *ngIf="loadingServers" id="loadingMsg" class="text-sm text-gray-600">
+            {{ "user-adjacency-dialog.loadingListServers" | translate }}
+        </p>
+
+        <mat-error
+            *ngIf="!loadingServers && servers.length === 0"
+            class="text-red-600 text-sm"
+        >
+            <p>{{ "user-adjacency-dialog.errorListServers" | translate }}</p>
+        </mat-error>
+
+        <!-- Allowed IPs chips -->
+        <mat-form-field
+            class="mb-2 w-full chipsFormField"
+            [ngClass]="{
+                'chips-wrapper-error':
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+            }"
+            id="addressesChopsFormField"
+        >
+            <mat-label
+                [ngClass]="{
+                    error:
+                        addresses.length === 0 &&
+                        allowedAddressFC.touched &&
+                        !allowedAddressFC.value
+                }"
+            >
+                {{ "user-adjacency-dialog.labelAllowedIps" | translate }}*
+            </mat-label>
+            <mat-chip-grid #allowedIpList>
+                <mat-chip-row
+                    *ngFor="let add of addresses"
+                    [removable]="true"
+                    (removed)="onAllowedAddressRemove(add)"
+                >
+                    {{ add }}
+                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{
+                        'shared.placeholderNewAddress' | translate
+                    }}"
+                    #allowedAddressInput
+                    [formControl]="allowedAddressFC"
+                    [matChipInputFor]="allowedIpList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onAddressBlur()"
+                    (matChipInputTokenEnd)="onAddressAdd($event)"
+                    (paste)="onAddressesPaste($event)"
+                />
+            </mat-chip-grid>
+            <!-- Replaced custom div errors with mat-hint for consistency -->
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+                "
+            >
+                {{ "shared.errorAddress" | translate }}
+            </mat-hint>
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="!allowedAddressFC.valid && allowedAddressFC.value"
+            >
+                {{ "shared.errorAddressFormatAdjacency" | translate }}
+            </mat-hint>
+        </mat-form-field>
+
+        <!-- Use Preshared Key -->
+        <mat-checkbox
+            formControlName="usePresharedKey"
+            id="usePresharedKeyInput"
+            *ngIf="!loadingServers && servers.length"
+            class="mb-2"
+        >
+            {{ "user-adjacency-dialog.labelUsePresharedKey" | translate }}
+        </mat-checkbox>
+
+        <p
+            class="text-red-600 text-sm font-medium"
+            *ngIf="error"
+            id="errorMsg"
+        >
+            {{ error }}
+        </p>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 pt-2">
+            <button
+                (click)="close()"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+                class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <button
+                mat-raised-button
+                [disabled]="
+                    form.invalid ||
+                    (addresses.length === 0 && !allowedAddressFC.value)
+                "
+                type="button"
+                color="primary"
+                (click)="submit()"
+                id="userAdjacencySubmitBtn"
+                class="flex items-center gap-2"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+        </div>
+    </form>
+</div>

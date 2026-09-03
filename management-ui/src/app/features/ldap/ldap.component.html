@@ -1,0 +1,16 @@
+<div class="flex flex-1 w-full h-full flex-col">
+  <nav mat-tab-nav-bar [tabPanel]="tabPanel" class="flex items-center justify-start gap-2 flex-none">
+      <a mat-tab-link
+          *ngFor="let link of navLinks"
+          [routerLink]="['/ldap/' + link.link]"
+          routerLinkActive #rla="routerLinkActive"
+          [active]="rla.isActive"
+          class="inline-flex !flex-none w-auto"
+          >
+          {{link.label}}
+      </a>
+  </nav>
+  <main mat-tab-nav-panel #tabPanel class="flex-1 min-h-0">
+      <router-outlet></router-outlet>
+  </main>
+</div>

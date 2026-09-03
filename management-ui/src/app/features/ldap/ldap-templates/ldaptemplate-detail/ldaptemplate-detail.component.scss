@@ -1,0 +1,25 @@
+::ng-deep .mat-chip-list-wrapper {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+.card-basic-table {
+    width: 100%;
+}
+
+h6::before {
+    content: ">> ";
+}
+
+.err {
+    text-align: center;
+  }
+
+  .grid-height-adjusted {
+  height: calc(100% - 48px);
+}
+
+.accent-min-size {
+    min-width: 300px;
+    min-height: 200px;
+}

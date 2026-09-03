@@ -1,0 +1,184 @@
+<div class="dialog-wrap" id="addUserDialogWrapper">
+    <h3 class="dialog-h t-primary">
+        {{ "server-adjacency-dialog.header" + (editing ? "Edit" : "Add") + "Usr" | translate }}
+    </h3>
+    <form
+        class="flex flex-col gap-4"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="serverAdjacencyForm"
+    >
+        <mat-form-field
+            class="w-full mb-2 chipsFormField"
+            [ngClass]="{
+                'chips-wrapper-error':
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+            }"
+            id="allowedIpsFormField"
+        >
+            <mat-label
+                [ngClass]="{
+                    error:
+                        addresses.length === 0 &&
+                        allowedAddressFC.touched &&
+                        !allowedAddressFC.value
+                }"
+            >
+                {{ "server-adjacency-dialog.labelAllowedIps" | translate }}*
+            </mat-label>
+            <mat-chip-grid #allowedIpList>
+                <mat-chip-row
+                    *ngFor="let add of addresses"
+                    [removable]="true"
+                    (removed)="onAllowedAddressRemove(add,'addresses')"
+                >
+                    {{ add }}
+                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{
+                        'shared.placeholderNewAddress' | translate
+                    }}"
+                    #allowedAddressInput
+                    [formControl]="allowedAddressFC"
+                    [matChipInputFor]="allowedIpList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onAddressBlur('addresses','allowedAddressFC')"
+                    (matChipInputTokenEnd)="onMatChipInputTokenEnd('addresses','allowedAddressFC')"
+                    (paste)="onAddressesPaste($event,'addresses','allowedAddressFC')"
+                />
+            </mat-chip-grid>
+
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="
+                    addresses.length === 0 &&
+                    allowedAddressFC.touched &&
+                    !allowedAddressFC.value
+                "
+            >
+                {{ "shared.errorAddress" | translate }}
+            </mat-hint>
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="!allowedAddressFC.valid && allowedAddressFC.value"
+            >
+                {{ "shared.errorAddressFormatAdjacency" | translate }}
+            </mat-hint>
+        </mat-form-field>
+
+        <mat-form-field
+            class="w-full mb-2 chipsFormField"
+            [ngClass]="{
+                'chips-wrapper-error':
+                    otherSideAddresses.length === 0 &&
+                    otherSideAllowedAddressFC.touched &&
+                    !otherSideAllowedAddressFC.value
+            }"
+            id="otherSideAllowedIpsFormField"
+        >
+            <mat-label
+                [ngClass]="{
+                    error:
+                        otherSideAddresses.length === 0 &&
+                        otherSideAllowedAddressFC.touched &&
+                        !otherSideAllowedAddressFC.value
+                }"
+            >
+                {{ "server-adjacency-dialog.labelOtherSideAllowedIps" | translate }}*
+            </mat-label>
+            <mat-chip-grid #otherSideAllowedIpList>
+                <mat-chip-row
+                    *ngFor="let oSAdd of otherSideAddresses"
+                    [removable]="true"
+                    (removed)="onAllowedAddressRemove(oSAdd, 'otherSideAddresses')"
+                >
+                    {{ oSAdd }}
+                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{
+                        'shared.placeholderNewAddress' | translate
+                    }}"
+                    #otherSideAllowedAddressInput
+                    [formControl]="otherSideAllowedAddressFC"
+                    [matChipInputFor]="otherSideAllowedIpList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onAddressBlur('otherSideAddresses', 'otherSideAllowedAddressFC')"
+                    (matChipInputTokenEnd)="onMatChipInputTokenEnd('otherSideAddresses','otherSideAllowedAddressFC')"
+                    (paste)="onAddressesPaste($event, 'otherSideAddresses','otherSideAllowedAddressFC')"
+                />
+            </mat-chip-grid>
+
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="
+                    otherSideAddresses.length === 0 &&
+                    otherSideAllowedAddressFC.touched &&
+                    !otherSideAllowedAddressFC.value
+                "
+            >
+                {{ "shared.errorAddress" | translate }}
+            </mat-hint>
+            <mat-hint
+                class="mat-mdc-form-field-error custom-error-hint"
+                align="start"
+                *ngIf="!otherSideAllowedAddressFC.valid && otherSideAllowedAddressFC.value"
+            >
+                {{ "shared.errorAddressFormatAdjacency" | translate }}
+            </mat-hint>
+        </mat-form-field>
+
+        <mat-form-field class="w-full mb-2">
+            <mat-label>{{
+                "server-adjacency-dialog.labelPresharedKey" | translate
+            }}</mat-label>
+            <input
+                matInput
+                formControlName="presharedKey"
+                id="presharedKeyInput"
+            />
+        </mat-form-field>
+
+        <p class="error text-red-600 text-sm" *ngIf="error">{{ error }}</p>
+        <div dir="rtl" class="flex items-center justify-end gap-2">
+            <button
+                mat-raised-button
+                id="adjacencySubmitBtn"
+                [disabled]="
+                    form.invalid ||
+                    (addresses.length === 0 && !allowedAddressFC.value) ||
+                    (otherSideAddresses.length === 0 && !otherSideAllowedAddressFC.value)
+                "
+                type="button"
+                color="primary"
+                (click)="submit()"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                    id="adjacencyProgress"
+                >
+                </mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+            <button
+                (click)="close()"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <div class="flex-1"></div>
+        </div>
+    </form>
+</div>

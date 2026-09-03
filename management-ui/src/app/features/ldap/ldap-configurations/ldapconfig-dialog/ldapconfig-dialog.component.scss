@@ -1,0 +1,27 @@
+div.action-buttons {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.dialog-wrap {
+    overflow: auto;
+    height: 100%;
+    max-height: 90vh;
+}
+
+.ldap-form {
+    width: 100%
+}
+
+/* remove MDC hint wrapper padding and spacer locally */
+:host ::ng-deep .mat-mdc-form-field-hint-wrapper { padding: 0 !important; }
+:host ::ng-deep .mat-mdc-form-field-subscript-wrapper { padding: 0 !important; }
+:host ::ng-deep .mat-mdc-form-field-hint-spacer { display: none !important; }
+
+/* make hints smaller and left-aligned */
+:host ::ng-deep .mat-mdc-form-field-hint {
+    font-size: 10px;
+    line-height: 1.1;
+    text-align: left;
+}

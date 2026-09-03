@@ -1,0 +1,53 @@
+#autoGenDiv {
+    height: 20px;
+    margin-top: 8px;
+}
+
+.horizontal-stepper{
+    max-width: 600px;
+}
+
+.icon{
+    margin-top: -5px;
+}
+
+.arrows{
+    position: absolute;
+    width: 100%;
+    height: 21px;
+    top: 0;
+    left: 0;
+
+    span{
+        position: absolute;
+        top: 25px;
+        width: 72px;
+        height: 21px;
+        line-height: 21px;
+        color: rgba(0, 0, 0, 0.12);
+        background-image: url(../../../../../assets/img/arrows.svg);
+        background-repeat: no-repeat;
+
+        &:nth-child(1){
+            left: 24%;
+        }
+        &:nth-child(2){
+            left: 67%;
+        }
+    }
+}
+
+::ng-deep #addressesChipsFormField .mat-mdc-form-field-subscript-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+::ng-deep #addressesChipsFormField .mat-mdc-form-field-hint-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+:host ::ng-deep #addressesChipsFormField .mat-mdc-form-field-hint.custom-error-hint {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    margin-top: 0;
+}

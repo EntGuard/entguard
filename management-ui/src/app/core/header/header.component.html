@@ -1,0 +1,65 @@
+<header class="small-shadow position-fixed w-100" *ngIf="loggedUser">
+    <a class="logo-link position-absolute" routerLink="/users">
+        <img
+            src="../../../assets/img/entguard.png"
+            [attr.alt]="'title.imageAltLogo' | translate"
+            id="logoImg"
+        />
+    </a>
+    <div class="nav-wrap h-100 d-flex justify-content-between">
+        <nav class="d-flex align-items-center">
+            <a
+                class="text-dark mr-3 text-decoration-none"
+                routerLinkActive="active-link"
+                routerLink="/servers"
+                id="serversMenuLink"
+                >{{ "navbar.servers" | translate }}</a
+            >
+            <a
+                class="text-dark me-3 text-decoration-none"
+                routerLinkActive="active-link"
+                routerLink="/users"
+                id="usersMenuLink"
+                >{{ "navbar.users" | translate }}</a
+            >
+            <a
+                class="text-dark me-3 text-decoration-none"
+                routerLinkActive="active-link"
+                routerLink="/ldap"
+                id="ldapMenuLink"
+                >{{ "navbar.ldap" | translate }}</a
+            >
+            <a
+                class="text-dark me-3 text-decoration-none"
+                routerLinkActive="active-link"
+                routerLink="/mfa-certificates"
+                id="mfaCertificatesLink"
+                >{{ "navbar.mfaCertificates" | translate }}</a
+            >
+            <a
+            class="text-dark me-3 text-decoration-none"
+            routerLinkActive="active-link"
+            routerLink="/address-pools"
+            id="addressPoolsMenuLink"
+            >{{ "navbar.addressPools" | translate }}</a
+            >
+        </nav>
+        <div class="d-flex justify-content-center align-items-center user-info">
+            <mat-icon class="user-mat-icon" svgIcon="account-circle"></mat-icon>
+            <span id="currentUserName">{{ loggedUser.username }}</span>
+
+            <div
+                (click)="logOut()"
+                id="logoutBtn"
+                matTooltip="{{ 'navbar.tooltipLogout' | translate }}"
+                class="cursor-pointer text-decoration-none p-1 d-flex justify-content-center align-items-center"
+            >
+                <img
+                    class="logout-icon"
+                    src="../../../assets/img/logout.svg"
+                    [attr.alt]="'navbar.imageAltLogout' | translate"
+                />
+            </div>
+        </div>
+    </div>
+</header>

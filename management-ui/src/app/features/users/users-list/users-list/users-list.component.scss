@@ -1,0 +1,74 @@
+h6::before {
+    content: ">> ";
+}
+
+div.server-status-unknown {
+    width: 20px;
+    height: 20px;
+    background: silver;
+    border-radius: 15px;
+}
+
+#showTotpSecretField {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+}
+
+#searchIcon {
+    margin-right: 0.5rem;
+}
+
+.card-basic-table {
+    width: 100%;
+}
+
+.searchInputIcons {
+    color: #7d7d7d;
+}
+
+.side-button {
+    height: 25px;
+    width: 25px;
+    line-height: 25px;
+    padding: 0;
+}
+
+.side-button.mat-icon-button,
+.side-button.mat-mdc-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    --mdc-icon-button-state-layer-size: 25px;
+
+    ::ng-deep .mat-mdc-button-touch-target {
+        height: 25px;
+        width: 25px;
+    }
+}
+
+.side-button mat-icon {
+    line-height: 25px;
+}
+
+.tall-section {
+    min-height: 300px;
+    height: 450px;
+}
+
+::ng-deep .mat-chip-list-wrapper {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+.grid-height-adjusted {
+    height: calc(100% - 56px);
+}
+
+.grid-height-adjusted-small {
+    height: calc(100% - 24px);
+}
+
+::ng-deep .mat-mdc-tab-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}

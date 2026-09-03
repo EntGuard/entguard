@@ -1,0 +1,117 @@
+<div class="dialog-wrap mr-2">
+    <h3 class="dialog-h t-primary">
+        {{ "user-dialog.header" | translate }}
+    </h3>
+
+    <form
+        class="dialog_form user-form position-relative relative flex flex-col space-y-4"
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        id="editUserForm"
+    >
+        <div dir="rtl" class="action-buttons flex items-center justify-end gap-3 mb-2">
+            <button
+                mat-raised-button
+                [disabled]="form.invalid"
+                type="button"
+                color="primary"
+                (click)="submit()"
+                id="submitUserBtn"
+                class="flex items-center gap-2"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+            <button
+                (click)="close()"
+                class="mr-2"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <div class="flex-1"></div>
+        </div>
+
+        <mat-form-field class="w-full field-block">
+            <mat-label>{{ "user-dialog.labelName" | translate }}</mat-label>
+            <input matInput formControlName="name" id="nameInput" />
+            <mat-error *ngIf="form.get('name').hasError('required')">{{
+                "user-dialog.errorName" | translate
+            }}</mat-error>
+        </mat-form-field>
+
+        <div class="flex items-start field-block mb-0" *ngIf="!editing">
+            <mat-form-field class="flex-1">
+                <input
+                    matInput
+                    [type]="showChars ? 'text' : 'password'"
+                    autocomplete="new-password"
+                    placeholder="{{
+                        'user-dialog.placeholderPassword' | translate
+                    }}"
+                    formControlName="password"
+                    id="passwordInput"
+                />
+                <mat-error *ngIf="form.get('password').hasError('required')">{{
+                    "user-dialog.errorPassword" | translate
+                }}</mat-error>
+            </mat-form-field>
+            <div class="show-hide-chars flex items-center">
+                <button
+                    class="mini-fab-flat ml-1"
+                    (click)="toggleCharsShow()"
+                    id="toggleCharsBtn"
+                    type="button"
+                    matTooltip="{{ (showChars ? 'shared.tooltipHideCharacters' : 'shared.tooltipShowCharacters') | translate }} {{ 'shared.tooltipCharacters' | translate }}"
+                >
+                    <mat-icon
+                        [svgIcon]="showChars ? 'hide' : 'show'"
+                    ></mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <p class="align-content-center items-center gap-2">
+            <br *ngIf="!editing" />
+            <mat-checkbox formControlName="isAdmin" id="isAdminCheckbox">{{
+                "user-dialog.checkboxAdmin" | translate
+            }}</mat-checkbox>
+        </p>
+
+        <mat-form-field *ngIf="mfaTypes" class="w-full field-block mt-1">
+            <mat-label>{{ "user-dialog.labelMfaType" | translate }}</mat-label>
+            <mat-select matInput formControlName="mfa_type" id="mfaTypeInput">
+                <mat-option></mat-option>
+                <mat-option *ngFor="let type of mfaTypes" [value]="type">{{
+                    type
+                }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <p *ngIf="!mfaTypes && !mfaTypesError">
+            {{ "user-dialog.loadingOptions" | translate }}
+        </p>
+
+        <mat-form-field class="w-full field-block">
+            <mat-label>{{ "user-dialog.labelNotification" | translate }}</mat-label>
+            <input
+                matInput
+                formControlName="notification"
+                id="notificationInput"
+            />
+        </mat-form-field>
+
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+        <p class="error" *ngIf="mfaTypesError" id="mfaTypeserrorMsg">
+            {{ mfaTypesError }}
+        </p>
+    </form>
+</div>

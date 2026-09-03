@@ -1,0 +1,119 @@
+<div class="dialog-wrap" mat-dialog-content>
+    <div class="flex items-center mb-4">
+        <h3 class="flex-1 m-0">{{ 'user-list.headerDeviceInfo' | translate }}</h3>
+    </div>
+
+    <table class="card-basic-table w-full">
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellID' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                {{ device.id }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellDescription' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                {{ device.description || '-' }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellAddresses' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                <div>
+                    <mat-chip-list *ngIf="device.addresses?.length > 0">
+                        <mat-chip *ngFor="let address of device.addresses" class="m-1">
+                            {{ address }}
+                        </mat-chip>
+                    </mat-chip-list>
+                    <span *ngIf="!device.addresses?.length">-</span>
+                </div>
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellPublicKey' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell break-all">
+                {{ device.publicKey || '-' }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.privateKey' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell break-all">
+                <div class="flex items-center gap-2">
+                    <span *ngIf="showPrivateKey">{{ device.privateKey || '-' }}</span>
+                    <span *ngIf="!showPrivateKey && device.privateKey">••••••••••••••••••••••••••••••</span>
+                    <span *ngIf="!showPrivateKey && !device.privateKey">-</span>
+                    <button
+                        *ngIf="device.privateKey"
+                        class="mini-fab-flat"
+                        (click)="togglePrivateKeyShow()"
+                        matTooltip="{{
+                            (showPrivateKey
+                                ? 'shared.tooltipHideCharacters'
+                                : 'shared.tooltipShowCharacters'
+                            ) | translate
+                        }}
+                            {{ 'shared.tooltipCharacters' | translate }}">
+                        <mat-icon [svgIcon]="showPrivateKey ? 'hide' : 'show'"></mat-icon>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellSessionID' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                {{ device.sessionId || '-' }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellLastTimeConnected' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                {{ device.lastTimeConnected ? (device.lastTimeConnected | date: 'medium') : '-' }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellExternalDeviceId' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                {{ device.deviceId || '-' }}
+            </td>
+        </tr>
+        <tr class="mat-row mat-mdc-row">
+            <td class="mat-cell mat-mdc-cell name-cell">
+                {{ 'user-list.cellDeviceInformation' | translate }}
+            </td>
+            <td class="mat-cell mat-mdc-cell property-cell">
+                <ng-container *ngIf="deviceInfoEntries.length > 0; else noDeviceInfo">
+                    <dl class="device-info-list">
+                        <div *ngFor="let info of deviceInfoEntries" class="device-info-list__row">
+                            <dt class="device-info-list__term">{{ info.label }}</dt>
+                            <dd class="device-info-list__description">{{ info.value }}</dd>
+                        </div>
+                    </dl>
+                </ng-container>
+                <ng-template #noDeviceInfo>-</ng-template>
+            </td>
+        </tr>
+    </table>
+
+    <div mat-dialog-actions class="flex mt-4" dir="rtl">
+        <button mat-raised-button mat-dialog-close (click)="closeDialog()">
+            {{ 'shared.buttonClose' | translate }}
+        </button>
+        <span class="flex-1"></span>
+    </div>
+</div>

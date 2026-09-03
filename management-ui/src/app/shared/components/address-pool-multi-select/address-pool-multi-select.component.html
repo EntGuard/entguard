@@ -1,0 +1,89 @@
+<mat-form-field class="address-pool-multi-select-field">
+    <mat-label>{{ 'shared.labelAddressRanges' | translate }}</mat-label>
+    <mat-select
+        [formControl]="control"
+        [placeholder]="'shared.placeholderSelectAddressPool' | translate"
+        [compareWith]="comparePools"
+        [disabled]="disabled || loading"
+        [required]="required"
+        multiple
+        panelClass="address-pool-multi-select-panel"
+        (openedChange)="onPanelOpened($event)"
+    >
+        <mat-select-trigger>
+            <div class="trigger-chips-container" *ngIf="selectedCount > 0; else emptyTrigger">
+                <div class="chips-scroll-area">
+                    <div
+                        *ngFor="let pool of control.value; trackBy: trackById"
+                        class="address-pool-chip"
+                        [matTooltip]="pool.tooltipText"
+                        matTooltipPosition="above"
+                        matDisableTooltipInteractivity="false"
+                    >
+                        <span class="chip-name">{{ pool.name }}</span>
+                        <button
+                            type="button"
+                            class="chip-remove-btn"
+                            (click)="removePool(pool, $event)"
+                            [disabled]="disabled || loading"
+                            aria-label="Remove"
+                        >
+                            <mat-icon svgIcon="cancel"></mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <ng-template #emptyTrigger>
+                <span class="trigger-text">{{ 'shared.placeholderSelectAddressPool' | translate }}</span>
+            </ng-template>
+        </mat-select-trigger>
+
+        <mat-option *ngIf="loading" disabled class="loading-option">
+            <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+        </mat-option>
+
+        <ng-container *ngIf="vm$ | async as vm">
+            <div class="search-row" (click)="onSelectAllClick(vm.filteredPools, $event)">
+                <mat-pseudo-checkbox
+                    class="select-all-checkbox"
+                    [state]="getSelectAllState(vm.filteredPools)"
+                    [disabled]="vm.filteredPools.length === 0"
+                ></mat-pseudo-checkbox>
+                <input
+                    #searchInput
+                    type="text"
+                    class="search-input"
+                    [placeholder]="'shared.placeholderSearchAddressPools' | translate"
+                    [formControl]="searchControl"
+                    (click)="$event.stopPropagation()"
+                />
+                <button
+                    type="button"
+                    class="clear-btn"
+                    *ngIf="searchControl.value"
+                    (click)="clearSearch($event)"
+                >
+                    X
+                </button>
+            </div>
+            <mat-option
+                *ngFor="let option of vm.options; trackBy: trackOptionById"
+                [value]="option.pool"
+                [id]="'addressPoolOption_' + option.pool.id"
+                [matTooltip]="option.pool.description || ''"
+                [matTooltipDisabled]="!option.pool.description"
+                [class.hidden-option]="!option.visible"
+            >
+                <div class="option-content">
+                    <span class="option-name">{{ option.pool.name }}</span>
+                    <span class="option-range">{{ option.pool.addressRange }}</span>
+                </div>
+            </mat-option>
+            <mat-option *ngIf="!loading && vm.filteredPools.length === 0" disabled>
+                {{ 'shared.messageNoResults' | translate }}
+            </mat-option>
+        </ng-container>
+    </mat-select>
+
+    <mat-error *ngIf="showError">{{ 'shared.errorAddress' | translate }}</mat-error>
+</mat-form-field>

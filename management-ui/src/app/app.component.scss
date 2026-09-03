@@ -1,0 +1,24 @@
+@use 'variables' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  main {
+    padding: 5px + $headerHeight 30px 30px;
+    box-sizing: border-box;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    // stylelint-disable-next-line @angular-eslint/no-deep-combinator
+    ::ng-deep router-outlet + * {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}

@@ -1,0 +1,35 @@
+<div class="dialog-wrap" mat-dialog-content>
+    <div class="flex">
+        <h3 *ngIf="data.certificateType === 'CA' " class="flex-1">{{ 'mfa-certificates-dialog.headerAddCACert' | translate }}</h3>
+        <h3 *ngIf="data.certificateType === 'CRL' " class="flex-1">{{ 'mfa-certificates-dialog.headerAddCertRevocationList' | translate }}</h3>
+    </div>
+
+    <div class="mt-2 flex">
+        <form  [formGroup]="form" novalidate autocomplete="off" matInput id="addMfaCertificate">
+            <mat-form-field class="w-full">
+                <mat-label *ngIf="data.certificateType === 'CA' ">{{ 'mfa-certificates-dialog.labelCACert' | translate }}</mat-label>
+                <mat-label *ngIf="data.certificateType === 'CRL' ">{{ 'mfa-certificates-dialog.labelCRLCert' | translate }}</mat-label>
+                <textarea
+                    formControlName="mfaCertificate"
+                    name="mfaCertificate"
+                    matInput
+                    rows="12"
+                    cols="50"
+                    class="w-full"
+                ></textarea>
+            </mat-form-field>
+        </form>
+    </div>
+
+    <p class="text-red-600 text-sm mt-2" *ngIf="error" id="errorMsg">{{ error }}</p>
+
+    <div mat-dialog-actions class="flex flex-row-reverse gap-2">
+        <button id="confirmation_yes_button" mat-raised-button color="primary" (click)="submit()">
+            <mat-progress-spinner class="mr-2" color="white" mode="indeterminate" [diameter]="15" *ngIf="savingProgress"></mat-progress-spinner>
+            {{ 'mfa-certificates-dialog.buttonAdd' | translate }}
+        </button>
+        <button id="confirmation_close_button" mat-flat-button mat-dialog-close (click)="closeDialog()">
+            {{ 'shared.buttonCancel' | translate }}
+        </button>
+    </div>
+</div>

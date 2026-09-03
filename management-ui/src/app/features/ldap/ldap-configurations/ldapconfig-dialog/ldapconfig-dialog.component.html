@@ -1,0 +1,132 @@
+<div class="dialog-wrap">
+    <h3 class="dialog-h t-primary">{{ "ldapconfig-dialog.ldapConfig" | translate }}</h3>
+    <form class="dialog_form ldap-form position-relative config-form flex flex-col" [formGroup]="form" novalidate autocomplete="off"
+          id="editConfigForm">
+        <div class="flex w-full flex-nowrap items-center gap-2">
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelPriority" | translate }}</mat-label>
+                <input matInput formControlName="priority" id="priorityInput" matTooltip="{{ 'ldapconfig-dialog.tooltipPriority' | translate }}" autofocus>
+                <mat-error *ngIf="form.get('priority').hasError('required')">{{ "ldapconfig-dialog.errorPriorityRequired" | translate }}</mat-error>
+                <mat-error *ngIf="form.get('priority').hasError('pattern')">{{ "ldapconfig-dialog.errorPriorityNumber" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelHost" | translate }}</mat-label>
+                <input matInput formControlName="host" id="hostInput" matTooltip="{{ 'ldapconfig-dialog.tooltipHost' | translate }}">
+                <mat-error *ngIf="form.get('host').hasError('required')">{{ "ldapconfig-dialog.errorHostRequired" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelPort" | translate }}</mat-label>
+                <input matInput formControlName="port" id="portInput" matTooltip="{{ 'ldapconfig-dialog.tooltipPort' | translate }}">
+                <mat-error *ngIf="form.get('port').hasError('required')">{{ "ldapconfig-dialog.errorPortRequired" | translate }}</mat-error>
+                <mat-error *ngIf="form.get('port').hasError('pattern')">{{ "ldapconfig-dialog.errorPortNumber" | translate }}</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="flex w-full flex-nowrap items-center gap-2">
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelBaseDN" | translate }}</mat-label>
+                <input matInput formControlName="baseDn" id="baseDnInput" matTooltip="{{ 'ldapconfig-dialog.tooltipBaseDN' | translate }}">
+                <mat-error *ngIf="form.get('baseDn').hasError('required')">{{ "ldapconfig-dialog.errorBaseDNRequired" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelBindDN" | translate }}</mat-label>
+                <input matInput formControlName="bindDn" id="bindDnInput" matTooltip="{{ 'ldapconfig-dialog.tooltipBindDN' | translate }}">
+                <mat-error *ngIf="form.get('bindDn').hasError('required')">{{ "ldapconfig-dialog.errorBindDNRequired" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelBindPW" | translate }}</mat-label>
+                <input type="password" matInput formControlName="bindPw" id="bindPwInput" autocomplete="new-password" matTooltip="{{ 'ldapconfig-dialog.tooltipBindPW' | translate }}">
+                <mat-hint *ngIf="editing" align="start">({{ "ldapconfig-dialog.hintBindPWEdit" | translate }})</mat-hint>
+                <mat-error *ngIf="form.get('bindPw').hasError('required')">{{ "ldapconfig-dialog.errorBindPWRequired" | translate }}</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="flex w-full flex-nowrap items-center mt-1 gap-2">
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelUserList" | translate }}</mat-label>
+                <input matInput formControlName="userListFilter" id="userListFilterInput" matTooltip="{{ 'ldapconfig-dialog.tooltipUserList' | translate }}">
+                <mat-error *ngIf="form.get('userListFilter').hasError('required')">{{ "ldapconfig-dialog.errorUserListRequired" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelUsernameAttr" | translate }}</mat-label>
+                <input matInput formControlName="usernameAttr" id="usernameAttrInput" matTooltip="{{ 'ldapconfig-dialog.tooltipUsernameAttr' | translate }}">
+                <mat-error *ngIf="form.get('usernameAttr').hasError('required')">{{ "ldapconfig-dialog.errorUsernameAttrRequired" | translate }}</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="flex w-full flex-nowrap items-center gap-2">
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>{{ "ldapconfig-dialog.inputLabelUIDAttr" | translate }}</mat-label>
+                <input matInput formControlName="uidAttr" id="uidAttrInput" matTooltip="{{ 'ldapconfig-dialog.tooltipUIDAttr' | translate }}">
+                <mat-error *ngIf="form.get('uidAttr').hasError('required')">{{ "ldapconfig-dialog.errorUIDAttrRequired" | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>
+                    {{ "ldapconfig-dialog.labelTemplate" | translate }}
+                </mat-label>
+                <mat-select
+                    matInput
+                    placeholder="{{
+                        'ldapconfig-dialog.labelTemplate' | translate
+                    }}"
+                    formControlName="template"
+                    id="templateInput"
+                >
+                <mat-option></mat-option>
+                    <mat-option
+                        [value]="template.id"
+                        *ngFor="let template of templates"
+                        id="templateInputOpt_{{ template.name }}"
+                    >
+                        {{ template.name }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('template').hasError('required')">
+                    {{ "ldapconfig-dialog.errorTemplate" | translate }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <p *ngIf="loadingTemplates" id="loadingMsg">
+            {{ "ldapconfig-dialog.loadingListTemplates" | translate }}
+        </p>
+
+        <p>
+            <mat-checkbox formControlName="useTLS" id="isTLSCheckbox">{{ "ldapconfig-dialog.checkboxUseTLS" | translate }}</mat-checkbox>
+        </p>
+
+        <mat-form-field class="mb-2 w-full">
+            <mat-label >{{ "ldapconfig-dialog.inputLabelFQDN" | translate }}</mat-label>
+            <input matInput formControlName="fqdn" id="fqdnInput" matTooltip="{{ 'ldapconfig-dialog.tooltipFQDN' | translate }}" (change)="forceFqdnCacertValidation()">
+            <mat-error *ngIf="form.get('fqdn').hasError('groupRequired')">{{ "ldapconfig-dialog.errorFQDNRequired" | translate }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{ "ldapconfig-dialog.inputLabelCACertificate" | translate }}</mat-label>
+            <textarea matInput formControlName="caCert" id="caCertInput" (change)="forceFqdnCacertValidation()"></textarea>
+            <mat-error *ngIf="form.get('caCert').hasError('groupRequired')">{{ "ldapconfig-dialog.errorCACertificateRequired" | translate }}</mat-error>
+        </mat-form-field>
+
+        <p class="error" *ngIf="error" id="errorMsg">{{ error }}</p>
+
+        <div class="flex w-full align-items-end justify-end gap-2">
+            <button (click)="close()" class="mr-4" id="cancelBtn"
+                mat-raised-button>{{ "shared.buttonCancel" | translate }}
+            </button>
+            <button (click)="submit()" [disabled]="form.invalid" color="primary" id="submitConfigBtn" mat-raised-button
+                    type="button">
+                <mat-progress-spinner *ngIf="savingProgress" [diameter]="15" color="white"
+                mode="indeterminate">
+                </mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+        </div>
+
+    </form>
+</div>

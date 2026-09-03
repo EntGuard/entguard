@@ -1,0 +1,127 @@
+<div class="dialog-wrap">
+    <h3 class="dialog-h t-primary">
+        {{ "server-config-dialog.headerEditInterface" | translate }}
+    </h3>
+    <form
+        [formGroup]="form"
+        novalidate
+        autocomplete="off"
+        class="flex flex-col"
+        id="editInterfaceForm"
+    >
+        <mat-form-field class="mb-2 w-full">
+            <mat-label>{{ "shared.labelInterfaceName" | translate }}</mat-label>
+            <input matInput formControlName="name" id="nameInput" />
+            <mat-error *ngIf="form.get('name').hasError('required')">
+                {{ "shared.errorNameRequired" | translate }}
+            </mat-error>
+        </mat-form-field>
+
+        <app-address-pool-multi-select
+            class="mb-2"
+            [loading]="loadingAddressPools"
+            [pools]="addressPools"
+            [control]="addressesControl"
+            [required]="true"
+        ></app-address-pool-multi-select>
+
+        <div class="flex w-full flex-nowrap items-center gap-2">
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>
+                    {{ "user-config-dialog.labelListenPortOptional" | translate }}
+                </mat-label>
+                <input
+                    matInput
+                    formControlName="listenPort"
+                    id="listenPortInput"
+                    matTooltip="{{ 'user-config-dialog.tooltipListenPort' | translate }}"
+                />
+                <mat-error *ngIf="form.get('listenPort').hasError('pattern')">
+                    {{ "shared.errorListenPortFormat" | translate }}
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="mb-2 flex-1">
+                <mat-label>
+                    {{ "shared.labelMaximumTransmissionUnit" | translate }}
+                </mat-label>
+                <input
+                    matInput
+                    formControlName="mtu"
+                    id="mtuInput"
+                    matTooltip="{{ 'shared.tooltipMaximumTransmissionUnit' | translate }}"
+                />
+                <mat-error
+                    *ngIf="
+                        form.get('mtu').hasError('pattern') ||
+                        form.get('mtu').hasError('min') ||
+                        form.get('mtu').hasError('max')
+                    "
+                >
+                    {{ "shared.errorMtu" | translate }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-form-field class="mb-2 w-full" id="dnsChipsFormField">
+            <mat-label>
+                {{ "user-config-dialog.labelDns" | translate }}
+            </mat-label>
+            <mat-chip-grid #dnsList>
+                <mat-chip-row
+                    *ngFor="let add of iface.dns"
+                    [removable]="true"
+                    (removed)="onDNSRemove(add)"
+                >
+                    {{ add }}
+                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                </mat-chip-row>
+                <input
+                    placeholder="{{
+                        'user-config-dialog.placeholderNewDns' | translate
+                    }}"
+                    #dnsInput
+                    [formControl]="dnsFormControl"
+                    [matChipInputFor]="dnsList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (blur)="onDnsBlur()"
+                    (matChipInputTokenEnd)="onDnsAdd($event)"
+                />
+            </mat-chip-grid>
+        </mat-form-field>
+
+        <p class="error" *ngIf="error">{{ error }}</p>
+
+        <div dir="rtl" class="flex items-center justify-end gap-2 mt-2">
+            <button
+                mat-raised-button
+                [disabled]="
+                    form.invalid ||
+                    addressesControl.invalid
+                "
+                type="button"
+                color="primary"
+                (click)="onSubmit()"
+                id="userConfigSubmitBtn"
+            >
+                <mat-progress-spinner
+                    color="white"
+                    mode="indeterminate"
+                    [diameter]="15"
+                    *ngIf="savingProgress"
+                ></mat-progress-spinner>
+                {{ "shared.buttonSubmit" | translate }}
+            </button>
+            <button
+                (click)="onClose()"
+                class="mr-2"
+                mat-raised-button
+                type="button"
+                id="cancelBtn"
+            >
+                {{ "shared.buttonCancel" | translate }}
+            </button>
+            <div class="flex-1"></div>
+        </div>
+    </form>
+</div>

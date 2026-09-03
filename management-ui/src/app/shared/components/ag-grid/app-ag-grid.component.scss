@@ -1,0 +1,124 @@
+.custom-paging {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 13px;
+  padding: 8px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto; /* Don't grow, don't shrink, use auto height */
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  gap: 8px;
+  z-index: 1; /* Ensure it appears above grid content if needed */
+  background-color: #fff; /* Match your app's background */
+  border-top: 1px solid rgba(0, 0, 0, 0.12); /* Optional: adds separation from grid */
+}
+
+  .flex.items-center {
+    display: flex;
+    align-items: center;
+  }
+
+.hidden-select {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+}
+
+::ng-deep .mat-select-panel,
+::ng-deep .mat-mdc-select-panel {
+  min-width: 120px !important;
+  padding: 0 !important;
+}
+
+::ng-deep .page-number-select {
+  text-align: center;
+}
+
+.page-select-button,
+.items-per-page-select-button {
+  min-width: 0 !important;
+}
+
+.autoRefreshWrapper {
+  padding: 13px 38px 5px 0px;
+}
+
+.refreshing-interval-input {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 13px;
+  width: 228px;
+}
+
+.refreshing-interval-input input {
+  text-align: right;
+  width: 40px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.54);
+}
+
+::ng-deep .mat-checkbox-checked.mat-accent .mat-checkbox-background {
+  background-color: gray;
+}
+
+::ng-deep .mat-mdc-checkbox:not(.mat-checkbox-disabled).mat-accent .mat-checkbox-ripple .mat-ripple-element {
+  background-color: gray;
+}
+
+::ng-deep .ag-theme-material .ag-pinned-right-header {
+  border-left: none !important;
+}
+
+::ng-deep .ag-theme-material .ag-cell-first-right-pinned {
+  border-left: none !important;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+#grid-wrapper-serversList .ag-grid-container {
+  flex: 1 1 auto;
+  width: 100%;
+  height: calc(100vh - 276px);
+  display: flex;
+}
+
+.grid-obj {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+::ng-deep .ag-root-wrapper {
+  min-height: 200px;
+}
+
+::ng-deep .ag-center-cols-viewport {
+  min-height: 48px !important;
+}
+
+::ng-deep .ag-center-cols-container {
+  min-height: 48px;
+}
+
+/* Prevent cell focus border from shifting content (Material theme) */
+::ng-deep .ag-theme-material .ag-cell-focus,
+::ng-deep .ag-theme-material .ag-cell:focus,
+::ng-deep .ag-theme-material .ag-cell:focus-within {
+  outline: none !important;
+  border: none !important;
+}

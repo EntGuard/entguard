@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/entguard/entguard/proto/v1;pbapi";
+
+service VpnS {
+    rpc GetConfiguration(Empty) returns (Configuration) {}
+    rpc SubscribeWG(stream SubscribeWGRequest) returns (stream WireGuardNotification) {}
+    rpc SendTelemetry(stream WireGuardTelemetry) returns (Empty) {}
+}
+
+service VpnC {
+    rpc GetConfiguration(ClientConfigurationRequest) returns (ClientConfigurationResponse) {}
+}
+
+// Error codes for gRPC APIs.
+// For more information: https://grpc.github.io/grpc/core/md_doc_statuscodes.html
+enum RPCErrorCode {
+    OK = 0;
+    CANCELLED = 1;
+    UNKNOWN = 2;
+    INVALID_ARGUMENT = 3;
+    DEADLINE_EXCEEDED = 4;
+    NOT_FOUND = 5;
+    ALREADY_EXISTS = 6;
+    PERMISSION_DENIED = 7;
+    RESOURCE_EXHAUSTED = 8;
+    FAILED_PRECONDITION = 9;
+    ABORTED = 10;
+    OUT_OF_RANGE = 11;
+    UNIMPLEMENTED = 12;
+    INTERNAL = 13;
+    UNAVAILABLE = 14;
+    DATA_LOSS = 15;
+    UNAUTHENTICATED = 16;
+}
+
+message RPCStatus {
+    RPCErrorCode code = 1;
+    string message = 2;
+}
+
+message Empty {}
+
+message Subscribe {}
+
+message SubscribeWGRequest {
+    oneof data {
+        Subscribe subscribe = 1;
+        RPCStatus response = 2;
+    }
+}
+
+message Configuration {
+    enum Type {
+        UNDEFINED_TYPE = 0;
+        WIREGUARD = 1;
+    };
+    Type type = 1;
+    bool telemetry_enabled = 2;
+
+    oneof vpn_proto {
+        WireGuard wg = 100;
+    };
+}
+
+message WireGuard {
+    string name = 1;
+    WireGuardInterface iface = 2;
+    repeated WireGuardPeer peers = 3;
+}
+
+message WireGuardInterface {
+    string private_key = 1;
+    repeated string addresses = 2;
+    string listen_port = 3;
+    repeated string dns = 4;
+    string mtu = 5;
+}
+
+// In the WireGuardPeer message, all occurences of "endpoint" mean "address:port"
+message WireGuardPeer {
+    string public_key = 1;
+    string preshared_key = 2;
+    repeated string allowed_ips = 3;
+    string endpoint = 4;
+    string persistent_keepalive = 5;
+    string healthcheck_endpoint = 6;
+}
+
+message WireGuardNotification {
+    oneof data {
+        WireGuardPeerNotification peer_notification = 1;
+        WireGuard config_notification = 2;
+    }
+}
+
+message WireGuardPeerNotification {
+    enum Operation {
+        UNDEFINED = 0;
+        ADD_PEER = 1;
+        DEL_PEER = 2;
+    }
+    Operation operation = 1;
+    WireGuardPeer peer = 2;
+}
+
+message WireGuardTelemetry {
+    bytes data = 1;
+}
+
+message ClientConfigurationRequest {
+    string external_device_id = 1;
+    string device_information = 2;
+}
+
+message ClientConfigurationResponse {
+    Configuration configuration = 1;
+    string session_id = 2;
+}

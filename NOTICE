@@ -1,0 +1,19 @@
+EntGuard
+Copyright 2020-2026 PANTHEON.tech s.r.o.
+
+This product includes software developed at
+PANTHEON.tech s.r.o. (https://pantheon.tech/).
+
+This product contains code from google.golang.org/grpc.
+Copyright 2014 gRPC authors.
+
+This product contains code from gopkg.in/yaml.v2 and gopkg.in/yaml.v3.
+Copyright 2011-2016 Canonical Ltd.
+
+gopkg.in/yaml.v3 additionally contains libyaml-derived code under the MIT license.
+Copyright (c) 2006-2010 Kirill Simonov
+Copyright (c) 2006-2011 Kirill Simonov
+
+This product includes other third-party open-source software under the MIT, BSD,
+and other permissive licenses. See the 'third_party_licenses' directory for the
+full list of dependencies and their license texts.
