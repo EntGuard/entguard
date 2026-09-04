@@ -424,6 +424,87 @@ Undo a database migration (rolls back only latest migration script):
   make migrate-down
   ```
 
+### DoS Hardening for Third-Party Components
+
+The official images for Docker Compose stack's third-party services (PostgreSQL, Prometheus, Grafana, 
+Telegraf) ship with permissive defaults — no connection caps, no query/statement timeouts, no payload-size 
+limits. To increase DoS resistance, we use our `provisioning/docker/compose.yaml` and the config files it mounts 
+to pin down each of these services using their own built-in options (no reverse proxy involved). None of this 
+is rate limiting in the requests/second sense (only EG-O's own REST/RPC APIs have that — see above); it's 
+connection, timeout, and resource-size caps that close the same class of DoS/resource-exhaustion gaps.
+
+**PostgreSQL (`db` service)** — via `command:` in `compose.yaml`:
+```yaml
+command: >
+  postgres
+  -c max_connections=100
+  -c statement_timeout=30000
+  -c idle_in_transaction_session_timeout=60000
+```
+`max_connections` caps total concurrent connections (comfortably above the orchestrator's own pool
+size, `max(runtime.NumCPU(), 4)` — see `service/config/config.go`). `statement_timeout` (ms) aborts a
+runaway query; 30s is comfortably above normal query and migration runtime.
+`idle_in_transaction_session_timeout` (ms) reclaims connections/locks left
+behind by a hung or abandoned transaction.
+
+**Prometheus (`tsdb` service)** — via `command:` in `compose.yaml`:
+```yaml
+command: >
+  --web.enable-lifecycle
+  --config.file=/etc/prometheus/prometheus.yaml
+  --web.max-connections=256
+  --query.max-concurrency=20
+  --query.timeout=30s
+  --query.max-samples=10000000
+```
+`--web.max-connections` caps total concurrent HTTP connections (default 512, tightened since this
+deployment has a single scrape target and a single Grafana datasource consumer). `--query.timeout` is
+tightened from the 2m default. `--query.max-concurrency`/`--query.max-samples` bound worst-case query
+cost. All are Prometheus's own flags; `prometheus.yaml` itself only holds scrape config and has no
+equivalent settings.
+
+**Grafana** — via `provisioning/docker/grafana/conf/grafana.ini`:
+```ini
+[security]
+disable_ip_address_login_protection = false
+brute_force_login_protection_max_attempts = 5
+
+[dataproxy]
+max_conns_per_host = 10
+timeout = 30
+dialTimeout = 10
+response_limit = 10485760
+
+[live]
+max_connections = 100
+message_size_limit = 8388608
+client_queue_max_size = 4194304
+```
+`disable_ip_address_login_protection = false` matters most: Grafana's per-IP brute-force login lockout
+is disabled by default (only per-username lockout is on by default), and Grafana is the only
+third-party service with a host-published port (`3000:3000`). `[dataproxy] response_limit` was a real
+gap, not just documentation — it defaults to `0` (unlimited), so a compromised/misbehaving Prometheus
+datasource could force Grafana to buffer an unbounded response body; the rest of `[dataproxy]`/`[live]`
+bound outbound connection count, connect/response timeouts, and Grafana Live (WebSocket) connection
+count, message size, and per-client buffer. Note: Grafana OSS has no general per-IP/API request-rate
+limiter — only login lockout and the frontend log-ingestion endpoint have one — so scripted
+dashboard/API CRUD abuse has nothing built-in to throttle short of a reverse proxy, which is out of
+scope here.
+
+**Telegraf** — via `provisioning/docker/telegraf/orchestrator/telegraf.conf`:
+```ini
+[[inputs.socket_listener]]
+  service_address = "unix:///run/entguard/sockets/socket"
+  read_timeout = "100s"
+  read_buffer_size = "40KiB"
+  max_connections = 20
+```
+`max_connections` caps concurrent connections to the telemetry-ingest Unix socket — each connected
+EG-S holds one open connection for the duration of its `SendTelemetry` stream
+(`service/rpc/vpns.go:180-216`), so this is effectively a fleet-size cap (currently ≤15 EG-S servers +
+headroom). Raise it if the fleet grows past that. Volumetric flooding on an already-open connection is
+separately bounded by the existing `[agent] metric_batch_size`/`metric_buffer_limit` in this same file.
+
 ## EntGuard Server
 
 The EntGuard server is able to configure WireGuard interfaces from the `Configuration` proto message.

@@ -374,6 +374,73 @@ environment variables:
 "VPN_ORCHESTRATOR_REST_RL_RATE":  "10"
 ```
 
+### Limiting Requests to Third-Party Components
+
+In addition to limiting requests to EG-O itself, you can protect the third-party services used by
+the EG-O Docker Compose stack — the PostgreSQL database, Prometheus, Grafana, and Telegraf — against excessive
+connections or requests, using each service's own configuration.
+
+**PostgreSQL database** — configured via the database container's startup command in `compose.yaml`:
+```yaml
+command: >
+  postgres
+  -c max_connections=100
+  -c statement_timeout=30000
+  -c idle_in_transaction_session_timeout=60000
+```
+`max_connections` limits the number of simultaneous database connections.  
+`statement_timeout` (in milliseconds) aborts a single query that runs longer than this.  
+`idle_in_transaction_session_timeout` (in milliseconds) closes a database session left idle inside 
+an open transaction for longer than this.
+
+**Prometheus** — configured via the Prometheus container's startup command in `compose.yaml`:
+```yaml
+command: >
+  --web.enable-lifecycle
+  --config.file=/etc/prometheus/prometheus.yaml
+  --web.max-connections=256
+  --query.max-concurrency=20
+  --query.timeout=30s
+  --query.max-samples=10000000
+```
+`--web.max-connections` limits simultaneous connections to Prometheus.  
+`--query.max-concurrency` limits how many queries can run at once. `--query.timeout` aborts a query 
+that runs too long. `--query.max-samples` limits how much data a single query can load into memory.
+
+**Grafana** — configured in the `grafana.ini` file:
+```ini
+[security]
+disable_ip_address_login_protection = false
+brute_force_login_protection_max_attempts = 5
+
+[dataproxy]
+max_conns_per_host = 10
+timeout = 30
+dialTimeout = 10
+response_limit = 10485760
+
+[live]
+max_connections = 100
+message_size_limit = 8388608
+client_queue_max_size = 4194304
+```
+The `[security]` settings lock out an IP address for 5 minutes after 5 failed login attempts. The
+`[dataproxy]` settings limit how many connections Grafana opens to its data source, how long it
+waits for a response, and how much data it accepts from a single response. The `[live]` settings
+limit how many live (WebSocket) connections Grafana accepts and how much data it buffers per
+connection.
+
+**Telegraf** (the instance that receives telemetry from your EG-S servers) — configured in the
+`telegraf.conf` file:
+```ini
+[[inputs.socket_listener]]
+  max_connections = 20
+```
+This limits how many EG-S servers can stream telemetry to EG-O at the same time.
+
+**NOTE:** If your deployment has more than 20 EntGuard Servers reporting telemetry at once, increase
+this value, or new EG-S telemetry connections may be rejected.
+
 ### Token Expiration
 
 The expiration time of JWT token can be controlled with environment variable:
