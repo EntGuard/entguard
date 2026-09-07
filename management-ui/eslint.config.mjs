@@ -30,7 +30,9 @@ export default [
         'error',
         {
           type: 'attribute',
-          prefix: 'app',
+          // 'mat' is allowed for directives that deliberately extend Angular
+          // Material behaviour and mirror its attribute naming.
+          prefix: ['app', 'mat'],
           style: 'camelCase',
         },
       ],
