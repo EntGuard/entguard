@@ -19,9 +19,9 @@ require (
 	github.com/vishvananda/netlink v1.2.1-beta.2
 	gitlab.com/michenriksen/jdam v0.2.0-alpha
 	go.fd.io/govpp v0.11.0
-	golang.org/x/crypto v0.46.0
-	golang.org/x/sync v0.19.0
-	golang.org/x/term v0.38.0
+	golang.org/x/crypto v0.52.0
+	golang.org/x/sync v0.20.0
+	golang.org/x/term v0.43.0
 	golang.org/x/time v0.3.0
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230215201556-9c5414ab4bde
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217
@@ -213,10 +213,10 @@ require (
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
-	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20230209153558-1e2c3e5a3c14 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
