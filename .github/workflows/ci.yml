@@ -1,0 +1,174 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref: a new push to a PR makes the
+# in-flight run irrelevant, and this repo is private (Actions minutes are billed).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Build, tests and lint share a job on purpose: golangci-lint type checks the
+  # whole program, so a separate job would repeat this job's compilation on the
+  # same restored cache. Steps run cheapest and most substantive first and
+  # slowest last, so the build warms the cache golangci-lint then reuses.
+  go:
+    name: Go build, tests & lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Build binaries
+        run: make orchestrator egserver egvpn healthcheck
+
+      - name: Check gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::These files are not gofmt-formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Verify go.mod and go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum \
+            || { echo "::error::go.mod/go.sum are not tidy - run 'go mod tidy' and commit"; exit 1; }
+
+      - name: Unit tests
+        # -count=1 disables Go's test result cache so a cached PASS from an
+        # earlier run can never mask a real failure.
+        env:
+          GOFLAGS: -count=1
+        run: make test-unit
+
+      # Single source of truth: the version the Makefile pins, so CI and
+      # `make golangci-lint` can never drift apart.
+      - name: Read golangci-lint version from Makefile
+        id: golangci
+        run: |
+          version=$(sed -n 's/^GOLANGCI_LINT_VERSION:=\(.*\)/\1/p' Makefile)
+          test -n "$version" || { echo "::error::could not read GOLANGCI_LINT_VERSION from Makefile"; exit 1; }
+          echo "version=v${version}" >> "$GITHUB_OUTPUT"
+
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: ${{ steps.golangci.outputs.version }}
+          args: --timeout 10m
+
+  integration-tests:
+    name: Go integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      # The -cached target skips `go clean -testcache`, which would throw away
+      # the build cache restored by setup-go. GOFLAGS=-count=1 gives us the
+      # correctness that test-clean was there for, without the cost.
+      - name: Integration tests
+        env:
+          GOFLAGS: -count=1
+        run: make test-integration-cached
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose -f provisioning/docker/compose.test-integration.yaml logs --no-color
+
+  proto:
+    name: Protobuf lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read buf version from Makefile
+        id: buf
+        run: |
+          version=$(sed -n 's/^BUF_LINT_VERSION:=\(.*\)/\1/p' Makefile)
+          test -n "$version" || { echo "::error::could not read BUF_LINT_VERSION from Makefile"; exit 1; }
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: ${{ steps.buf.outputs.version }}
+          github_token: ${{ github.token }}
+
+      - name: Lint protobuf
+        run: buf lint
+
+      # Diffed against the local checkout rather than the remote URL used by
+      # `make buf-breaking`: an anonymous clone of this repo fails while it is
+      # private, and this needs no credentials either way. The base branch is
+      # fetched explicitly so the ref is guaranteed to exist.
+      - name: Detect breaking protobuf changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin \
+            "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          buf breaking --against ".git#branch=origin/${BASE_REF}"
+
+  ui:
+    name: Management UI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: management-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: management-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # Single job to point branch protection at, so the required-check list does
+  # not need updating every time a job is added or renamed above.
+  ci-success:
+    name: CI success
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [go, integration-tests, proto, ui]
+    if: always()
+    steps:
+      - name: Fail if any job did not succeed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "::error::One or more CI jobs failed or were cancelled"
+          exit 1
+      - run: echo "All CI jobs passed."
