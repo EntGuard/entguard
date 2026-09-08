@@ -14,3 +14,5 @@ __debug_*
 govulncheck-results.txt
 osv-results.txt
 trivy-results.txt
+
+/dist

@@ -340,7 +340,8 @@ third-party-licenses:
 # PDF documentation
 # -------------------------------
 
-PANDOC_LATEX_IMAGE=pandoc/latex
+# Pinned so a released PDF is reproducible; `latest` can change under us.
+PANDOC_LATEX_IMAGE=pandoc/latex:3.11
 
 .PHONY: pdf-docs pdf-guide pdf-release-notes
 
@@ -390,3 +391,59 @@ sqlc-gen:
 		-v $(PWD):/src \
 		-w /src \
 		sqlc/sqlc:$(SQLC_VERSION) generate
+
+# -------------------------------
+# Release artifacts
+# -------------------------------
+# REGISTRY is the registry namespace released images are pushed to. Leave it
+# empty for local builds; release automation sets it to ghcr.io/<owner>.
+REGISTRY ?=
+
+DIST_DIR ?= dist
+
+# Push `latest` alongside the version tag. Release automation sets this to
+# false for pre-releases so `latest` keeps pointing at the last stable build.
+PUSH_LATEST ?= true
+
+RELEASE_IMAGES = \
+	$(ORCHESTRATOR_IMAGE_PROD):$(ORCHESTRATOR_VERSION) \
+	$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION) \
+	$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION) \
+	$(DBMIGRATE_IMAGE):$(DBMIGRATE_VERSION)
+
+.PHONY:push-images
+push-images:
+	@if [ -z "$(REGISTRY)" ]; then echo "=> REGISTRY is empty, refusing to push"; exit 1; fi
+	@set -e; for ref in $(RELEASE_IMAGES); do \
+		name=$${ref%%:*}; tag=$${ref##*:}; \
+		echo "=> pushing $(REGISTRY)/$$name:$$tag"; \
+		docker tag $$ref $(REGISTRY)/$$name:$$tag; \
+		docker push --quiet $(REGISTRY)/$$name:$$tag; \
+		if [ "$(PUSH_LATEST)" = "true" ]; then \
+			echo "=> pushing $(REGISTRY)/$$name:latest"; \
+			docker tag $$ref $(REGISTRY)/$$name:latest; \
+			docker push --quiet $(REGISTRY)/$$name:latest; \
+		fi; \
+	done
+
+# Cross-compiled, named egvpn binary for release assets. `make egvpn` installs
+# into GOPATH for local use; this writes a per-platform file into DIST_DIR and
+# reuses the same EGVPN_LDFLAGS so embedded metadata cannot drift.
+.PHONY:egvpn-dist
+egvpn-dist:
+	@if [ -z "$(GOOS)" ] || [ -z "$(GOARCH)" ]; then echo "=> set GOOS and GOARCH"; exit 1; fi
+	@echo "=> building egvpn $(EGVPN_VERSION) for $(GOOS)/$(GOARCH)"
+	@mkdir -p $(DIST_DIR)
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
+		-ldflags "${EGVPN_LDFLAGS}" \
+		-o $(DIST_DIR)/egvpn-$(GOOS)-$(GOARCH) ./cmd/egvpn/
+
+# Saves the images egvpn launches, for the offline `egvpn install` path.
+.PHONY:save-images
+save-images:
+	@mkdir -p $(DIST_DIR)
+	@set -e; for ref in $(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION) $(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION); do \
+		name=$${ref%%:*}; tag=$${ref##*:}; \
+		echo "=> saving $$name:$$tag"; \
+		docker save $$ref | gzip -9 > $(DIST_DIR)/$$name-$$tag.tar.gz; \
+	done
