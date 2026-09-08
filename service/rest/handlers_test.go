@@ -56,7 +56,7 @@ var (
 	vcmQ          vcm.VPNConfigManager
 	sqlcQ         *sqlc.Queries
 	manager       *user.PostgresManager
-	composeClient composeapi.Service
+	composeClient composeapi.Compose
 	testDir       string
 )
 
