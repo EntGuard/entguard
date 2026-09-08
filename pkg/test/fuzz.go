@@ -53,7 +53,7 @@ type FuzzFilepaths struct {
 	ComposeLogFile string
 }
 
-func SkipOrSetupRESTFuzzTest(t *testing.T, ctx context.Context, q user.Querier, compose composeapi.Service, testDir string) (*api.JWT, *FuzzFilepaths) {
+func SkipOrSetupRESTFuzzTest(t *testing.T, ctx context.Context, q user.Querier, compose composeapi.Compose, testDir string) (*api.JWT, *FuzzFilepaths) {
 	if !IsRESTFuzzTest() {
 		t.Skipf("skipping REST API fuzz test: to run this test set %s envvar to 1", restFuzzEnvVar)
 	}
@@ -130,7 +130,7 @@ func RunFFUFJob(
 	return nil
 }
 
-func DumpComposeLogs(ctx context.Context, compose composeapi.Service, file string) error {
+func DumpComposeLogs(ctx context.Context, compose composeapi.Compose, file string) error {
 	f, err := os.Create(file)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func DumpComposeLogs(ctx context.Context, compose composeapi.Service, file strin
 	return compose.Logs(ctx, restFuzzComposeProject, consumer, composeapi.LogOptions{})
 }
 
-func checkDockerComposeServices(t *testing.T, ctx context.Context, compose composeapi.Service) {
+func checkDockerComposeServices(t *testing.T, ctx context.Context, compose composeapi.Compose) {
 	errServiceDown := errors.New("docker compose service is down")
 	err := compose.Events(ctx, restFuzzComposeProject, composeapi.EventsOptions{
 		Services: []string{restFuzzOrchestratorService, restFuzzDBService},
