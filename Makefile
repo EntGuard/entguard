@@ -76,11 +76,15 @@ test-integration-cached:
 
 test-fuzz-rest: test-clean test-fuzz-rest-cached
 
+# Absolute: go test runs each package in its own directory.
+FUZZ_REST_COMPOSE_FILE:=$(CURDIR)/provisioning/docker/compose.test-fuzz-rest.yaml
+
 test-fuzz-rest-cached:
 	@echo "=> running REST API fuzz tests"
-	docker compose -f provisioning/docker/compose.test-fuzz-rest.yaml up -d --build
-	TEST_FUZZ_REST=1 go test -p=1 `go list ./... | grep -v pkg | grep -v cmd`
-	docker compose -f provisioning/docker/compose.test-fuzz-rest.yaml down -v
+	docker compose -f $(FUZZ_REST_COMPOSE_FILE) up -d --build
+	TEST_FUZZ_REST=1 TEST_FUZZ_COMPOSE_FILE=$(FUZZ_REST_COMPOSE_FILE) \
+		go test -p=1 `go list ./... | grep -v pkg | grep -v cmd`
+	docker compose -f $(FUZZ_REST_COMPOSE_FILE) down -v
 
 test-rest-local:
 	@echo "=> running REST API tests locally"

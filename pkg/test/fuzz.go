@@ -29,8 +29,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/compose/v2/cmd/formatter"
-	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/ffuf/ffuf/v2/pkg/ffuf"
 	"github.com/ffuf/ffuf/v2/pkg/filter"
 	"github.com/ffuf/ffuf/v2/pkg/input"
@@ -53,7 +51,7 @@ type FuzzFilepaths struct {
 	ComposeLogFile string
 }
 
-func SkipOrSetupRESTFuzzTest(t *testing.T, ctx context.Context, q user.Querier, compose composeapi.Compose, testDir string) (*api.JWT, *FuzzFilepaths) {
+func SkipOrSetupRESTFuzzTest(t *testing.T, ctx context.Context, q user.Querier, compose *ComposeProject, testDir string) (*api.JWT, *FuzzFilepaths) {
 	if !IsRESTFuzzTest() {
 		t.Skipf("skipping REST API fuzz test: to run this test set %s envvar to 1", restFuzzEnvVar)
 	}
@@ -65,12 +63,7 @@ func SkipOrSetupRESTFuzzTest(t *testing.T, ctx context.Context, q user.Querier, 
 		ComposeLogFile: filepath.Join(testDir, t.Name()+"-compose.log"),
 	}
 
-	timeout := time.Duration(20 * time.Second)
-	err := compose.Restart(ctx, restFuzzComposeProject, composeapi.RestartOptions{
-		Timeout:  &timeout,
-		Services: []string{restFuzzOrchestratorService},
-		NoDeps:   false,
-	})
+	err := compose.Restart(ctx, 20*time.Second, restFuzzOrchestratorService)
 	require.NoError(t, err)
 
 	// give some time for orchestrator restart
@@ -130,30 +123,20 @@ func RunFFUFJob(
 	return nil
 }
 
-func DumpComposeLogs(ctx context.Context, compose composeapi.Compose, file string) error {
-	f, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-	consumer := formatter.NewLogConsumer(ctx, f, f, false, true, true)
-	return compose.Logs(ctx, restFuzzComposeProject, consumer, composeapi.LogOptions{})
+func DumpComposeLogs(ctx context.Context, compose *ComposeProject, file string) error {
+	return compose.DumpLogs(ctx, file)
 }
 
-func checkDockerComposeServices(t *testing.T, ctx context.Context, compose composeapi.Compose) {
+func checkDockerComposeServices(t *testing.T, ctx context.Context, compose *ComposeProject) {
 	errServiceDown := errors.New("docker compose service is down")
-	err := compose.Events(ctx, restFuzzComposeProject, composeapi.EventsOptions{
-		Services: []string{restFuzzOrchestratorService, restFuzzDBService},
-		Consumer: func(event composeapi.Event) error {
-			switch event.Status {
+	err := compose.Events(ctx, []string{restFuzzOrchestratorService, restFuzzDBService},
+		func(event ComposeEvent) error {
+			switch event.Action {
 			case "destroy", "kill", "stop", "die":
-				return fmt.Errorf("%w: detected event %s for service %s", errServiceDown, event.Status, event.Service)
+				return fmt.Errorf("%w: detected event %s for service %s", errServiceDown, event.Action, event.Service)
 			}
 			return nil
-		},
-	})
+		})
 	if errors.Is(err, errServiceDown) {
 		require.NoError(t, err)
 	}
