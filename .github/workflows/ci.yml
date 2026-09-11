@@ -4,8 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
-  # Lets the release workflow reuse these exact checks rather than duplicating
-  # them, so "verified" means the same thing for a pull request and a release.
+  # Lets the release workflow reuse these checks
   workflow_call:
 
 # Cancel superseded runs on the same ref: a new push to a PR makes the

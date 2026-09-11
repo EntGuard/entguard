@@ -7,6 +7,36 @@ date: July 7, 2026
 
 # I. Overview
 
+## Archive Content
+
+```bash
+grafana/                     # Grafana configuration
+previous-db/                 # Empty directory to insert database dump from
+                             # previous version
+prometheus/                  # Prometheus configuration
+telegraf/                    # Telegraf configuration
+compose.yaml                 # Compose File
+dbconfig.yaml                # Database migration configuration
+egvpn                        # egvpn Tool Binary
+entguard-v1.14.1-guide.pdf   # EntGuard Guide (this document)
+generate-dev-certs.sh        # Script which generates self-signed
+                             # TLS certificates (for evaluation)
+LICENSE                      # License file
+NOTICE                       # Notice file complementing license
+release-notes.pdf            # Release notes
+```
+
+EntGuard additionally uses the following docker images. They can be pulled from
+GitHub container registry.
+
+```bash
+ghcr.io/entguard/eg-db-migrate:1.14.1.tar     # Database migration Docker
+                                              # Image
+ghcr.io/entguard/eg-healthcheck:1.14.1.tar    # EG-HC Docker Image
+ghcr.io/entguard/eg-orchestrator:1.14.1.tar   # EG-O Docker Image
+ghcr.io/entguard/eg-server:1.14.1.tar         # EG-S Docker Image
+```
+
 ## EntGuard Components
 
 * EntGuard Orchestrator, or **EG-O**, is a service for configuring VPN servers and

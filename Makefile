@@ -4,6 +4,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 REMOTE_GIT := https://github.com/EntGuard/entguard.git
 
 RELEASE_VERSION="1.14.1"
+RELEASE_FILENAME="entguard-release-v$(RELEASE_VERSION)"
 
 ORCHESTRATOR_VERSION=$(RELEASE_VERSION)
 ORCHESTRATOR_IMAGE_DEV="eg-orchestrator-dev"
@@ -22,6 +23,8 @@ EGVPN_VERSION=$(RELEASE_VERSION)
 DBMIGRATE_VERSION=$(RELEASE_VERSION)
 DBMIGRATE_IMAGE="eg-db-migrate"
 
+GHCR_IMAGE_REPO_URL="ghcr.io/entguard"
+
 ORCHESTRATOR_LDFLAGS = -w -s \
 	-X github.com/entguard/entguard/service/buildinfo.version=$(ORCHESTRATOR_VERSION) \
 	-X github.com/entguard/entguard/service/buildinfo.gitCommit=$(COMMIT) \
@@ -31,9 +34,9 @@ EGVPN_LDFLAGS = -w -s \
 	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.version=$(EGVPN_VERSION) \
 	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.gitCommit=$(COMMIT) \
 	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.gitBranch=$(BRANCH) \
-	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egServerImageName=$(EGSERVER_IMAGE_PROD) \
+	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egServerImageName=$(GHCR_IMAGE_REPO_URL)/$(EGSERVER_IMAGE_PROD) \
 	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egServerImageTag=$(EGSERVER_VERSION) \
-	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egHealthcheckImageName=$(HEALTHCHECK_IMAGE_PROD) \
+	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egHealthcheckImageName=$(GHCR_IMAGE_REPO_URL)/$(HEALTHCHECK_IMAGE_PROD) \
 	-X github.com/entguard/entguard/cmd/egvpn/buildinfo.egHealthcheckImageTag=$(HEALTHCHECK_VERSION)
 
 .PHONY: all orchestrator egserver egvpn healthcheck test test-unit test-integration test-clean
@@ -128,52 +131,52 @@ orchestrator-dev-image:
 	@echo "=> building EntGuard Orchestrator development image"
 	docker build \
 		--file docker/orchestrator.dev.Dockerfile \
-		--tag ${ORCHESTRATOR_IMAGE_DEV}:${ORCHESTRATOR_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${ORCHESTRATOR_IMAGE_DEV}:${ORCHESTRATOR_VERSION} \
 		.
 
 orchestrator-prod-image:
 	@echo "=> building EntGuard Orchestrator production image"
 	docker build \
-		--build-arg DEV_IMAGE=${ORCHESTRATOR_IMAGE_DEV}:${ORCHESTRATOR_VERSION} \
+		--build-arg DEV_IMAGE=$(GHCR_IMAGE_REPO_URL)/${ORCHESTRATOR_IMAGE_DEV}:${ORCHESTRATOR_VERSION} \
 		--file docker/orchestrator.prod.Dockerfile \
-		--tag ${ORCHESTRATOR_IMAGE_PROD}:${ORCHESTRATOR_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${ORCHESTRATOR_IMAGE_PROD}:${ORCHESTRATOR_VERSION} \
 		.
 
 egserver-dev-image:
 	@echo "=> building EntGuard Server development image"
 	docker build \
 		--file docker/egserver.dev.Dockerfile \
-		--tag ${EGSERVER_IMAGE_DEV}:${EGSERVER_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${EGSERVER_IMAGE_DEV}:${EGSERVER_VERSION} \
 		.
 
 egserver-prod-image:
 	@echo "=> building EntGuard Server production image"
 	docker build \
-		--build-arg DEV_IMAGE=${EGSERVER_IMAGE_DEV}:${EGSERVER_VERSION} \
+		--build-arg DEV_IMAGE=$(GHCR_IMAGE_REPO_URL)/${EGSERVER_IMAGE_DEV}:${EGSERVER_VERSION} \
 		--file docker/egserver.prod.Dockerfile \
-		--tag ${EGSERVER_IMAGE_PROD}:${EGSERVER_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${EGSERVER_IMAGE_PROD}:${EGSERVER_VERSION} \
 		.
 
 healthcheck-dev-image:
 	@echo "=> building EntGuard Healthcheck development image"
 	docker build \
 		--file docker/healthcheck.dev.Dockerfile \
-		--tag ${HEALTHCHECK_IMAGE_DEV}:${HEALTHCHECK_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${HEALTHCHECK_IMAGE_DEV}:${HEALTHCHECK_VERSION} \
 		.
 
 healthcheck-prod-image:
 	@echo "=> building EntGuard Healthcheck production image"
 	docker build \
-		--build-arg DEV_IMAGE=${HEALTHCHECK_IMAGE_DEV}:${HEALTHCHECK_VERSION} \
+		--build-arg DEV_IMAGE=$(GHCR_IMAGE_REPO_URL)/${HEALTHCHECK_IMAGE_DEV}:${HEALTHCHECK_VERSION} \
 		--file docker/healthcheck.prod.Dockerfile \
-		--tag ${HEALTHCHECK_IMAGE_PROD}:${HEALTHCHECK_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${HEALTHCHECK_IMAGE_PROD}:${HEALTHCHECK_VERSION} \
 		.
 
 dbmigrate-image:
 	@echo "=> building database migration image"
 	docker build \
 		--file docker/dbmigrate.Dockerfile \
-		--tag ${DBMIGRATE_IMAGE}:${DBMIGRATE_VERSION} \
+		--tag $(GHCR_IMAGE_REPO_URL)/${DBMIGRATE_IMAGE}:${DBMIGRATE_VERSION} \
 		.
 
 protoc-image:
@@ -308,8 +311,8 @@ TRIVY_OUTPUT:=trivy-results.txt
 trivy-scan:
 	@echo "=> running trivy v$(TRIVY_VERSION), saving results to $(TRIVY_OUTPUT)"
 	@TRIVY_VERSION="$(TRIVY_VERSION)" \
-		EGSERVER_IMAGE="$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION)" \
-		HEALTHCHECK_IMAGE="$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION)" \
+		EGSERVER_IMAGE="$(GHCR_IMAGE_REPO_URL)/$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION)" \
+		HEALTHCHECK_IMAGE="$(GHCR_IMAGE_REPO_URL)/$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION)" \
 		./scripts/trivy-scan.sh \
 		2>&1 | tee $(TRIVY_OUTPUT)
 
@@ -340,7 +343,6 @@ third-party-licenses:
 # PDF documentation
 # -------------------------------
 
-# Pinned so a released PDF is reproducible; `latest` can change under us.
 PANDOC_LATEX_IMAGE=pandoc/latex:3.11
 
 .PHONY: pdf-docs pdf-guide pdf-release-notes
@@ -393,57 +395,42 @@ sqlc-gen:
 		sqlc/sqlc:$(SQLC_VERSION) generate
 
 # -------------------------------
-# Release artifacts
+# Releases
 # -------------------------------
-# REGISTRY is the registry namespace released images are pushed to. Leave it
-# empty for local builds; release automation sets it to ghcr.io/<owner>.
-REGISTRY ?=
 
-DIST_DIR ?= dist
+# These relase related targets should be used only by CI/CD (with the exception
+# of `release-package` if you want to test it locally).
 
-# Push `latest` alongside the version tag. Release automation sets this to
-# false for pre-releases so `latest` keeps pointing at the last stable build.
-PUSH_LATEST ?= true
+# CI/CD is configured to run `verify` job before proceeding with the release, so
+# we do not need to run tests as prerequisites for the release targets.
 
-RELEASE_IMAGES = \
-	$(ORCHESTRATOR_IMAGE_PROD):$(ORCHESTRATOR_VERSION) \
-	$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION) \
-	$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION) \
-	$(DBMIGRATE_IMAGE):$(DBMIGRATE_VERSION)
+.PHONY: check-git-tag
+check-git-tag:
+	@git tag --points-at HEAD | grep -qF "v$(RELEASE_VERSION)" \
+		|| (echo "git tag of current HEAD commit differs from v$(RELEASE_VERSION)" && exit 1)
 
-.PHONY:push-images
-push-images:
-	@if [ -z "$(REGISTRY)" ]; then echo "=> REGISTRY is empty, refusing to push"; exit 1; fi
-	@set -e; for ref in $(RELEASE_IMAGES); do \
-		name=$${ref%%:*}; tag=$${ref##*:}; \
-		echo "=> pushing $(REGISTRY)/$$name:$$tag"; \
-		docker tag $$ref $(REGISTRY)/$$name:$$tag; \
-		docker push --quiet $(REGISTRY)/$$name:$$tag; \
-		if [ "$(PUSH_LATEST)" = "true" ]; then \
-			echo "=> pushing $(REGISTRY)/$$name:latest"; \
-			docker tag $$ref $(REGISTRY)/$$name:latest; \
-			docker push --quiet $(REGISTRY)/$$name:latest; \
-		fi; \
-	done
+# Release package does not contain docker images because they are uploaded separately to ghcr
+.PHONY: release-package
+release-package: egvpn pdf-docs
+	RELEASE_VERSION=$(RELEASE_VERSION) \
+	RELEASE_FILENAME=$(RELEASE_FILENAME) \
+	./scripts/release.sh
 
-# Cross-compiled, named egvpn binary for release assets. `make egvpn` installs
-# into GOPATH for local use; this writes a per-platform file into DIST_DIR and
-# reuses the same EGVPN_LDFLAGS so embedded metadata cannot drift.
-.PHONY:egvpn-dist
-egvpn-dist:
-	@if [ -z "$(GOOS)" ] || [ -z "$(GOARCH)" ]; then echo "=> set GOOS and GOARCH"; exit 1; fi
-	@echo "=> building egvpn $(EGVPN_VERSION) for $(GOOS)/$(GOARCH)"
-	@mkdir -p $(DIST_DIR)
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
-		-ldflags "${EGVPN_LDFLAGS}" \
-		-o $(DIST_DIR)/egvpn-$(GOOS)-$(GOARCH) ./cmd/egvpn/
-
-# Saves the images egvpn launches, for the offline `egvpn install` path.
-.PHONY:save-images
-save-images:
-	@mkdir -p $(DIST_DIR)
-	@set -e; for ref in $(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION) $(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION); do \
-		name=$${ref%%:*}; tag=$${ref##*:}; \
-		echo "=> saving $$name:$$tag"; \
-		docker save $$ref | gzip -9 > $(DIST_DIR)/$$name-$$tag.tar.gz; \
-	done
+.PHONY: release-ghcr-image-push
+release-ghcr-image-push: ORCHESTRATOR_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(ORCHESTRATOR_IMAGE_PROD):$(ORCHESTRATOR_VERSION)
+release-ghcr-image-push: EGSERVER_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION)
+release-ghcr-image-push: HEALTHCHECK_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION)
+release-ghcr-image-push: DBMIGRATE_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(DBMIGRATE_IMAGE):$(DBMIGRATE_VERSION)
+release-ghcr-image-push: release-ghcr-image-tag
+	@! docker manifest inspect $(ORCHESTRATOR_IMAGE_GHCR) \
+		|| (echo "image $(ORCHESTRATOR_IMAGE_GHCR) already exists in ghcr repository" && exit 1)
+	@! docker manifest inspect $(EGSERVER_IMAGE_GHCR) \
+		|| (echo "image $(EGSERVER_IMAGE_GHCR) already exists in ghcr repository" && exit 1)
+	@! docker manifest inspect $(HEALTHCHECK_IMAGE_GHCR) \
+		|| (echo "image $(HEALTHCHECK_IMAGE_GHCR) already exists in ghcr repository" && exit 1)
+	@! docker manifest inspect $(DBMIGRATE_IMAGE_GHCR) \
+		|| (echo "image $(DBMIGRATE_IMAGE_GHCR) already exists in ghcr repository" && exit 1)
+	docker push $(ORCHESTRATOR_IMAGE_GHCR)
+	docker push $(EGSERVER_IMAGE_GHCR)
+	docker push $(HEALTHCHECK_IMAGE_GHCR)
+	docker push $(DBMIGRATE_IMAGE_GHCR)

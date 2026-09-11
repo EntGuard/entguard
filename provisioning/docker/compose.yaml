@@ -6,7 +6,7 @@ volumes:
 services:
   migrate:
     container_name: eg-db-migrate
-    image: ${EG_IMAGE_PREFIX:-}eg-db-migrate:${EG_VERSION:-1.14.1}
+    image: ghcr.io/entguard/eg-db-migrate:1.14.1
     command: "up -config=dbconfig.yaml -env='postgresdb'"
     links:
       - db
@@ -36,7 +36,7 @@ services:
       - entguard_pgdata:/var/lib/postgresql/data
   web:
     container_name: eg-orchestrator
-    image: ${EG_IMAGE_PREFIX:-}eg-orchestrator:${EG_VERSION:-1.14.1}
+    image: ghcr.io/entguard/eg-orchestrator:1.14.1
     restart: unless-stopped
     ports:
       - "8080:8080"

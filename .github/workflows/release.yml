@@ -19,9 +19,6 @@ jobs:
     timeout-minutes: 5
     outputs:
       version: ${{ steps.v.outputs.version }}
-      registry: ${{ steps.v.outputs.registry }}
-      prerelease: ${{ steps.v.outputs.prerelease }}
-      push_latest: ${{ steps.v.outputs.push_latest }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,33 +28,9 @@ jobs:
           TAG: ${{ github.ref_name }}
           OWNER: ${{ github.repository_owner }}
         run: |
+          make check-git-tag
           version="${TAG#v}"
-          makefile_version=$(sed -n 's/^RELEASE_VERSION="\?\([^"]*\)"\?.*/\1/p' Makefile)
-          if [ "$version" != "$makefile_version" ]; then
-            echo "::error::tag ${TAG} implies version ${version}, but Makefile RELEASE_VERSION is ${makefile_version}. Update the Makefile, then re-tag."
-            exit 1
-          fi
 
-          # A tag like v1.15.0-rc1 is a pre-release, and must not move `latest`.
-          case "$version" in
-            *-*) prerelease=true;  push_latest=false ;;
-            *)   prerelease=false; push_latest=true  ;;
-          esac
-
-          # GHCR rejects uppercase in the namespace, and the owner is mixed case.
-          registry="ghcr.io/$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
-
-          {
-            echo "version=${version}"
-            echo "registry=${registry}"
-            echo "prerelease=${prerelease}"
-            echo "push_latest=${push_latest}"
-          } >> "$GITHUB_OUTPUT"
-
-          echo "Releasing ${version} to ${registry} (prerelease=${prerelease})"
-
-  # Reuses the PR pipeline verbatim, so a release is held to exactly the same
-  # bar as a pull request rather than a second, drifting copy of those checks.
   verify:
     name: Verify
     needs: version
@@ -65,15 +38,12 @@ jobs:
 
   images:
     name: Publish images
-    needs: [version, verify]
+    needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: read
       packages: write
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-      REGISTRY: ${{ needs.version.outputs.registry }}
     steps:
       - uses: actions/checkout@v4
 
@@ -83,49 +53,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The three *-dev images are ~3GB each and only exist to produce the tiny
-      # scratch-based prod images, so each one is dropped before building the
-      # next. Building all of them at once risks filling the runner disk.
       - name: Build images
-        run: |
-          set -e
-          for component in orchestrator egserver healthcheck; do
-            make "${component}-images"
-            case "$component" in
-              orchestrator) dev="eg-orchestrator-dev" ;;
-              egserver)     dev="eg-server-dev" ;;
-              healthcheck)  dev="eg-healthcheck-dev" ;;
-            esac
-            docker image rm "${dev}:${VERSION}" || true
-            docker builder prune -f >/dev/null || true
-            df -h / | tail -1
-          done
-          make dbmigrate-image
+        run: make all-images
 
       - name: Push images to GHCR
-        run: |
-          make push-images \
-            REGISTRY="${REGISTRY}" \
-            PUSH_LATEST=${{ needs.version.outputs.push_latest }}
+        run: make release-ghcr-image-push
 
-      - name: Save images for offline install
-        run: make save-images
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: image-archives
-          path: dist/*.tar.gz
-          if-no-files-found: error
-          retention-days: 7
-
-  bundle:
-    name: Build release bundle
-    needs: [version, verify]
+  package:
+    name: Build release package
+    needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-      REGISTRY: ${{ needs.version.outputs.registry }}
     steps:
       - uses: actions/checkout@v4
 
@@ -134,71 +72,19 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      # Built with the published image references baked in, so a released egvpn
-      # starts containers from GHCR rather than from unqualified local names.
-      - name: Build egvpn binaries
-        run: |
-          set -e
-          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
-            make egvpn-dist \
-              GOOS="${platform%/*}" GOARCH="${platform#*/}" \
-              EGSERVER_IMAGE_PROD="${REGISTRY}/eg-server" \
-              HEALTHCHECK_IMAGE_PROD="${REGISTRY}/eg-healthcheck"
-          done
-          ls -l dist/
-
-      - name: Generate PDF guide
-        run: make pdf-guide
-
-      # Assembled by explicit copy rather than by excluding paths: the
-      # dev-only db-encryption-key must never end up in a published bundle,
-      # and operators generate their own key as the bundle README describes.
-      - name: Assemble deployment bundle
-        run: |
-          set -e
-          bundle="entguard-${VERSION}-deploy"
-          staging="$(mktemp -d)/${bundle}"
-          mkdir -p "${staging}/previous-db" dist
-          cp provisioning/docker/compose.yaml "${staging}/"
-          cp provisioning/docker/dbconfig.yaml "${staging}/"
-          cp -r provisioning/docker/grafana \
-                provisioning/docker/prometheus \
-                provisioning/docker/telegraf "${staging}/"
-          touch "${staging}/previous-db/.gitkeep"
-          cp scripts/generate-dev-certs.sh "${staging}/"
-          cp LICENSE NOTICE "${staging}/"
-          sed -e "s|__VERSION__|${VERSION}|g" \
-              -e "s|__REGISTRY__|${REGISTRY}|g" \
-              provisioning/release/bundle-README.md > "${staging}/README.md"
-          cat > "${staging}/.env" <<EOF
-          # Pins this bundle to the images published for ${VERSION}.
-          EG_IMAGE_PREFIX=${REGISTRY}/
-          EG_VERSION=${VERSION}
-          EOF
-
-          if [ -e "${staging}/db-encryption-key" ]; then
-            echo "::error::the dev encryption key leaked into the bundle"; exit 1
-          fi
-
-          tar -C "$(dirname "${staging}")" -czf "dist/${bundle}.tar.gz" "${bundle}"
-          cp docs/entguard-guide.md "dist/"
-          cp "docs/entguard-v${VERSION}-guide.pdf" "dist/"
-          ls -l dist/
+      - name: Build the release package
+        run: make release-package
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-bundle
-          path: |
-            dist/egvpn-*
-            dist/entguard-${{ needs.version.outputs.version }}-deploy.tar.gz
-            dist/entguard-v${{ needs.version.outputs.version }}-guide.pdf
-            dist/entguard-guide.md
+          name: release-package
+          path: entguard-release-v*.zip
           if-no-files-found: error
           retention-days: 7
 
   release:
     name: Draft GitHub release
-    needs: [version, images, bundle]
+    needs: [version, images, package]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -215,25 +101,12 @@ jobs:
           path: assets
           merge-multiple: true
 
-      - name: Checksum every asset
-        working-directory: assets
-        run: |
-          # Any earlier file is removed and the sums are built outside the
-          # directory, so SHA256SUMS never lists itself even on a re-run.
-          rm -f SHA256SUMS
-          sha256sum -- * > "${RUNNER_TEMP}/SHA256SUMS"
-          mv "${RUNNER_TEMP}/SHA256SUMS" SHA256SUMS
-          cat SHA256SUMS
-
       # Left as a draft on purpose: the artifacts can be inspected and the
       # generated notes edited before anything becomes visible to users.
       - name: Create draft release
         run: |
           set -e
           flags="--draft --generate-notes"
-          if [ "${{ needs.version.outputs.prerelease }}" = "true" ]; then
-            flags="${flags} --prerelease"
-          fi
           # shellcheck disable=SC2086
           gh release create "${TAG}" ${flags} \
             --title "EntGuard ${VERSION}" \
