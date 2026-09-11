@@ -1,4 +1,4 @@
-ARG DEV_IMAGE="ghcr.io/entguard/eg-orchestrator-dev:1.14.1"
+ARG DEV_IMAGE="ghcr.io/entguard/eg-orchestrator-dev:1.15.0"
 FROM ${DEV_IMAGE} AS base
 
 FROM scratch
