@@ -43,6 +43,9 @@ const (
 	restFuzzEnvVar          = "TEST_FUZZ_REST"
 	restHandlersLocalEnvVar = "TEST_LOCAL_REST_HANDLERS"
 
+	// set by the Makefile's test-fuzz-rest target
+	restFuzzComposeFileEnvVar = "TEST_FUZZ_COMPOSE_FILE"
+
 	restFuzzComposeProject      = "eg-test-fuzz-rest"
 	restFuzzOrchestratorService = "testweb"
 	restFuzzDBService           = "testdb"

@@ -27,10 +27,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/flags"
-	composeapi "github.com/docker/compose/v2/pkg/api"
-	"github.com/docker/compose/v2/pkg/compose"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
@@ -56,7 +52,7 @@ var (
 	vcmQ          vcm.VPNConfigManager
 	sqlcQ         *sqlc.Queries
 	manager       *user.PostgresManager
-	composeClient composeapi.Compose
+	composeClient *test.ComposeProject
 	testDir       string
 )
 
@@ -86,14 +82,10 @@ func TestMain(m *testing.M) {
 	}
 	exitCode := 0
 	if test.IsRESTFuzzTest() {
-		dockerCli, err := command.NewDockerCli()
+		composeClient, err = test.NewRESTFuzzComposeProject()
 		if err != nil {
-			logger.Fatal("NewDockerCli: ", err)
+			logger.Fatal("NewRESTFuzzComposeProject: ", err)
 		}
-		if err := dockerCli.Initialize(flags.NewClientOptions()); err != nil {
-			logger.Fatal("Docker Client initialization: ", err)
-		}
-		composeClient = compose.NewComposeService(dockerCli)
 		testDir, err = os.MkdirTemp("", "eg-fuzz-test")
 		if err != nil {
 			logger.Fatal("MkdirTemp(eg-fuzz-test): ", err)
