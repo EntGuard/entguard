@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+# A publish must never be interrupted half-way, so runs are not cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag and check it matches the Makefile
+        id: v
+        env:
+          TAG: ${{ github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          make check-git-tag
+          version="${TAG#v}"
+
+  verify:
+    name: Verify
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    name: Publish images
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build images
+        run: make all-images
+
+      - name: Push images to GHCR
+        run: make release-ghcr-image-push
+
+  package:
+    name: Build release package
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Build the release package
+        run: make release-package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: entguard-release-v*.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Draft GitHub release
+    needs: [version, images, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      # Left as a draft on purpose: the artifacts can be inspected and the
+      # generated notes edited before anything becomes visible to users.
+      - name: Create draft release
+        run: |
+          set -e
+          flags="--draft --generate-notes"
+          # shellcheck disable=SC2086
+          gh release create "${TAG}" ${flags} \
+            --title "EntGuard ${VERSION}" \
+            assets/*
+          echo "Draft release created. Review and publish it at:"
+          gh release view "${TAG}" --json url --jq .url

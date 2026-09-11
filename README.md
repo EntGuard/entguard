@@ -25,53 +25,71 @@ You can find the full (user-oriented) documentation here: [docs/entguard-guide.m
 
 ### Prerequisites
 
-* Go 1.26+ ([installation instructions](https://go.dev/doc/install))
+* [Go 1.26+](https://go.dev/doc/install)
+* [Docker](https://docs.docker.com/engine/install/) (minimal version 24.0.0)
+* [Docker Compose](https://docs.docker.com/compose/install/) (minimal version 2.20.0)
 
-### Build Components
+You may be required to preface each `docker` command in this guide with `sudo`. If you want to avoid this,
+follow the steps in the [Docker post-installation guide](https://docs.docker.com/engine/install/linux-postinstall/).
 
-1. Prepare TLS certificates to provide communications security in the gRPC connections:
+### Set up secrets 
+
+1. Prepare TLS certificates to provide communications security in the gRPC connections.
+
+   For testing you can generate self-signed certificates:
 
    ```bash
    make dev-certs
    ```
 
-2. Build all EntGuard components (orchestrator, server, healthcheck, egvpn tool, and database migrations):
+   > **NOTE:** Do not use self-signed certificates for production deployments.
+
+2. Generate a database encryption key
 
    ```bash
-   make all
+   mkdir -p db-encryption-key
+   openssl rand -out ./db-encryption-key/db-encryption-key.key 16
    ```
 
-   Or build components individually:
+### Build components
 
-   - Build docker images (development and production) with the EntGuard Orchestrator:
+Build all EntGuard components (orchestrator, server, healthcheck, egvpn tool, and database migrations):
 
-     ```bash
-     make orchestrator-images
-     ```
+```bash
+make all
+```
 
-   - Build docker images (development and production) with the EntGuard Server:
+Or build components individually:
 
-     ```bash
-     make egserver-images
-     ```
+- Build docker images (development and production) with the EntGuard Orchestrator:
 
-   - Build docker images (development and production) with the EntGuard Healthcheck:
+  ```bash
+  make orchestrator-images
+  ```
 
-     ```bash
-     make healthcheck-images
-     ```
+- Build docker images (development and production) with the EntGuard Server:
 
-   - Build the `egvpn` tool which helps to run the EntGuard Server:
+  ```bash
+  make egserver-images
+  ```
 
-     ```bash
-     make egvpn
-     ```
+- Build docker images (development and production) with the EntGuard Healthcheck:
 
-   - Build docker image with the database migrations:
+  ```bash
+  make healthcheck-images
+  ```
 
-     ```bash
-     make dbmigrate-image
-     ```
+- Build the `egvpn` tool which helps to run the EntGuard Server:
+
+  ```bash
+  make egvpn
+  ```
+
+- Build docker image with the database migrations:
+
+  ```bash
+  make dbmigrate-image
+  ```
 
 ## How to run the EntGuard Orchestrator
 

@@ -3,6 +3,7 @@ tls-auth.json
 config.json
 vpp.config
 vpp-day0.config
+entguard-release*
 *.pdf
 *.zip
 .idea

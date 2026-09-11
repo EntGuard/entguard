@@ -33,10 +33,10 @@ var (
 
 // Info about EntGuard Images.
 var (
-	egServerImageName = "eg-server"
+	egServerImageName = "ghcr.io/entguard/eg-server"
 	egServerImageTag  = "latest"
 
-	egHealthcheckImageName = "eg-healthcheck"
+	egHealthcheckImageName = "ghcr.io/entguard/eg-healthcheck"
 	egHealthcheckImageTag  = "latest"
 
 	egTelegrafImageName = "telegraf"
