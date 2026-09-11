@@ -425,7 +425,7 @@ release-ghcr-image-push: ORCHESTRATOR_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(ORCHES
 release-ghcr-image-push: EGSERVER_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(EGSERVER_IMAGE_PROD):$(EGSERVER_VERSION)
 release-ghcr-image-push: HEALTHCHECK_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(HEALTHCHECK_IMAGE_PROD):$(HEALTHCHECK_VERSION)
 release-ghcr-image-push: DBMIGRATE_IMAGE_GHCR=$(GHCR_IMAGE_REPO_URL)/$(DBMIGRATE_IMAGE):$(DBMIGRATE_VERSION)
-release-ghcr-image-push: release-ghcr-image-tag
+release-ghcr-image-push:
 	@! docker manifest inspect $(ORCHESTRATOR_IMAGE_GHCR) \
 		|| (echo "image $(ORCHESTRATOR_IMAGE_GHCR) already exists in ghcr repository" && exit 1)
 	@! docker manifest inspect $(EGSERVER_IMAGE_GHCR) \
