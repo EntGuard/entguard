@@ -1,6 +1,6 @@
 ---
-title: EntGuard Installation Guide v1.14.1
-date: July 7, 2026
+title: EntGuard Installation Guide v1.15.0
+date: September 11, 2026
 ---
 
 \newpage
@@ -18,7 +18,7 @@ telegraf/                    # Telegraf configuration
 compose.yaml                 # Compose File
 dbconfig.yaml                # Database migration configuration
 egvpn                        # egvpn Tool Binary
-entguard-v1.14.1-guide.pdf   # EntGuard Guide (this document)
+entguard-v1.15.0-guide.pdf   # EntGuard Guide (this document)
 generate-dev-certs.sh        # Script which generates self-signed
                              # TLS certificates (for evaluation)
 LICENSE                      # License file
@@ -30,11 +30,11 @@ EntGuard additionally uses the following docker images. They can be pulled from
 GitHub container registry.
 
 ```bash
-ghcr.io/entguard/eg-db-migrate:1.14.1.tar     # Database migration Docker
+ghcr.io/entguard/eg-db-migrate:1.15.0.tar     # Database migration Docker
                                               # Image
-ghcr.io/entguard/eg-healthcheck:1.14.1.tar    # EG-HC Docker Image
-ghcr.io/entguard/eg-orchestrator:1.14.1.tar   # EG-O Docker Image
-ghcr.io/entguard/eg-server:1.14.1.tar         # EG-S Docker Image
+ghcr.io/entguard/eg-healthcheck:1.15.0.tar    # EG-HC Docker Image
+ghcr.io/entguard/eg-orchestrator:1.15.0.tar   # EG-O Docker Image
+ghcr.io/entguard/eg-server:1.15.0.tar         # EG-S Docker Image
 ```
 
 ## EntGuard Components
@@ -96,12 +96,12 @@ follow the steps in the [Docker post-installation guide](https://docs.docker.com
 Before you start, you will need to pull (or build) the EntGuard Orchestrator image from the GitHub container registry:
 
 ```bash
-$ docker pull ghcr.io/entguard/eg-orchestrator:1.14.1
+$ docker pull ghcr.io/entguard/eg-orchestrator:1.15.0
 ```
 
 Also, you will need to pull (or build) Database Migration image:
 ```bash
-$ docker pull ghcr.io/entguard/eg-db-migrate:1.14.1
+$ docker pull ghcr.io/entguard/eg-db-migrate:1.15.0
 ```
 
 You need to acquire FQDN and a valid TLS certificate for EG-O gRPC communication. You
@@ -539,8 +539,8 @@ The following information will help you diagnose potential problems.
 5. Pull (or build) new docker images.
 
    ```bash
-   $ docker pull ghcr.io/entguard/eg-orchestrator:1.14.1
-   $ docker pull ghcr.io/entguard/eg-db-migrate:1.14.1
+   $ docker pull ghcr.io/entguard/eg-orchestrator:1.15.0
+   $ docker pull ghcr.io/entguard/eg-db-migrate:1.15.0
    ```
 
 6. Provide certificates as described in the sections
@@ -671,7 +671,7 @@ then it can be resolved by setting (automatic) hugepages allocation at OS start 
 1. Pull the EG-S image.
 
    ```bash
-   $ docker pull ghcr.io/entguard/eg-server:1.14.1
+   $ docker pull ghcr.io/entguard/eg-server:1.15.0
    ```
 
 2. Create configuration files.
@@ -1197,7 +1197,7 @@ value that you configured for EG-HC.
 1. Pull (or build) the EG-HC image.
 
    ```bash
-   $ docker pull ghcr.io/entguard/eg-healthcheck:1.14.1
+   $ docker pull ghcr.io/entguard/eg-healthcheck:1.15.0
    ```
 
 2. Create configuration files.

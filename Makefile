@@ -3,7 +3,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 REMOTE_GIT := https://github.com/EntGuard/entguard.git
 
-RELEASE_VERSION="1.14.1"
+RELEASE_VERSION="1.15.0"
 RELEASE_FILENAME="entguard-release-v$(RELEASE_VERSION)"
 
 ORCHESTRATOR_VERSION=$(RELEASE_VERSION)
