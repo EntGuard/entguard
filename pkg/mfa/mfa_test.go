@@ -17,11 +17,10 @@
 package mfa_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/dgryski/dgoogauth"
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 
 	"github.com/entguard/entguard/pkg/mfa"
@@ -63,36 +62,47 @@ func TestAuthenticateWithCert(t *testing.T) {
 
 func TestAuthenticateWithTOTP(t *testing.T) {
 	a := mfa.TOTPAuthenticator{}
-
 	secret := "F2I74CLERIDNY47A225TVHQXILJROLYX"
 
-	failure := func(secret, password string) {
-		t.Helper()
-		ok, _ := a.Authenticate(
-			&mfa.TOTPSecret{Key: secret},
-			&mfa.TOTPCredentials{Password: password},
-		)
-		if ok {
-			t.Fatalf("expected first returned value to be false in TOTP a.Authenticate, password: %s", password)
-		}
+	someCode := "123456"
+	validCode, err := totp.GenerateCode(secret, time.Now().UTC())
+	require.NoError(t, err)
+
+	cases := []struct {
+		name          string
+		secret        string
+		password      string
+		expectFailure bool
+	}{
+		{
+			name:          "valid code",
+			secret:        secret,
+			password:      validCode,
+			expectFailure: false,
+		},
+		{
+			name:          "invalid code",
+			secret:        secret,
+			password:      someCode,
+			expectFailure: true,
+		},
 	}
 
-	success := func(secret, password string) {
-		t.Helper()
-		ok, err := a.Authenticate(
-			&mfa.TOTPSecret{Key: secret},
-			&mfa.TOTPCredentials{Password: password},
-		)
-		if !ok || err != nil {
-			t.Fatalf("expected first returned value to be true and nil error in TOTP a.Authenticate: %v, code: %s", err, password)
-		}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ok, err := a.Authenticate(
+				&mfa.TOTPSecret{Key: tc.secret},
+				&mfa.TOTPCredentials{Password: tc.password},
+			)
+			require.NoError(t, err)
+
+			if tc.expectFailure {
+				require.False(t, ok)
+				return
+			}
+			require.True(t, ok)
+		})
 	}
-
-	someCode := 123456
-	failure(secret, fmt.Sprintf("%06d", someCode))
-
-	validCode := dgoogauth.ComputeCode(secret, time.Now().UTC().Unix()/30)
-	success(secret, fmt.Sprintf("%06d", validCode))
 }
 
 func TestCreateUserSecrets(t *testing.T) {
