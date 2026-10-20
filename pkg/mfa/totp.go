@@ -21,13 +21,20 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
+	"math"
+	"time"
 
-	"github.com/pquerna/otp/totp"
+	"github.com/pquerna/otp/hotp"
 )
 
 const (
 	secretSize = 20
+	Period     = 30
 )
+
+// ErrTOTPReplay is returned by Authenticate when a valid code is reused. It is
+// meant for server-side logging only and MUST NOT be exposed to clients.
+var ErrTOTPReplay = errors.New("attempted replay of TOTP code")
 
 type TOTPAuthenticator struct{}
 
@@ -35,36 +42,13 @@ type TOTPCredentials struct {
 	Password string
 }
 
-type TOTPSecret struct {
-	Key string `json:"totp_key"`
+type TOTPValidators struct {
+	Key             string
+	LastUsedCounter int64
 }
 
-func (a *TOTPAuthenticator) CreateUserSecrets() (*TOTPSecret, error) {
-	key, err := createTOTPKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return &TOTPSecret{
-		Key: key,
-	}, nil
-}
-
-func (a *TOTPAuthenticator) Authenticate(secret, creds interface{}) (bool, error) {
-	cred, ok := creds.(*TOTPCredentials)
-	if !ok {
-		return false, errors.New("invalid credential type")
-	}
-	scrt, ok := secret.(*TOTPSecret)
-	if !ok {
-		return false, errors.New("invalid secret type")
-	}
-
-	authenticated := totp.Validate(cred.Password, scrt.Key)
-	return authenticated, nil
-}
-
-func createTOTPKey() (string, error) {
+// CreateTOTPKey generates a new random base32-encoded TOTP key.
+func (a *TOTPAuthenticator) CreateTOTPKey() (string, error) {
 	secret := make([]byte, secretSize)
 	_, err := rand.Read(secret)
 	if err != nil {
@@ -72,4 +56,49 @@ func createTOTPKey() (string, error) {
 	}
 	secretBase32 := base32.StdEncoding.EncodeToString(secret)
 	return secretBase32, nil
+}
+
+// Authenticate checks user supplied TOTP code (in creds) against TOTP secret
+// (in secret.Key). It provides replay protection - it does not authenticate if
+// supplied code is valid for the same or earlier period than a previously
+// validated period (in secret.LastUsedCounter).
+//
+// If inputAuthenticated is true, Authenticate returns the counter for which
+// the TOTP code is valid. Callers MUST save the returned counter to database.
+// Then the result must be treated as authenticated if and only if the database
+// operation succeeds.
+//
+// Callers MUST hide returned ErrTOTPReplay.
+func (a *TOTPAuthenticator) Authenticate(
+	secret, creds interface{},
+) (inputAuthenticated bool, counter int64, err error) {
+	cred, ok := creds.(*TOTPCredentials)
+	if !ok {
+		return false, 0, errors.New("invalid credential type")
+	}
+	v, ok := secret.(*TOTPValidators)
+	if !ok {
+		return false, 0, errors.New("invalid secret type")
+	}
+
+	// the TOTP library does not support replay protection nor checking code for
+	// custom counters, so we must use directly the underlying HOTP stuff
+	currentTime := time.Now().UTC()
+	currentCounter := TimeToCounter(currentTime)
+	allowedCounters := []int64{currentCounter - 1, currentCounter, currentCounter + 1}
+
+	for _, c := range allowedCounters {
+		if hotp.Validate(cred.Password, uint64(c), v.Key) {
+			if c <= v.LastUsedCounter {
+				return false, 0, ErrTOTPReplay
+			}
+			return true, c, nil
+		}
+	}
+	return false, 0, nil
+}
+
+func TimeToCounter(t time.Time) int64 {
+	// copy-pasted from totp.ValidateCustom
+	return int64(math.Floor(float64(t.Unix()) / float64(Period)))
 }

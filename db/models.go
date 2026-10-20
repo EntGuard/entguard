@@ -310,10 +310,11 @@ type Tag struct {
 }
 
 type Totp struct {
-	ID           int
-	UserID       *int
-	Key          *string
-	KeyEncrypted aesgcm.Ciphertext
+	ID              int
+	UserID          *int
+	Key             *string
+	KeyEncrypted    aesgcm.Ciphertext
+	LastUsedCounter int64
 }
 
 type User struct {

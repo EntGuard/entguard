@@ -669,6 +669,10 @@ type LdapSyncStatus struct {
 	Errors                []string  `json:"error_list"`
 }
 
+type TOTPSecret struct {
+	Key string `json:"totp_key"`
+}
+
 // Used both for CAs and CRLs data
 type Cert struct {
 	Data string `json:"data"`

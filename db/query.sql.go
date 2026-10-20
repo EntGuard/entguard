@@ -2045,16 +2045,21 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUs
 }
 
 const getUserTOTP = `-- name: GetUserTOTP :one
-SELECT key_encrypted
+SELECT key_encrypted, last_used_counter
 FROM totp
 WHERE user_id=$1
 `
 
-func (q *Queries) GetUserTOTP(ctx context.Context, userID *int) (aesgcm.Ciphertext, error) {
+type GetUserTOTPRow struct {
+	KeyEncrypted    aesgcm.Ciphertext
+	LastUsedCounter int64
+}
+
+func (q *Queries) GetUserTOTP(ctx context.Context, userID *int) (GetUserTOTPRow, error) {
 	row := q.db.QueryRow(ctx, getUserTOTP, userID)
-	var key_encrypted aesgcm.Ciphertext
-	err := row.Scan(&key_encrypted)
-	return key_encrypted, err
+	var i GetUserTOTPRow
+	err := row.Scan(&i.KeyEncrypted, &i.LastUsedCounter)
+	return i, err
 }
 
 const getWireGuardIfaceAllAddrs = `-- name: GetWireGuardIfaceAllAddrs :many
@@ -2746,9 +2751,9 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 }
 
 const insertUserTOTP = `-- name: InsertUserTOTP :one
-INSERT INTO totp (key_encrypted, user_id)
-VALUES ($1, $2)
-RETURNING id, user_id, key, key_encrypted
+INSERT INTO totp (key_encrypted, user_id, last_used_counter)
+VALUES ($1, $2, 0)
+RETURNING id, user_id, key, key_encrypted, last_used_counter
 `
 
 type InsertUserTOTPParams struct {
@@ -2764,6 +2769,7 @@ func (q *Queries) InsertUserTOTP(ctx context.Context, arg InsertUserTOTPParams) 
 		&i.UserID,
 		&i.Key,
 		&i.KeyEncrypted,
+		&i.LastUsedCounter,
 	)
 	return i, err
 }
@@ -2941,6 +2947,33 @@ func (q *Queries) ServerNameCheck(ctx context.Context, name string) (int, error)
 	var column_1 int
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const tryToUpdateUserTOTPCounter = `-- name: TryToUpdateUserTOTPCounter :one
+UPDATE totp
+SET last_used_counter=$1
+WHERE user_id=$2 AND last_used_counter < $1
+RETURNING id, user_id, key, key_encrypted, last_used_counter
+`
+
+type TryToUpdateUserTOTPCounterParams struct {
+	LastUsedCounter int64
+	UserID          *int
+}
+
+// TryToUpdateUserTOTPCounter updates last_used_counter only if it is greater
+// that the currently stored value
+func (q *Queries) TryToUpdateUserTOTPCounter(ctx context.Context, arg TryToUpdateUserTOTPCounterParams) (Totp, error) {
+	row := q.db.QueryRow(ctx, tryToUpdateUserTOTPCounter, arg.LastUsedCounter, arg.UserID)
+	var i Totp
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Key,
+		&i.KeyEncrypted,
+		&i.LastUsedCounter,
+	)
+	return i, err
 }
 
 const updateAddressPool = `-- name: UpdateAddressPool :one
@@ -3622,9 +3655,9 @@ func (q *Queries) UpdateUserPwd(ctx context.Context, arg UpdateUserPwdParams) (U
 
 const updateUserTOTP = `-- name: UpdateUserTOTP :one
 UPDATE totp
-SET key_encrypted=$1
+SET key_encrypted=$1, last_used_counter=0
 WHERE user_id=$2
-RETURNING id, user_id, key, key_encrypted
+RETURNING id, user_id, key, key_encrypted, last_used_counter
 `
 
 type UpdateUserTOTPParams struct {
@@ -3640,6 +3673,34 @@ func (q *Queries) UpdateUserTOTP(ctx context.Context, arg UpdateUserTOTPParams) 
 		&i.UserID,
 		&i.Key,
 		&i.KeyEncrypted,
+		&i.LastUsedCounter,
+	)
+	return i, err
+}
+
+const updateUserTOTPCounterUnsafe = `-- name: UpdateUserTOTPCounterUnsafe :one
+UPDATE totp
+SET last_used_counter=$1
+WHERE user_id=$2
+RETURNING id, user_id, key, key_encrypted, last_used_counter
+`
+
+type UpdateUserTOTPCounterUnsafeParams struct {
+	LastUsedCounter int64
+	UserID          *int
+}
+
+// UpdateUserTOTPCounterUnsafe is meant for tests only. Production code should use
+// TryToUpdateUserTOTPCounter instead, which provides protection against race condition
+func (q *Queries) UpdateUserTOTPCounterUnsafe(ctx context.Context, arg UpdateUserTOTPCounterUnsafeParams) (Totp, error) {
+	row := q.db.QueryRow(ctx, updateUserTOTPCounterUnsafe, arg.LastUsedCounter, arg.UserID)
+	var i Totp
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Key,
+		&i.KeyEncrypted,
+		&i.LastUsedCounter,
 	)
 	return i, err
 }
