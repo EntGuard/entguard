@@ -29,7 +29,7 @@ type CertCredential struct {
 	Cert []byte
 }
 
-type Validators struct {
+type CertValidators struct {
 	CAs  [][]byte
 	CRLs [][]byte
 }
@@ -40,7 +40,7 @@ func (a CERTAuthenticator) Authenticate(validators, creds interface{}) (bool, er
 		return false, errors.New("invalid credential type")
 	}
 
-	v, ok := validators.(*Validators)
+	v, ok := validators.(*CertValidators)
 	if !ok {
 		return false, errors.New("invalid validator type")
 	}
