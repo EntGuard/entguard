@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dgryski/dgoogauth"
+	"github.com/pquerna/otp/totp"
 )
 
 const (
@@ -51,7 +51,7 @@ func (a *TOTPAuthenticator) CreateUserSecrets() (*TOTPSecret, error) {
 }
 
 func (a *TOTPAuthenticator) Authenticate(secret, creds interface{}) (bool, error) {
-	totp, ok := creds.(*TOTPCredentials)
+	cred, ok := creds.(*TOTPCredentials)
 	if !ok {
 		return false, errors.New("invalid credential type")
 	}
@@ -60,14 +60,7 @@ func (a *TOTPAuthenticator) Authenticate(secret, creds interface{}) (bool, error
 		return false, errors.New("invalid secret type")
 	}
 
-	authenticated, err := (&dgoogauth.OTPConfig{
-		Secret:      scrt.Key,
-		WindowSize:  3,
-		HotpCounter: 0,
-	}).Authenticate(totp.Password)
-	if err != nil {
-		return false, fmt.Errorf("failed to authenticate with TOTP: %v", err)
-	}
+	authenticated := totp.Validate(cred.Password, scrt.Key)
 	return authenticated, nil
 }
 

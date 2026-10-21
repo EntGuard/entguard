@@ -14,6 +14,10 @@ gopkg.in/yaml.v3 additionally contains libyaml-derived code under the MIT licens
 Copyright (c) 2006-2010 Kirill Simonov
 Copyright (c) 2006-2011 Kirill Simonov
 
+This product contains code from github.com/pquerna/otp developed by
+Paul Querna (http://paul.querna.org/).
+Copyright (c) 2014, Paul Querna
+
 This product includes other third-party open-source software under the MIT, BSD,
 and other permissive licenses. See the 'third_party_licenses' directory for the
 full list of dependencies and their license texts.

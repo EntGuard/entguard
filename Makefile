@@ -333,15 +333,8 @@ third-party-licenses:
 	@rm -rf third_party_licenses
 	@go mod download
 	@go-licenses save ./cmd/orchestrator/... ./cmd/vpn_server/... ./cmd/healthcheck/... ./cmd/egvpn/... \
-		--save_path=third_party_licenses || true
+		--save_path=third_party_licenses
 	@rm -rf third_party_licenses/pantheon.tech
-# after invoking `make third-party-licenses`, read the terminal output and
-# update the following section as necessary
-	@mkdir -p third_party_licenses/github.com/dgryski/dgoogauth
-	@echo "github.com/dgryski/dgoogauth does not ship a LICENSE file. Its README states:" > third_party_licenses/github.com/dgryski/dgoogauth/NOTES.md
-	@echo "" >> third_party_licenses/github.com/dgryski/dgoogauth/NOTES.md
-	@echo "> Copyright (c) 2012 Damian Gryski <damian@gryski.com>" >> third_party_licenses/github.com/dgryski/dgoogauth/NOTES.md
-	@echo "> This code is licensed under the Apache License, version 2.0" >> third_party_licenses/github.com/dgryski/dgoogauth/NOTES.md
 
 # -------------------------------
 # PDF documentation

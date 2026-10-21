@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgryski/dgoogauth"
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
 
@@ -162,7 +162,8 @@ func TestIntegrationMfaAuth(t *testing.T) {
 		UserID:       &u.ID,
 	})
 	require.NoError(t, err)
-	validCode := dgoogauth.ComputeCode(secret, time.Now().UTC().Unix()/30)
+	validCode, err := totp.GenerateCode(secret, time.Now().UTC())
+	require.NoError(t, err)
 
 	meta := &rpc.UserMetadata{
 		UserID:       u.ID,
@@ -185,7 +186,7 @@ func TestIntegrationMfaAuth(t *testing.T) {
 		{
 			name:          "authenticate with TOTP type",
 			mfaType:       mfa.TOTP,
-			mfaData:       fmt.Sprintf("%06d", validCode),
+			mfaData:       validCode,
 			expectFailure: false,
 		},
 		{

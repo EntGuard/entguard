@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgryski/dgoogauth"
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 
 	sqlc "github.com/entguard/entguard/db"
@@ -2001,7 +2001,8 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 		UserID:       &u.ID,
 	})
 	require.NoError(t, err)
-	validCode := dgoogauth.ComputeCode(secret, time.Now().UTC().Unix()/30)
+	validCode, err := totp.GenerateCode(secret, time.Now().UTC())
+	require.NoError(t, err)
 
 	cases := []struct {
 		name          string
@@ -2009,6 +2010,10 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 		creds         any
 		userID        int
 		expectFailure bool
+		// expectAuthenticated has effect only if expectFailure is false (if
+		// expectFailure is true, then user MUST NOT be authenticated regardless
+		// of the value of expectAuthenticated)
+		expectAuthenticated bool
 	}{
 		{
 			name:    "authenticate with CERT type",
@@ -2017,16 +2022,18 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 			creds: &mfa.CertCredential{
 				Cert: []byte(mt.ValidCert),
 			},
-			expectFailure: false,
+			expectFailure:       false,
+			expectAuthenticated: true,
 		},
 		{
 			name:    "authenticate with TOTP type",
 			mfaType: mfa.TOTP,
 			userID:  u.ID,
 			creds: &mfa.TOTPCredentials{
-				Password: fmt.Sprintf("%06d", validCode),
+				Password: validCode,
 			},
-			expectFailure: false,
+			expectFailure:       false,
+			expectAuthenticated: true,
 		},
 		{
 			name:    "bad MFA",
@@ -2042,9 +2049,20 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 			mfaType: mfa.TOTP,
 			userID:  u.ID,
 			creds: &mfa.TOTPCredentials{
+				Password: "111111",
+			},
+			expectFailure:       false,
+			expectAuthenticated: false,
+		},
+		{
+			name:    "wrong length code for TOTP type",
+			mfaType: mfa.TOTP,
+			userID:  u.ID,
+			creds: &mfa.TOTPCredentials{
 				Password: "1111111",
 			},
-			expectFailure: true,
+			expectFailure:       false,
+			expectAuthenticated: false,
 		},
 		{
 			name:    "invalid certificate for CERT type",
@@ -2065,9 +2083,13 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 				require.False(t, result)
 				return
 			}
-
 			require.NoError(t, err)
-			require.True(t, result)
+
+			if tc.expectAuthenticated {
+				require.True(t, result)
+				return
+			}
+			require.False(t, result)
 		})
 	}
 }
