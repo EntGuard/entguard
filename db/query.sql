@@ -56,19 +56,35 @@ DELETE FROM users WHERE id=$1;
 SELECT COUNT(*) FROM users;
 
 -- name: GetUserTOTP :one
-SELECT key_encrypted
+SELECT key_encrypted, last_used_counter
 FROM totp
 WHERE user_id=$1;
 
 -- name: InsertUserTOTP :one
-INSERT INTO totp (key_encrypted, user_id)
-VALUES ($1, $2)
+INSERT INTO totp (key_encrypted, user_id, last_used_counter)
+VALUES ($1, $2, 0)
 RETURNING *;
 
 -- name: UpdateUserTOTP :one
 UPDATE totp
-SET key_encrypted=$1
+SET key_encrypted=$1, last_used_counter=0
 WHERE user_id=$2
+RETURNING *;
+
+-- UpdateUserTOTPCounterUnsafe is meant for tests only. Production code should use
+-- TryToUpdateUserTOTPCounter instead, which provides protection against race condition
+-- name: UpdateUserTOTPCounterUnsafe :one
+UPDATE totp
+SET last_used_counter=$1
+WHERE user_id=$2
+RETURNING *;
+
+-- TryToUpdateUserTOTPCounter updates last_used_counter only if it is greater
+-- that the currently stored value
+-- name: TryToUpdateUserTOTPCounter :one
+UPDATE totp
+SET last_used_counter=$1
+WHERE user_id=$2 AND last_used_counter < $1
 RETURNING *;
 
 -- name: GetMFACertsByType :many

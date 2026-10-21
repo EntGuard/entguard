@@ -32,7 +32,7 @@ func TestAuthenticateWithCert(t *testing.T) {
 
 	failure := func(cert string) {
 		t.Helper()
-		ok, _ := a.Authenticate(&mfa.Validators{
+		ok, _ := a.Authenticate(&mfa.CertValidators{
 			CAs:  [][]byte{[]byte(test.CA)},
 			CRLs: [][]byte{[]byte(test.CRL)},
 		}, &mfa.CertCredential{
@@ -45,7 +45,7 @@ func TestAuthenticateWithCert(t *testing.T) {
 
 	success := func(cert string) {
 		t.Helper()
-		ok, err := a.Authenticate(&mfa.Validators{
+		ok, err := a.Authenticate(&mfa.CertValidators{
 			CAs:  [][]byte{[]byte(test.CA)},
 			CRLs: [][]byte{[]byte(test.CRL)},
 		}, &mfa.CertCredential{
@@ -64,54 +64,115 @@ func TestAuthenticateWithTOTP(t *testing.T) {
 	a := mfa.TOTPAuthenticator{}
 	secret := "F2I74CLERIDNY47A225TVHQXILJROLYX"
 
-	someCode := "123456"
-	validCode, err := totp.GenerateCode(secret, time.Now().UTC())
+	currentTime := time.Now().UTC()
+	currentCounter := mfa.TimeToCounter(currentTime)
+
+	currentCode, err := totp.GenerateCode(secret, currentTime)
+	require.NoError(t, err)
+	validEarlyCode, err := totp.GenerateCode(secret, currentTime.Add(-1*mfa.Period*time.Second))
+	require.NoError(t, err)
+	validLateCode, err := totp.GenerateCode(secret, currentTime.Add(1*mfa.Period*time.Second))
+	require.NoError(t, err)
+	tooEarlyCode, err := totp.GenerateCode(secret, currentTime.Add(-2*mfa.Period*time.Second))
+	require.NoError(t, err)
+	tooLateCode, err := totp.GenerateCode(secret, currentTime.Add(2*mfa.Period*time.Second))
 	require.NoError(t, err)
 
 	cases := []struct {
-		name          string
-		secret        string
-		password      string
-		expectFailure bool
+		name                string
+		secret              string
+		lastUsedCounter     int64
+		password            string
+		expectedCounter     int64
+		expectAuthenticated bool
+		expectReplay        bool
 	}{
 		{
-			name:          "valid code",
-			secret:        secret,
-			password:      validCode,
-			expectFailure: false,
+			name:                "valid current code",
+			secret:              secret,
+			lastUsedCounter:     0,
+			password:            currentCode,
+			expectedCounter:     currentCounter,
+			expectAuthenticated: true,
 		},
 		{
-			name:          "invalid code",
-			secret:        secret,
-			password:      someCode,
-			expectFailure: true,
+			name:                "valid early code",
+			secret:              secret,
+			lastUsedCounter:     0,
+			password:            validEarlyCode,
+			expectedCounter:     currentCounter - 1,
+			expectAuthenticated: true,
+		},
+		{
+			name:                "valid late code",
+			secret:              secret,
+			lastUsedCounter:     0,
+			password:            validLateCode,
+			expectedCounter:     currentCounter + 1,
+			expectAuthenticated: true,
+		},
+		{
+			name:                "invalid code - too early",
+			secret:              secret,
+			lastUsedCounter:     0,
+			password:            tooEarlyCode,
+			expectAuthenticated: false,
+		},
+		{
+			name:                "invalid code - too late",
+			secret:              secret,
+			lastUsedCounter:     0,
+			password:            tooLateCode,
+			expectAuthenticated: false,
+		},
+		{
+			name:                "valid new unique code (no replay)",
+			secret:              secret,
+			lastUsedCounter:     currentCounter - 1,
+			password:            currentCode,
+			expectedCounter:     currentCounter,
+			expectAuthenticated: true,
+		},
+		{
+			name:                "invalid - code replayed",
+			secret:              secret,
+			lastUsedCounter:     currentCounter,
+			password:            currentCode,
+			expectedCounter:     currentCounter,
+			expectAuthenticated: false,
+			expectReplay:        true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			ok, err := a.Authenticate(
-				&mfa.TOTPSecret{Key: tc.secret},
+			ok, gotCounter, err := a.Authenticate(
+				&mfa.TOTPValidators{
+					Key:             tc.secret,
+					LastUsedCounter: tc.lastUsedCounter,
+				},
 				&mfa.TOTPCredentials{Password: tc.password},
 			)
-			require.NoError(t, err)
-
-			if tc.expectFailure {
+			if !tc.expectAuthenticated {
 				require.False(t, ok)
+				if tc.expectReplay {
+					require.ErrorIs(t, err, mfa.ErrTOTPReplay)
+				} else {
+					require.NoError(t, err)
+				}
 				return
 			}
+			require.NoError(t, err)
 			require.True(t, ok)
+			require.Equal(t, tc.expectedCounter, gotCounter)
 		})
 	}
 }
 
-func TestCreateUserSecrets(t *testing.T) {
+func TestCreateTOTPKey(t *testing.T) {
 	a := mfa.TOTPAuthenticator{}
 
-	totpSecret, err := a.CreateUserSecrets()
+	key, err := a.CreateTOTPKey()
 	require.NoError(t, err)
-
-	require.IsType(t, &mfa.TOTPSecret{}, totpSecret)
-	require.NotNil(t, totpSecret)
-	require.NotEmpty(t, totpSecret.Key)
+	require.NotEmpty(t, key)
 }
