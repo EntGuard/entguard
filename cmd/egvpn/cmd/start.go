@@ -530,12 +530,13 @@ func verifyAndAllocateHugePages(opts *egVPNOptions) error {
 	if err != nil {
 		return fmt.Errorf("failed to read kernel setting(%s): %w", maxMapCountKernelSettingName, err)
 	}
-	if int(maxMapCount) < (2 * opts.HugePages2MCount) {
-		if err := writeIntKernelSetting(maxMapCountKernelSettingName, uint64(2*opts.HugePages2MCount)); err != nil {
+	requiredMaxMapCount := uint64(2 * opts.HugePages2MCount)
+	if maxMapCount < requiredMaxMapCount {
+		if err := writeIntKernelSetting(maxMapCountKernelSettingName, requiredMaxMapCount); err != nil {
 			return fmt.Errorf("failed to set kernel setting(%s) to %d: %w",
-				maxMapCountKernelSettingName, 2*opts.HugePages2MCount, err)
+				maxMapCountKernelSettingName, requiredMaxMapCount, err)
 		}
-		fmt.Printf("Kernel setting(%s) set to %d.\n", maxMapCountKernelSettingName, 2*opts.HugePages2MCount)
+		fmt.Printf("Kernel setting(%s) set to %d.\n", maxMapCountKernelSettingName, requiredMaxMapCount)
 	} else {
 		fmt.Println("Setting is OK.")
 	}
