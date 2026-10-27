@@ -301,25 +301,40 @@ If you change the internal EG-O container ports, do not forget to update corresp
 
 ### Certificates Path
 
-In the default configuration, EG-O is set to load self-signed certificates from
-the `./dev-certs` directory. To mount your certificates from any other location, find
-the following lines in the `compose.yaml` file:
+The gRPC certificates that are used for the EG-O gRPC API are also used to
+secure EG-O REST API and Grafana service with TLS.
+
+In the default configuration, EG-O and grafana are set to load self-signed
+certificates from the `./dev-certs` directory. To mount your certificates from
+any other location, find the following lines in the `volumes` section of the
+`web` and `metrics-ui` services in the `compose.yaml` file:
 
 ```yaml
-volumes:
-  - type: bind
-    source: "./dev-certs/grpc-server-cert.pem"
-    target: "/etc/entguard/ssl/grpc-server-cert.pem"
-  - type: bind
-    source: "./dev-certs/grpc-server-key.pem"
-    target: "/etc/entguard/ssl/grpc-server-key.pem"
+  web:
+    # more lines ...
+    volumes:
+      - type: bind
+        source: "./dev-certs/grpc-server-cert.pem"
+        target: "/etc/entguard/ssl/grpc-server-cert.pem"
+      - type: bind
+        source: "./dev-certs/grpc-server-key.pem"
+        target: "/etc/entguard/ssl/grpc-server-key.pem"
+    # more lines ...
+  metrics-ui:
+    # more lines ...
+    volumes:
+      - type: bind
+        source: "./dev-certs/grpc-server-cert.pem"
+        target: "/etc/grafana/grafana.crt"
+      - type: bind
+        source: "./dev-certs/grpc-server-key.pem"
+        target: "/etc/grafana/grafana.key"
 ```
 
-and update the source path for files.
-
-If you change "target" path, do not forget to update corresponding environment variable.
-
-These certificates are used for both gRPC API and REST API (TLS).
+and update all of the *source* lines with the actual paths for the files. (It is
+not recommended to change the *target* path. If you do that anyway, then you
+must not forget to update corresponding variables in the `environment` sections
+of both services.)
 
 #### Updating certificates
 

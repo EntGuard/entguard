@@ -142,6 +142,15 @@ services:
       - type: volume
         source: "grafana-data"
         target: "/var/lib/grafana"
+      - type: bind
+        source: "./dev-certs/grpc-server-cert.pem"
+        target: "/etc/grafana/grafana.crt"
+      - type: bind
+        source: "./dev-certs/grpc-server-key.pem"
+        target: "/etc/grafana/grafana.key"
     environment:
-      GF_SECURITY_ADMIN_USER:     admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER:     "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_SERVER_CERT_FILE:        "/etc/grafana/grafana.crt"
+      GF_SERVER_CERT_KEY:         "/etc/grafana/grafana.key"
+    user: '0'
