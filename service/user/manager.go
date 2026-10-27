@@ -86,9 +86,9 @@ type Manager interface {
 	MFAGetEnabledTypes(ctx context.Context) *api.MfaEnabledTypes
 	MFAAuthenticate(ctx context.Context, userID int, mfaType mfa.AuthenticatorType, creds interface{}) (bool, error)
 
-	MFACreateTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error)
-	MFAUpdateTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error)
-	MFAGetTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error)
+	MFACreateTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error)
+	MFAUpdateTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error)
+	MFAGetTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error)
 
 	MFAGetAllCAs(ctx context.Context) (*api.MfaCAList, error)
 	MFACreateCA(ctx context.Context, ca []byte) error
@@ -924,24 +924,53 @@ func (m *PostgresManager) MFAAuthenticate(ctx context.Context, userID int, mfaTy
 
 	switch mfaType {
 	case mfa.TOTP:
-		scrtEncrypted, err := m.SQLcQ.GetUserTOTP(ctx, &userID)
+		totpRow, err := m.SQLcQ.GetUserTOTP(ctx, &userID)
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				return false, ErrUserSecretNotFound
 			}
 			return false, err
 		}
-		scrt, err := aesgcm.OpenString(m.EncryptionKey, scrtEncrypted)
+		scrt, err := aesgcm.OpenString(m.EncryptionKey, totpRow.KeyEncrypted)
 		if err != nil {
 			return false, err
 		}
-		success, err := m.TotpMfa.Authenticate(&mfa.TOTPSecret{
-			Key: scrt,
+
+		inputAuthenticated, counter, err := m.TotpMfa.Authenticate(&mfa.TOTPValidators{
+			Key:             scrt,
+			LastUsedCounter: totpRow.LastUsedCounter,
 		}, creds)
 		if err != nil {
+			if errors.Is(err, mfa.ErrTOTPReplay) {
+				m.Logger.
+					WithField("user ID", userID).
+					Warn("attempted TOTP code replay")
+				return false, nil
+			}
 			return false, err
 		}
-		return success, nil
+		if !inputAuthenticated {
+			return false, nil
+		}
+		// race protection: TryToUpdateUserTOTPCounter updates the counter only
+		// if it is still greater than the stored value, which makes
+		// check-and-set atomic in the DB. Otherwise if user and attacker try to
+		// authenticate at the same time, both DB reads above may occur before
+		// the first DB write, which would defeat replay protection
+		_, err = m.SQLcQ.TryToUpdateUserTOTPCounter(ctx, sqlc.TryToUpdateUserTOTPCounterParams{
+			LastUsedCounter: counter,
+			UserID:          &userID,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				m.Logger.
+					WithField("user ID", userID).
+					Warn("attempted TOTP code replay")
+				return false, nil
+			}
+			return false, ErrQueryFailed
+		}
+		return true, nil
 	case mfa.CERT:
 		crls, err := m.DB.GetMFACerts(ctx, "crl")
 		if err != nil {
@@ -959,7 +988,7 @@ func (m *PostgresManager) MFAAuthenticate(ctx context.Context, userID int, mfaTy
 			return rcs
 		}
 
-		success, err := m.CertMfa.Authenticate(&mfa.Validators{
+		success, err := m.CertMfa.Authenticate(&mfa.CertValidators{
 			CAs:  f(cas),
 			CRLs: f(crls),
 		}, creds)
@@ -972,7 +1001,7 @@ func (m *PostgresManager) MFAAuthenticate(ctx context.Context, userID int, mfaTy
 	}
 }
 
-func (m *PostgresManager) MFACreateTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error) {
+func (m *PostgresManager) MFACreateTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error) {
 	u, err := m.DB.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
@@ -981,13 +1010,13 @@ func (m *PostgresManager) MFACreateTOTPSecret(ctx context.Context, userID int) (
 		return nil, fmt.Errorf("GetUserByID: %w", err)
 	}
 
-	scrt, err := m.TotpMfa.CreateUserSecrets()
+	key, err := m.TotpMfa.CreateTOTPKey()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create secrets: %v", err)
 	}
 
 	err = db.WithTx(ctx, m.DB.GetDbConnection(ctx), func(qsqlc *sqlc.Queries) error {
-		keyEnc, err := aesgcm.Seal(m.EncryptionKey, scrt.Key)
+		keyEnc, err := aesgcm.Seal(m.EncryptionKey, key)
 		if err != nil {
 			return fmt.Errorf("failed to encrypt secrets: %v", err)
 		}
@@ -1016,10 +1045,10 @@ func (m *PostgresManager) MFACreateTOTPSecret(ctx context.Context, userID int) (
 		return nil, err
 	}
 
-	return scrt, nil
+	return &api.TOTPSecret{Key: key}, nil
 }
 
-func (m *PostgresManager) MFAUpdateTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error) {
+func (m *PostgresManager) MFAUpdateTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error) {
 	u, err := m.DB.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
@@ -1028,13 +1057,13 @@ func (m *PostgresManager) MFAUpdateTOTPSecret(ctx context.Context, userID int) (
 		return nil, fmt.Errorf("GetUserByID: %w", err)
 	}
 
-	scrt, err := m.TotpMfa.CreateUserSecrets()
+	key, err := m.TotpMfa.CreateTOTPKey()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create secrets: %v", err)
 	}
 
 	err = db.WithTx(ctx, m.DB.GetDbConnection(ctx), func(qsqlc *sqlc.Queries) error {
-		keyEnc, err := aesgcm.Seal(m.EncryptionKey, scrt.Key)
+		keyEnc, err := aesgcm.Seal(m.EncryptionKey, key)
 		if err != nil {
 			return fmt.Errorf("failed to encrypt secrets: %v", err)
 		}
@@ -1066,10 +1095,10 @@ func (m *PostgresManager) MFAUpdateTOTPSecret(ctx context.Context, userID int) (
 		return nil, err
 	}
 
-	return scrt, nil
+	return &api.TOTPSecret{Key: key}, nil
 }
 
-func (m *PostgresManager) MFAGetTOTPSecret(ctx context.Context, userID int) (*mfa.TOTPSecret, error) {
+func (m *PostgresManager) MFAGetTOTPSecret(ctx context.Context, userID int) (*api.TOTPSecret, error) {
 	exists, err := m.DB.CheckUserIDExists(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -1078,18 +1107,18 @@ func (m *PostgresManager) MFAGetTOTPSecret(ctx context.Context, userID int) (*mf
 		return nil, fmt.Errorf("%w: user with that ID does not exist", ErrBadUserData)
 	}
 
-	scrtEncrypted, err := m.SQLcQ.GetUserTOTP(ctx, &userID)
+	totpRow, err := m.SQLcQ.GetUserTOTP(ctx, &userID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, ErrUserSecretNotFound
 		}
 		return nil, err
 	}
-	scrt, err := aesgcm.OpenString(m.EncryptionKey, scrtEncrypted)
+	scrt, err := aesgcm.OpenString(m.EncryptionKey, totpRow.KeyEncrypted)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt secrets: %v", err)
 	}
-	return &mfa.TOTPSecret{Key: scrt}, nil
+	return &api.TOTPSecret{Key: scrt}, nil
 }
 
 func (m *PostgresManager) MFAGetAllCAs(ctx context.Context) (*api.MfaCAList, error) {

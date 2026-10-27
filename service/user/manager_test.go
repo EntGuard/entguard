@@ -1730,12 +1730,13 @@ func TestIntegrationMFACreateTOTPSecret(t *testing.T) {
 			require.Equal(t, countBefore+1, countAfter)
 
 			// check returned secret with what is in DB
-			dbSecretEncrypted, err := sqlcq.GetUserTOTP(ctx, &tc.userID)
-			dbSecret := &mfa.TOTPSecret{
-				Key: test.OpenString(dbSecretEncrypted),
+			totpRow, err := sqlcq.GetUserTOTP(ctx, &tc.userID)
+			dbSecret := &api.TOTPSecret{
+				Key: test.OpenString(totpRow.KeyEncrypted),
 			}
 			require.NoError(t, err)
 			require.Equal(t, secret, dbSecret)
+			require.Equal(t, int64(0), totpRow.LastUsedCounter)
 
 			u, err := sqlcq.GetUserByID(ctx, tc.userID)
 			require.NoError(t, err)
@@ -1806,16 +1807,28 @@ func TestIntegrationMFAUpdateTOTPSecret(t *testing.T) {
 	test.SkipOrSetupIntegrationTest(t, ctx, q)
 
 	conn := q.GetDbConnection(ctx)
-	usr := test.InsertSampleUser(t, ctx, q, "user1").ToAPI()
+	usr1 := test.InsertSampleUser(t, ctx, q, "user1").ToAPI()
+	usr2WithCounter := test.InsertSampleUser(t, ctx, q, "user2").ToAPI()
 	oldSecretKey := "testtotpsecretkey"
 	_, err := sqlcq.InsertUserTOTP(ctx, sqlc.InsertUserTOTPParams{
 		KeyEncrypted: test.Seal(oldSecretKey),
-		UserID:       &usr.ID,
+		UserID:       &usr1.ID,
+	})
+	require.NoError(t, err)
+	_, err = sqlcq.InsertUserTOTP(ctx, sqlc.InsertUserTOTPParams{
+		KeyEncrypted: test.Seal(oldSecretKey),
+		UserID:       &usr2WithCounter.ID,
+	})
+	require.NoError(t, err)
+	_, err = sqlcq.UpdateUserTOTPCounterUnsafe(ctx, sqlc.UpdateUserTOTPCounterUnsafeParams{
+		LastUsedCounter: int64(123),
+		UserID:          &usr2WithCounter.ID,
 	})
 	require.NoError(t, err)
 
 	p1 := test.InsertSampleAddressPool(t, ctx, sqlcq, test.NewSampleInsertAddressPoolParams("testPool1"))
-	test.InsertSampleDeviceTemplate(t, ctx, sqlcq, usr.ID, []int{p1.ID})
+	test.InsertSampleDeviceTemplate(t, ctx, sqlcq, usr1.ID, []int{p1.ID})
+	test.InsertSampleDeviceTemplate(t, ctx, sqlcq, usr2WithCounter.ID, []int{p1.ID})
 
 	cases := []struct {
 		name          string
@@ -1825,8 +1838,14 @@ func TestIntegrationMFAUpdateTOTPSecret(t *testing.T) {
 	}{
 		{
 			name:          "update TOTP secret for user (with new random secret)",
-			userID:        usr.ID,
-			userUpdatedAt: usr.UpdatedAt,
+			userID:        usr1.ID,
+			userUpdatedAt: usr1.UpdatedAt,
+			expectFailure: false,
+		},
+		{
+			name:          "update TOTP secret for user (with new random secret)",
+			userID:        usr2WithCounter.ID,
+			userUpdatedAt: usr2WithCounter.UpdatedAt,
 			expectFailure: false,
 		},
 		{
@@ -1836,7 +1855,7 @@ func TestIntegrationMFAUpdateTOTPSecret(t *testing.T) {
 		},
 		{
 			name:          "nonexisting user ID",
-			userID:        usr.ID + 1, // there is no user with higher ID than the last added user
+			userID:        usr2WithCounter.ID + 1, // there is no user with higher ID than the last added user
 			expectFailure: true,
 		},
 	}
@@ -1856,14 +1875,15 @@ func TestIntegrationMFAUpdateTOTPSecret(t *testing.T) {
 			require.Equal(t, countBefore, countAfter)
 
 			// check that newSecret got updated and that new newSecret is correctly set in the DB
-			dbSecretEncrypted, err := sqlcq.GetUserTOTP(ctx, &tc.userID)
-			dbSecret := &mfa.TOTPSecret{
-				Key: test.OpenString(dbSecretEncrypted),
+			totpRow, err := sqlcq.GetUserTOTP(ctx, &tc.userID)
+			dbSecret := &api.TOTPSecret{
+				Key: test.OpenString(totpRow.KeyEncrypted),
 			}
 			require.NoError(t, err)
 			require.NotNil(t, newSecret)
 			require.NotEqual(t, oldSecretKey, newSecret.Key)
 			require.Equal(t, newSecret, dbSecret)
+			require.Equal(t, int64(0), totpRow.LastUsedCounter)
 
 			u, err := sqlcq.GetUserByID(ctx, tc.userID)
 			require.NoError(t, err)
@@ -2001,8 +2021,11 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 		UserID:       &u.ID,
 	})
 	require.NoError(t, err)
-	validCode, err := totp.GenerateCode(secret, time.Now().UTC())
+	currentTime := time.Now().UTC()
+	currentCounter := mfa.TimeToCounter(currentTime)
+	validCode, err := totp.GenerateCode(secret, currentTime)
 	require.NoError(t, err)
+	counterDummy := int64(123)
 
 	cases := []struct {
 		name          string
@@ -2014,6 +2037,8 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 		// expectFailure is true, then user MUST NOT be authenticated regardless
 		// of the value of expectAuthenticated)
 		expectAuthenticated bool
+		isTOTP              bool
+		expectTOTPCounter   int64
 	}{
 		{
 			name:    "authenticate with CERT type",
@@ -2034,6 +2059,8 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 			},
 			expectFailure:       false,
 			expectAuthenticated: true,
+			isTOTP:              true,
+			expectTOTPCounter:   currentCounter,
 		},
 		{
 			name:    "bad MFA",
@@ -2053,6 +2080,8 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 			},
 			expectFailure:       false,
 			expectAuthenticated: false,
+			isTOTP:              true,
+			expectTOTPCounter:   counterDummy,
 		},
 		{
 			name:    "wrong length code for TOTP type",
@@ -2063,6 +2092,8 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 			},
 			expectFailure:       false,
 			expectAuthenticated: false,
+			isTOTP:              true,
+			expectTOTPCounter:   counterDummy,
 		},
 		{
 			name:    "invalid certificate for CERT type",
@@ -2076,7 +2107,21 @@ func TestIntegrationMFAAuthenticate(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.isTOTP {
+				_, e := sqlcq.UpdateUserTOTPCounterUnsafe(ctx, sqlc.UpdateUserTOTPCounterUnsafeParams{
+					LastUsedCounter: counterDummy,
+					UserID:          &tc.userID,
+				})
+				require.NoError(t, e)
+			}
+
 			result, err := manager.MFAAuthenticate(ctx, tc.userID, tc.mfaType, tc.creds)
+
+			if tc.isTOTP {
+				totpRow, e := sqlcq.GetUserTOTP(ctx, &tc.userID)
+				require.NoError(t, e)
+				require.Equal(t, tc.expectTOTPCounter, totpRow.LastUsedCounter)
+			}
 
 			if tc.expectFailure {
 				require.Error(t, err)
