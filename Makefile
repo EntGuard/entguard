@@ -259,6 +259,10 @@ generate-proto:
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative
 	@echo "=> generated!"
 
+.PHONY:redownload-common-passwords
+redownload-common-passwords:
+	go generate pkg/passwords/passwords.go
+
 # -------------------------------
 # Vulnerability scans
 # -------------------------------
