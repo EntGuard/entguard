@@ -62,6 +62,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not read configuration: %v", err)
 	}
+	// verify the server certificate is publicly trusted, log a warning otherwise
+	if msg := config.VerifyPublicServerCert(cfg.RPC.CertFile); msg != "" {
+		logger.Warn(msg)
+	}
 
 	logger.SetLevel(cfg.LogLevel)
 	ctx := context.Background()
