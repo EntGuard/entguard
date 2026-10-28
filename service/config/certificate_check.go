@@ -71,7 +71,7 @@ func verifyPublicServerCert(certificatePath string, rootPool func() (*x509.CertP
 		return fmt.Sprintf("load system root certificates: %s", err)
 	}
 	if roots == nil {
-		return fmt.Sprint("system root certificate pool is unavailable")
+		return "system root certificate pool is unavailable"
 	}
 
 	_, err = leaf.Verify(x509.VerifyOptions{
