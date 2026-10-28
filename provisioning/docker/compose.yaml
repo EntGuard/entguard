@@ -34,6 +34,11 @@ services:
     volumes:
       - ./previous-db/:/docker-entrypoint-initdb.d/
       - entguard_pgdata:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c max_connections=100
+      -c statement_timeout=30000
+      -c idle_in_transaction_session_timeout=60000
   web:
     container_name: eg-orchestrator
     image: ghcr.io/entguard/eg-orchestrator:1.15.0
@@ -117,7 +122,6 @@ services:
     container_name: eg-prometheus
     image: prom/prometheus:v3.11.0
     restart: unless-stopped
-    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yaml
     depends_on:
       telegraf:
         condition: service_started
@@ -125,6 +129,13 @@ services:
       - type: bind
         source: "./prometheus/prometheus.yaml"
         target: "/etc/prometheus/prometheus.yaml"
+    command: >
+      --web.enable-lifecycle
+      --config.file=/etc/prometheus/prometheus.yaml
+      --web.max-connections=256
+      --query.max-concurrency=20
+      --query.timeout=30s
+      --query.max-samples=10000000
   metrics-ui:
     container_name: eg-grafana
     image: grafana/grafana:12.4.2
