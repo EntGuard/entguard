@@ -5,13 +5,12 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build-prod": "ng build --configuration production",
     "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "^22.2.4",
-    "@angular/cdk": "22.2.5",
+    "@angular/cdk": "^22.2.5",
     "@angular/common": "^22.2.4",
     "@angular/compiler": "^22.2.4",
     "@angular/core": "^22.2.4",
