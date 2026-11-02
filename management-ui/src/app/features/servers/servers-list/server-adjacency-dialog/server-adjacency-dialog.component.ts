@@ -177,7 +177,7 @@ export class ServerAdjacencyDialogComponent
         if (
             address &&
             this[addressesArray].indexOf(address) === -1 &&
-            this[addressFC].valid
+            !this[addressFC].validator?.(new FormControl(address))
         ) {
             this[addressesArray].push(address);
         } else {

@@ -188,7 +188,7 @@ export class ServerConfigDialogComponent
         if (
             address &&
             this.addresses.indexOf(address) === -1 &&
-            this.addressFormControl.valid
+            !this.addressFormControl.validator?.(new FormControl(address))
         ) {
             this.addresses.push(address);
         } else {

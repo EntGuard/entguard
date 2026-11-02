@@ -221,9 +221,10 @@ export class DeviceServerDialogComponent extends CommonFormDialogComponent imple
     }
 
     addUniqueAddress(address: string, list: string[], fc: FormControl): void {
-        if (address && list.indexOf(address) === -1 && fc.valid) {
+        const valid = !fc.validator?.(new FormControl(address));
+        if (address && list.indexOf(address) === -1 && valid) {
             list.push(address);
-        } else if (!fc.valid) {
+        } else if (!valid) {
             fc.setErrors({ incorrect: true });
         }
     }
