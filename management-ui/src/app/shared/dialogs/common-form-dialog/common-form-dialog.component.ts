@@ -44,6 +44,9 @@ export class CommonFormDialogComponent implements OnDestroy {
         savingObservable: Observable<any>,
         afterSaveObservable?: Observable<any>
     ): void {
+        if (this.savingProgress) {
+            return;
+        }
         this.initProgress();
         savingObservable.pipe(takeUntil(this.componentDestroyed)).subscribe(
             () => {
