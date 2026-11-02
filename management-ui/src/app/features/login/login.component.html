@@ -16,7 +16,7 @@
                 <br>
                 <mat-form-field class="w-100 mb-3 no-required-star">
                     <mat-label>{{ "login.password" | translate }}</mat-label>
-                    <input matInput type="password" formControlName="password" id="passwordInput" autocomplete="off">
+                    <input matInput type="password" formControlName="password" id="passwordInput" autocomplete="current-password">
                     <mat-error *ngIf="form.get('password').hasError('required')">{{ "login.errorRequired" | translate }}</mat-error>
                 </mat-form-field>
                 <p class="error" *ngIf="error" id="loginErrorMsg">{{ error }}<br></p>

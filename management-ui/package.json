@@ -1,5 +1,5 @@
 {
-  "name": "cnf",
+  "name": "entguard-management-ui",
   "version": "1.15.0",
   "scripts": {
     "ng": "ng",

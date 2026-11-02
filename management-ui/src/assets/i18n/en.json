@@ -57,7 +57,6 @@
         "required": "This field is required."
     },
     "title": {
-        "title": "Cnf",
         "entguard": "EntGuard",
         "imageAltLogo": "logo"
     },
@@ -67,7 +66,8 @@
         "ldap": "LDAP",
         "mfaCertificates": "MFA Certificates",
         "addressPools": "Address Pools",
-        "tooltipLogout": "Log out"
+        "tooltipLogout": "Log out",
+        "imageAltLogout": "Log out"
     },
     "ldaptemplate-dialog": {
         "ldapTemplate": "LDAP Template",
