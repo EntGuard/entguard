@@ -1,0 +1,10 @@
+Third-party assets in this directory
+
+fonts/roboto/
+  Roboto, Copyright 2011 Google Inc.
+  Apache License 2.0, see fonts/roboto/LICENSE.txt.
+
+icons/
+  Material Design icons, Copyright Google LLC.
+  Apache License 2.0, see fonts/roboto/LICENSE.txt.
+  ic_info_outline_48px_modified.svg is a modified version of the original icon.
