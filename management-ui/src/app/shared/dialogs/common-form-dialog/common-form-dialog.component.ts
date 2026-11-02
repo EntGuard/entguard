@@ -55,7 +55,11 @@ export class CommonFormDialogComponent implements OnDestroy {
                         .pipe(takeUntil(this.componentDestroyed))
                         .subscribe(
                             (data) => this.dialogRef.close(data),
-                            (errAfterSave) => this.printError(errAfterSave)
+                            // the save worked; keeping the dialog open would invite a duplicate save
+                            (errAfterSave) => {
+                                this.dialogRef.close();
+                                this.applicationUtilsService.handleHttpError(errAfterSave);
+                            }
                         );
                 } else {
                     this.dialogRef.close(true);
