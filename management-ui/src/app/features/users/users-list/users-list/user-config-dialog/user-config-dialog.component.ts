@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     AbstractControl,
     FormBuilder,
@@ -23,6 +23,7 @@ import { DeviceTemplateModel } from '../../../../../shared/models/device-templat
     selector: 'app-user-config-dialog',
     templateUrl: './user-config-dialog.component.html',
     styleUrls: ['./user-config-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserConfigDialogComponent

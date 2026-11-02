@@ -1,10 +1,11 @@
 import {
-    Component,
-    EventEmitter,
-    Inject,
-    OnDestroy,
-    OnInit,
-    ViewChild,
+  Component,
+  EventEmitter,
+  Inject,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
     FormBuilder,
@@ -29,6 +30,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-server-dialog',
     templateUrl: './add-server-dialog.component.html',
     styleUrls: ['./add-server-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddServerDialogComponent

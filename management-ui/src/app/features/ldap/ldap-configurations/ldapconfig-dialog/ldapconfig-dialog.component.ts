@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -20,6 +20,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-ldapconfig-dialog',
     templateUrl: './ldapconfig-dialog.component.html',
     styleUrls: ['./ldapconfig-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LDAPConfigDialogComponent

@@ -1,4 +1,4 @@
-import { Component, NgZone, TemplateRef } from '@angular/core';
+import { Component, NgZone, TemplateRef, ChangeDetectionStrategy } from '@angular/core';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 
@@ -6,6 +6,7 @@ import { ICellRendererParams } from 'ag-grid-community';
     selector: 'app-ag-cell-template-renderer',
     templateUrl: './ag-cell-template-renderer.component.html',
     styleUrls: ['./ag-cell-template-renderer.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AgCellTemplateRendererComponent

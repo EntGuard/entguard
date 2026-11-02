@@ -1,15 +1,16 @@
 import {
-    AfterViewInit,
-    Component,
-    ContentChildren,
-    ElementRef,
-    EventEmitter,
-    Input,
-    OnDestroy,
-    OnInit,
-    Output,
-    QueryList,
-    TemplateRef,
+  AfterViewInit,
+  Component,
+  ContentChildren,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  QueryList,
+  TemplateRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
     ColDef,
@@ -30,6 +31,7 @@ import { MatSelectChange } from '@angular/material/select';
     selector: 'app-ag-grid',
     templateUrl: './app-ag-grid.component.html',
     styleUrls: ['./app-ag-grid.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AppAgGridComponent implements AfterViewInit, OnInit, OnDestroy {

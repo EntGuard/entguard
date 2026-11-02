@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AppUtilsService } from '../../../core/app-utils.service';
 import { Observable, Subject } from 'rxjs';
@@ -9,6 +9,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-common-form-dialog',
     templateUrl: './common-form-dialog.component.html',
     styleUrls: ['./common-form-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CommonFormDialogComponent implements OnDestroy {

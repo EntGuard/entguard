@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonFormDialogComponent } from '../../../../shared/dialogs/common-form-dialog/common-form-dialog.component';
 import {
     FormBuilder,
@@ -21,6 +21,7 @@ import { switchMap, takeUntil } from 'rxjs/operators';
     selector: 'app-server-config-dialog',
     templateUrl: './server-config-dialog.component.html',
     styleUrls: ['./server-config-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ServerConfigDialogComponent
