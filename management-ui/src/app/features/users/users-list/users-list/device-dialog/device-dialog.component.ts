@@ -150,9 +150,10 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
     }
 
     addUniqueAddress(address: string): void {
-        if (address && this.addresses.indexOf(address) === -1 && this.addressFC.valid) {
+        const valid = !this.addressFC.validator?.(new FormControl(address));
+        if (address && this.addresses.indexOf(address) === -1 && valid) {
             this.addresses.push(address);
-        } else if (!this.addressFC.valid) {
+        } else if (!valid) {
             this.addressFC.setErrors({ incorrect: true });
         }
     }

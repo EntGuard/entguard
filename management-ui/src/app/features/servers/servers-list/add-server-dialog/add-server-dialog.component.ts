@@ -207,7 +207,7 @@ export class AddServerDialogComponent
         if (
             address &&
             this.config.interface.addresses.indexOf(address) === -1 &&
-            this.addressFormControl.valid
+            !this.addressFormControl.validator?.(new FormControl(address))
         ) {
             this.config.interface.addresses.push(address);
         } else {

@@ -163,7 +163,7 @@ export class UserAdjacencyDialogComponent
         if (
             address &&
             this.addresses.indexOf(address) === -1 &&
-            this.allowedAddressFC.valid
+            !this.allowedAddressFC.validator?.(new FormControl(address))
         ) {
             this.addresses.push(address);
             this.isAddressDirty = true;
