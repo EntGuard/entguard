@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { LDAPService } from 'src/app/features/ldap/ldap.service';
@@ -10,6 +10,7 @@ import { LDAPErrorsComponent } from './ldap-errors/ldap-errors.component';
     selector: 'app-ldap-synchronization',
     templateUrl: './ldap-synchronization.component.html',
     styleUrls: ['./ldap-synchronization.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LdapSynchronizationComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UsersDataService } from '../../users/users-data.service';
@@ -15,6 +15,7 @@ import { Patterns } from '../../../shared/validator-patterns';
     selector: 'app-address-pool-dialog',
     templateUrl: './address-pool-dialog.component.html',
     styleUrls: ['./address-pool-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddressPoolDialogComponent extends CommonFormDialogComponent implements OnInit, OnDestroy {

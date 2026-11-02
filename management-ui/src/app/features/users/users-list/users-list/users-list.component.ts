@@ -1,9 +1,10 @@
 import {
-    Component,
-    ElementRef,
-    OnDestroy,
-    OnInit,
-    ViewChild,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { UserModel } from '../../../../shared/models/user-model';
@@ -39,6 +40,7 @@ import { SyncResultDialogComponent } from '../../../../shared/dialogs/sync-resul
     selector: 'app-users-list',
     templateUrl: './users-list.component.html',
     styleUrls: ['./users-list.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UsersListComponent implements OnInit, OnDestroy {

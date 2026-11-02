@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable, Subject } from 'rxjs';
 import { MfaCaModel } from '../../shared/models/mfa-ca-model';
@@ -15,6 +15,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-mfa-certificates',
     templateUrl: './mfa-certificates.component.html',
     styleUrls: ['./mfa-certificates.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MfaCertificatesComponent implements OnInit, OnDestroy {

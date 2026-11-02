@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Inject, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { LDAPService } from '../../ldap.service';
@@ -19,6 +19,7 @@ import { AddressPoolModel } from '../../../../shared/models/address-pool.model';
     selector: 'app-ldaptemplate-add-dialog',
     templateUrl: './ldaptemplate-add-dialog.component.html',
     styleUrls: ['./ldaptemplate-add-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LDAPTemplateAddDialogComponent

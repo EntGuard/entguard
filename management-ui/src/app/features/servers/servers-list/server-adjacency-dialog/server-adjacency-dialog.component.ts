@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -19,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-server-adjacency-dialog',
     templateUrl: './server-adjacency-dialog.component.html',
     styleUrls: ['./server-adjacency-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ServerAdjacencyDialogComponent
