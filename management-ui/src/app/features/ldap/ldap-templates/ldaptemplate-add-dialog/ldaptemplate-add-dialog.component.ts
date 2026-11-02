@@ -117,6 +117,9 @@ export class LDAPTemplateAddDialogComponent
     }
 
     onSubmitTemplate() {
+        if (this.savingProgress) {
+            return;
+        }
         this.error = null;
         const dataObj = {
             name: this.formTemplate.get('name')?.value,

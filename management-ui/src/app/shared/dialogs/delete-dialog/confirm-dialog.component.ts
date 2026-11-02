@@ -38,6 +38,9 @@ export class ConfirmDialogComponent implements OnDestroy {
     }
 
     submit() {
+        if (this.savingProgress) {
+            return;
+        }
         this.initProgress();
 
         if (this.actionToBePerformed) {

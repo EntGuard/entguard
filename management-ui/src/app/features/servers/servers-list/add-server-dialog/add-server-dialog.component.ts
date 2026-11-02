@@ -225,6 +225,9 @@ export class AddServerDialogComponent
     }
 
     submitServer() {
+        if (this.savingServer) {
+            return;
+        }
         const dataObj = {
             name: this.createForm.get('name').value,
             endpoint: this.createForm.get('endpoint').value,

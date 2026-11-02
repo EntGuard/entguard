@@ -34,7 +34,7 @@
   }
 
   <div mat-dialog-actions class="flex flex-row-reverse gap-2">
-    <button id="confirmation_yes_button" mat-raised-button color="primary" (click)="submit()">
+    <button id="confirmation_yes_button" mat-raised-button color="primary" [disabled]="form.invalid" (click)="submit()">
       @if (savingProgress) {
         <mat-progress-spinner class="mr-2" color="white" mode="indeterminate" [diameter]="15"></mat-progress-spinner>
       }
