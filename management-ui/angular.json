@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "cnf": {
+    "management-ui": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -102,18 +102,18 @@
           "options": {
             "port": 4300,
             "proxyConfig": "src/proxy.conf.json",
-            "buildTarget": "cnf:build:development"
+            "buildTarget": "management-ui:build:development"
           },
           "configurations": {
             "production": {
-              "buildTarget": "cnf:build:production"
+              "buildTarget": "management-ui:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "cnf:build"
+            "buildTarget": "management-ui:build"
           }
         },
         "test": {

@@ -94,7 +94,6 @@ export class LDAPConfigDialogComponent
         this.form.addControl(
             'template',
             new FormControl({ value: '', disabled: false }, [
-                // TODO
                 this.myValidators.getGroupRequirementValidator(this.form, [
                     'fqdn',
                     'caCert',
