@@ -30,30 +30,6 @@ export class ValidatorsService {
         };
     }
 
-    getIpv4v6CidrAndRangeValidator(): ValidatorFn {
-        return (formControl: FormControl): { [key: string]: any } => {
-            const input = formControl.value;
-            if (!input) {
-                return null;
-            }
-
-            const isValidRange = (value: string) => {
-                return (
-                    Patterns.IPv4Range.test(value) ||
-                    Patterns.IPv6Range.test(value) ||
-                    Patterns.IPv4CIDR.test(value) ||
-                    Patterns.IPv6CIDR.test(value)
-                );
-            };
-
-            if (isValidRange(input)) {
-                return null;
-            } else {
-                return { ipv4v6CidrRange: true };
-            }
-        };
-    }
-
     getGroupRequirementValidator(
         form: FormGroup,
         groupMembers: string[]
