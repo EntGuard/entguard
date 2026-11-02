@@ -19,6 +19,7 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
     syncStatus: LdapSyncModel;
     syncError: any;
     syncProgress = false;
+    private pollTimer: ReturnType<typeof setTimeout>;
 
     constructor(private dataService: LDAPService, private dialog: MatDialog) { }
 
@@ -37,9 +38,8 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
                 (status: LdapSyncModel) => {
                     this.syncStatus = status;
                     if (status.inProgress) {
-                        setTimeout(() => {
-                            return this.refreshSyncStatus();
-                        }, 500);
+                        clearTimeout(this.pollTimer);
+                        this.pollTimer = setTimeout(() => this.refreshSyncStatus(), 500);
                     } else {
                         this.syncError = null;
                     }
@@ -73,6 +73,7 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        clearTimeout(this.pollTimer);
         this.componentDestroyed.next();
     }
 
