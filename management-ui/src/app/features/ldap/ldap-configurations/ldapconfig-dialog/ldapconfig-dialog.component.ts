@@ -1,7 +1,6 @@
 import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
-    FormControl,
     FormGroup,
     Validators,
 } from '@angular/forms';
@@ -92,33 +91,11 @@ export class LDAPConfigDialogComponent
                 this.config ? this.config.caCert : '', []
             ],
         });
-        this.form.addControl(
-            'template',
-            new FormControl({ value: '', disabled: false }, [
-                this.myValidators.getGroupRequirementValidator(this.form, [
-                    'fqdn',
-                    'caCert',
-                ]),
-            ])
-        );
-        this.form.addControl(
-            'fqdn',
-            new FormControl({ value: '', disabled: true }, [
-                this.myValidators.getGroupRequirementValidator(this.form, [
-                    'fqdn',
-                    'caCert',
-                ]),
-            ])
-        );
-        this.form.addControl(
-            'caCert',
-            new FormControl({ value: '', disabled: true }, [
-                this.myValidators.getGroupRequirementValidator(this.form, [
-                    'fqdn',
-                    'caCert',
-                ]),
-            ])
-        );
+        for (const name of ['fqdn', 'caCert']) {
+            this.form.get(name).setValidators(
+                this.myValidators.getGroupRequirementValidator(this.form, ['fqdn', 'caCert'])
+            );
+        }
         this.checkTLS();
         this.form.get('useTLS').valueChanges.pipe(takeUntil(this.componentDestroyed)).subscribe((val) => {
             this.checkTLS(val);
