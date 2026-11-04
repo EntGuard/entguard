@@ -62,13 +62,14 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not read configuration: %v", err)
 	}
+
+	logger.SetLevel(cfg.LogLevel)
+	ctx := context.Background()
+
 	// verify the server certificate is publicly trusted, log a warning otherwise
 	if msg := config.VerifyPublicServerCert(cfg.RPC.CertFile); msg != "" {
 		logger.Warn(msg)
 	}
-
-	logger.SetLevel(cfg.LogLevel)
-	ctx := context.Background()
 
 	logger.Info("Connecting to database...")
 	conn, err := db.Connect(ctx, logger, cfg.DB)

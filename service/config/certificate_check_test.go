@@ -100,7 +100,7 @@ func TestVerifyPublicServerCertErrors(t *testing.T) {
 
 func generateTrustedServerCert(t *testing.T) ([]byte, *x509.CertPool) {
 	now := time.Now()
-	certificateDER, privateKey := selfSignedCertificatePEM(now, t)
+	certificateDER, privateKey := selfSignedCACertificateDER(now, t)
 	caCertificate, err := x509.ParseCertificate(certificateDER)
 	if err != nil {
 		t.Fatalf("parse test CA certificate: %v", err)
@@ -132,11 +132,11 @@ func generateTrustedServerCert(t *testing.T) ([]byte, *x509.CertPool) {
 }
 
 func generateUntrustedServerCert(t *testing.T) ([]byte, *x509.CertPool) {
-	certificateDER, _ := selfSignedCertificatePEM(time.Now(), t)
+	certificateDER, _ := selfSignedCACertificateDER(time.Now(), t)
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificateDER}), x509.NewCertPool()
 }
 
-func selfSignedCertificatePEM(now time.Time, t *testing.T) ([]byte, ed25519.PrivateKey) {
+func selfSignedCACertificateDER(now time.Time, t *testing.T) ([]byte, ed25519.PrivateKey) {
 	t.Helper()
 
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
