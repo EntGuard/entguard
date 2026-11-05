@@ -1,156 +1,173 @@
 <div class="dialog-wrap">
-    <h3 class="dialog-h t-primary">
-        {{ "user-adjacency-dialog.header" + (editing ?  "Edit" : "Add") + "Server" | translate }}
-    </h3>
-    <form
-        class="dialog_form flex flex-col"
-        [formGroup]="form"
-        novalidate
-        autocomplete="off"
-        id="userAdjForm"
+  <h3 class="dialog-h t-primary">
+    {{ "user-adjacency-dialog.header" + (editing ?  "Edit" : "Add") + "Server" | translate }}
+  </h3>
+  <form
+    class="dialog_form flex flex-col"
+    [formGroup]="form"
+    novalidate
+    autocomplete="off"
+    id="userAdjForm"
     >
-        <mat-form-field
-            class="mb-2 w-full"
-            *ngIf="!loadingServers && servers.length > 0"
+    @if (!loadingServers && servers.length > 0) {
+      <mat-form-field
+        class="mb-2 w-full"
         >
-            <mat-label>
-                {{ "user-adjacency-dialog.labelServer" | translate }}
-            </mat-label>
-            <mat-select
-                matInput
-                id="server"
+        <mat-label>
+          {{ "user-adjacency-dialog.labelServer" | translate }}
+        </mat-label>
+        <mat-select
+          matInput
+          id="server"
                 placeholder="{{
                     'user-adjacency-dialog.labelServer' | translate
                 }}"
-                formControlName="server"
-                id="serverInput"
-            >
-                <mat-option
-                    [value]="server.name"
-                    *ngFor="let server of servers"
-                    id="serverInputOpt_{{ server.name }}"
-                >
-                    {{ server.name }}
-                </mat-option>
-            </mat-select>
-            <mat-error *ngIf="form.get('server').hasError('required')">
-                {{ "user-adjacency-dialog.errorServer" | translate }}
-            </mat-error>
-        </mat-form-field>
+          formControlName="server"
+          id="serverInput"
+          >
+          @for (server of servers; track server) {
+            <mat-option
+              [value]="server.name"
+              id="serverInputOpt_{{ server.name }}"
+              >
+              {{ server.name }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('server').hasError('required')) {
+          <mat-error>
+            {{ "user-adjacency-dialog.errorServer" | translate }}
+          </mat-error>
+        }
+      </mat-form-field>
+    }
 
-        <mat-error *ngIf="error && loadingServers">
-            <p>{{ "user-adjacency-dialog.serversFail" | translate }}</p>
-        </mat-error>
+    @if (error && loadingServers) {
+      <mat-error>
+        <p>{{ "user-adjacency-dialog.serversFail" | translate }}</p>
+      </mat-error>
+    }
 
-        <p *ngIf="loadingServers && !error" id="loadingMsg">
-            {{ "user-adjacency-dialog.loadingListServers" | translate }}
-        </p>
+    @if (loadingServers && !error) {
+      <p id="loadingMsg">
+        {{ "user-adjacency-dialog.loadingListServers" | translate }}
+      </p>
+    }
 
-        <mat-error *ngIf="!loadingServers && servers.length === 0">
-            <p>{{ "user-adjacency-dialog.errorListServers" | translate }}</p>
-        </mat-error>
+    @if (!loadingServers && servers.length === 0) {
+      <mat-error>
+        <p>{{ "user-adjacency-dialog.errorListServers" | translate }}</p>
+      </mat-error>
+    }
 
-        <mat-form-field
-            class="mb-3 w-full"
+    <mat-form-field
+      class="mb-3 w-full"
             [ngClass]="{
                 'chips-wrapper-error':
                     addresses.length === 0 &&
                     allowedAddressFC.touched &&
                     !allowedAddressFC.value
             }"
-            id="addressesChipsFormField"
-        >
-            <mat-label
+      id="addressesChipsFormField"
+      >
+      <mat-label
                 [ngClass]="{
                     error:
                         addresses.length === 0 &&
                         allowedAddressFC.touched &&
                         !allowedAddressFC.value
                 }"
+        >
+        {{ "user-adjacency-dialog.labelAllowedIps" | translate }} *
+      </mat-label>
+      <mat-chip-grid #allowedIpList>
+        @for (add of addresses; track add) {
+          <mat-chip-row
+            [removable]="true"
+            (removed)="onAllowedAddressRemove(add)"
             >
-                {{ "user-adjacency-dialog.labelAllowedIps" | translate }} *
-            </mat-label>
-            <mat-chip-grid #allowedIpList>
-                <mat-chip-row
-                    *ngFor="let add of addresses"
-                    [removable]="true"
-                    (removed)="onAllowedAddressRemove(add)"
-                >
-                    {{ add }}
-                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
-                </mat-chip-row>
-                <input
+            {{ add }}
+            <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+          </mat-chip-row>
+        }
+        <input
                     placeholder="{{
                         'shared.placeholderNewAddress' | translate
                     }}"
-                    #allowedAddressInput
-                    [formControl]="allowedAddressFC"
-                    [matChipInputFor]="allowedIpList"
-                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                    (blur)="onAddressBlur()"
-                    (matChipInputTokenEnd)="onAddressAdd($event)"
-                    (paste)="onAddressesPaste($event)"
-                />
-            </mat-chip-grid>
-            <mat-hint
-                class="mat-mdc-form-field-error custom-error-hint"
-                align="start"
-                *ngIf="
-                    addresses.length === 0 &&
-                    allowedAddressFC.touched &&
-                    !allowedAddressFC.value
-                "
-            >
-                {{ "shared.errorAddress" | translate }}
-            </mat-hint>
-            <mat-hint
-                class="mat-mdc-form-field-error custom-error-hint"
-                align="start"
-                *ngIf="!allowedAddressFC.valid && allowedAddressFC.value"
-            >
-                {{ "shared.errorAddressFormatAdjacency" | translate }}
-            </mat-hint>
-        </mat-form-field>
+          #allowedAddressInput
+          [formControl]="allowedAddressFC"
+          [matChipInputFor]="allowedIpList"
+          [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+          (blur)="onAddressBlur()"
+          (matChipInputTokenEnd)="onAddressAdd($event)"
+          (paste)="onAddressesPaste($event)"
+          />
+      </mat-chip-grid>
+      @if (
+        addresses.length === 0 &&
+        allowedAddressFC.touched &&
+        !allowedAddressFC.value
+        ) {
+        <mat-hint
+          class="mat-mdc-form-field-error custom-error-hint"
+          align="start"
+          >
+          {{ "shared.errorAddress" | translate }}
+        </mat-hint>
+      }
+      @if (!allowedAddressFC.valid && allowedAddressFC.value) {
+        <mat-hint
+          class="mat-mdc-form-field-error custom-error-hint"
+          align="start"
+          >
+          {{ "shared.errorAddressFormatAdjacency" | translate }}
+        </mat-hint>
+      }
+    </mat-form-field>
 
-        <mat-checkbox
-            formControlName="usePresharedKey"
-            id="usePresharedKeyInput"
-            *ngIf="!loadingServers && servers.length"
-            class="mb-2"
+    @if (!loadingServers && servers.length) {
+      <mat-checkbox
+        formControlName="usePresharedKey"
+        id="usePresharedKeyInput"
+        class="mb-2"
         >
-            {{ "user-adjacency-dialog.labelUsePresharedKey" | translate }}
-        </mat-checkbox>
+        {{ "user-adjacency-dialog.labelUsePresharedKey" | translate }}
+      </mat-checkbox>
+    }
 
-        <p class="error" *ngIf="error && !loadingServers" id="errorMsg">{{ error }}</p>
+    @if (error && !loadingServers) {
+      <p class="error" id="errorMsg">{{ error }}</p>
+    }
 
-        <div class="flex items-center justify-end gap-2 mt-2">
-            <button
-                (click)="close()"
-                mat-raised-button
-                type="button"
-                id="cancelBtn"
-            >
-                {{ "shared.buttonCancel" | translate }}
-            </button>
-            <button
-                mat-raised-button
+    <div class="flex items-center justify-end gap-2 mt-2">
+      <button
+        (click)="close()"
+        mat-raised-button
+        type="button"
+        id="cancelBtn"
+        >
+        {{ "shared.buttonCancel" | translate }}
+      </button>
+      <button
+        mat-raised-button
                 [disabled]="
                     form.invalid ||
                     (addresses.length === 0 && !allowedAddressFC.value)
                 "
-                type="button"
-                color="primary"
-                (click)="submit()"
-                id="userAdjacencySubmitBtn"
-            >
-                <mat-progress-spinner
-                    color="white"
-                    mode="indeterminate"
-                    [diameter]="15"
-                    *ngIf="savingProgress"
-                ></mat-progress-spinner>
-                {{ "shared.buttonSubmit" | translate }}
-            </button>
-        </div>
-    </form>
+        type="button"
+        color="primary"
+        (click)="submit()"
+        id="userAdjacencySubmitBtn"
+        >
+        @if (savingProgress) {
+          <mat-progress-spinner
+            color="white"
+            mode="indeterminate"
+            [diameter]="15"
+          ></mat-progress-spinner>
+        }
+        {{ "shared.buttonSubmit" | translate }}
+      </button>
+    </div>
+  </form>
 </div>

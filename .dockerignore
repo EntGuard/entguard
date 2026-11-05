@@ -1,5 +1,8 @@
 /docker
 /docs
+/management-ui/node_modules
+/management-ui/dist
+/management-ui/.angular
 
 govulncheck-results.txt
 osv-results.txt

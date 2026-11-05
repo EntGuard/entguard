@@ -1,9 +1,10 @@
 import {
-    Component,
-    ElementRef,
-    OnDestroy,
-    OnInit,
-    ViewChild,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { UserModel } from '../../../../shared/models/user-model';
@@ -17,7 +18,7 @@ import { Observable, of, Subject, forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { UsersDataService } from '../../../users/users-data.service';
 import { AppUtilsService } from '../../../../core/app-utils.service';
-import { finalize, switchMap, takeUntil } from 'rxjs/operators';
+import { filter, finalize, switchMap, takeUntil } from 'rxjs/operators';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { UserConfigDialogComponent } from './user-config-dialog/user-config-dialog.component';
 import { UserAdjacencyDialogComponent } from './user-adjacency-dialog/user-adjacency-dialog.component';
@@ -39,6 +40,7 @@ import { SyncResultDialogComponent } from '../../../../shared/dialogs/sync-resul
     selector: 'app-users-list',
     templateUrl: './users-list.component.html',
     styleUrls: ['./users-list.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UsersListComponent implements OnInit, OnDestroy {
@@ -334,13 +336,15 @@ export class UsersListComponent implements OnInit, OnDestroy {
     }
 
     loadSelectedUserDeviceTemplate(): void {
+        const user = this.selectedUser;
         this.loadingDeviceTemplate = true;
         this.dataService
-            .getUserDeviceTemplate(this.selectedUser.id)
+            .getUserDeviceTemplate(user.id)
             .pipe(
                 finalize(() => {
                     this.loadingDeviceTemplate = false;
                 }),
+                filter(() => user === this.selectedUser),
                 takeUntil(this.componentDestroyed)
             )
             .subscribe(
@@ -524,13 +528,15 @@ export class UsersListComponent implements OnInit, OnDestroy {
     }
 
     private loadSelectedUserAdjacencies() {
+        const user = this.selectedUser;
         this.loadingUserAdjacencies = true;
         this.dataService
-            .getUserAdjacencyTemplates(this.selectedUser.id)
+            .getUserAdjacencyTemplates(user.id)
             .pipe(
                 finalize(() => {
                     this.loadingUserAdjacencies = false;
                 }),
+                filter(() => user === this.selectedUser),
                 takeUntil(this.componentDestroyed)
             )
             .subscribe(
@@ -632,23 +638,40 @@ export class UsersListComponent implements OnInit, OnDestroy {
     }
 
     loadSelectedUserTotpSecret() {
+        const user = this.selectedUser;
         this.loadingUserTotpSecret = true;
         this.dataService
-            .getTotpSecret(this.selectedUser.id)
-            .pipe(finalize(() => (this.loadingUserTotpSecret = false)))
-            .subscribe((res: TotpSecretModel) => {
-                this.selectedUser.totpSecret = res.totpKey;
+            .getTotpSecret(user.id)
+            .pipe(
+                finalize(() => (this.loadingUserTotpSecret = false)),
+                takeUntil(this.componentDestroyed)
+            )
+            .subscribe({
+                next: (res: TotpSecretModel) => (user.totpSecret = res.totpKey),
+                error: (err) => {
+                    // 404 means the user has no TOTP secret yet
+                    if (err.status !== 404) {
+                        this.appUtils.handleHttpError(err);
+                    }
+                },
             });
     }
 
     onCreateUserTotpSecretClick() {
+        const user = this.selectedUser;
         this.loadingUserTotpSecret = true;
         this.dataService
-            .createTotpSecret(this.selectedUser.id)
-            .pipe(finalize(() => (this.loadingUserTotpSecret = false)))
-            .subscribe((res: TotpSecretModel) => {
-                this.selectedUser.totpSecret = res.totpKey;
-                this.reloadAllData();
+            .createTotpSecret(user.id)
+            .pipe(
+                finalize(() => (this.loadingUserTotpSecret = false)),
+                takeUntil(this.componentDestroyed)
+            )
+            .subscribe({
+                next: (res: TotpSecretModel) => {
+                    user.totpSecret = res.totpKey;
+                    this.reloadAllData();
+                },
+                error: (err) => this.appUtils.handleHttpError(err),
             });
     }
 

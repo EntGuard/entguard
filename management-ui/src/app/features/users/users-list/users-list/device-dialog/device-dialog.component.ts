@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatChipGrid } from '@angular/material/chips';
@@ -15,6 +15,7 @@ import { switchMap, takeUntil } from 'rxjs/operators';
     selector: 'app-device-dialog',
     templateUrl: './device-dialog.component.html',
     styleUrls: ['./device-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class DeviceDialogComponent extends CommonFormDialogComponent implements OnInit {
@@ -149,9 +150,10 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
     }
 
     addUniqueAddress(address: string): void {
-        if (address && this.addresses.indexOf(address) === -1 && this.addressFC.valid) {
+        const valid = !this.addressFC.validator?.(new FormControl(address));
+        if (address && this.addresses.indexOf(address) === -1 && valid) {
             this.addresses.push(address);
-        } else if (!this.addressFC.valid) {
+        } else if (!valid) {
             this.addressFC.setErrors({ incorrect: true });
         }
     }

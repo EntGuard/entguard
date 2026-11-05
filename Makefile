@@ -325,20 +325,23 @@ trivy-scan:
 		2>&1 | tee $(TRIVY_OUTPUT)
 
 # -------------------------------
-# Third-party licenses for *compiled binaries*
+# Third-party licenses for *compiled binaries* and the management UI bundle
 # -------------------------------
 
 GO_LICENSES_VERSION:=1.6.0
 
 .PHONY:third-party-licenses
 third-party-licenses:
-	@echo "=> regenerating directory 'third_party_licenses' for the shipped binaries"
+	@echo "=> regenerating directory 'third_party_licenses' for the shipped binaries and management UI"
 	@go install github.com/google/go-licenses@v$(GO_LICENSES_VERSION)
 	@rm -rf third_party_licenses
 	@go mod download
 	@go-licenses save ./cmd/orchestrator/... ./cmd/vpn_server/... ./cmd/healthcheck/... ./cmd/egvpn/... \
 		--save_path=third_party_licenses
 	@rm -rf third_party_licenses/pantheon.tech
+	@cd management-ui && npm ci && npm run build
+	@mkdir -p third_party_licenses/management-ui
+	@cp management-ui/dist/3rdpartylicenses.txt third_party_licenses/management-ui/
 
 # -------------------------------
 # PDF documentation

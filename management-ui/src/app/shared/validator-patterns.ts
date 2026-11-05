@@ -4,7 +4,6 @@ const octet = String.raw`([1-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])`
 const cidr4 = String.raw`([1-2]?[0-9]|3[0-2])`
 
 const IPv4noCIDR = String.raw`(${octet}(\.${octet}){3})`
-const IPv4CIDR = String.raw`(${IPv4noCIDR}/${cidr4})`
 const IPv4 = String.raw`(${IPv4noCIDR}(/${cidr4})?)`
 
 // ---- IPv6 ----
@@ -31,13 +30,7 @@ const IPv4inV6 = String.raw`(${IPv4inV6Part1}${IPv4noCIDR})`
 const IPv6WithZone = String.raw`(${IPv6General}%.+)`
 
 const IPv6noCIDR = String.raw`(${IPv6General}|${IPv4inV6}|${IPv6WithZone})`
-const IPv6CIDR = String.raw`(${IPv6noCIDR}/${cidr6})`
 const IPv6 = String.raw`(${IPv6noCIDR}(/${cidr6})?)`
-
-// ---- other ----
-
-const IPv4Range = String.raw`(${IPv4noCIDR}-${IPv4CIDR})`
-const IPv6Range = String.raw`(${IPv6noCIDR}-${IPv6CIDR})`
 
 export const Patterns = {
     wholeNumber: /^\d+$/,
@@ -45,11 +38,6 @@ export const Patterns = {
     IPv6: new RegExp("^" + IPv6 + "$"),
     IPv4noCIDR: new RegExp("^" + IPv4noCIDR + "$"),
     IPv6noCIDR: new RegExp("^" + IPv6noCIDR + "$"),
-    IPv4CIDR: new RegExp("^" + IPv4CIDR + "$"),
-    IPv6CIDR: new RegExp("^" + IPv6CIDR + "$"),
-    IPv4Range: new RegExp("^" + IPv4Range + "$"),
-    IPv6Range: new RegExp("^" + IPv6Range + "$"),
-    macAddress: /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
     portNumber:
         /^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/,
 };
