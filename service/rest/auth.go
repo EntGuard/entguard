@@ -20,8 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
+	"math"
+	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/entguard/entguard/pkg/httpconst"
 	"github.com/entguard/entguard/service/api/v1"
@@ -35,25 +39,39 @@ const (
 
 var (
 	ErrAuthenticationFailed = errors.New("authentication failed")
+	ErrTooManyAttempts      = errors.New("too many failed login attempts, try again later")
 )
 
-func (s *Server) basicAuth(r *http.Request) (*api.User, error) {
-	username, password, ok := r.BasicAuth()
+func (s *Server) basicAuth(c *gin.Context) (*api.User, error) {
+	username, password, ok := c.Request.BasicAuth()
 	if !ok {
 		return nil, fmt.Errorf("%w: invalid or missing basicAuth", ErrAuthenticationFailed)
 	}
 
-	u, err := s.userManager.GetUserByNameAndPassword(r.Context(), username, password)
+	wait := s.loginGuard.CheckWait(username, c.ClientIP())
+	if wait > 0 {
+		s.logger.WithFields(log.Fields{
+			"username": username,
+			"ip":       c.ClientIP(),
+		}).Info("Login attempt temporarily blocked because of too many failed attempts")
+		c.Header("Retry-After", strconv.Itoa(int(math.Ceil(wait.Seconds()))))
+		return nil, ErrTooManyAttempts
+	}
+
+	u, err := s.userManager.GetUserByNameAndPassword(c.Request.Context(), username, password)
 	if err != nil {
 		if err == user.ErrUserNotFound {
+			s.loginGuard.RecordFailedAttempt(username, c.ClientIP())
 			return nil, fmt.Errorf("%w: unknown user name or bad password", ErrAuthenticationFailed)
 		}
 		return nil, err
 	}
+	s.loginGuard.RecordSuccessfulAttempt(username)
 	return u, nil
 }
 
-func (s *Server) jwtAuth(r *http.Request) (*api.User, error) {
+func (s *Server) jwtAuth(c *gin.Context) (*api.User, error) {
+	r := c.Request
 	reqToken := r.Header.Get(httpconst.Authorization)
 	if reqToken == "" {
 		return nil, fmt.Errorf("%w: missing Authorization header", ErrAuthenticationFailed)

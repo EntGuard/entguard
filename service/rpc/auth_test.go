@@ -110,6 +110,7 @@ func TestIntegrationBasicAuth(t *testing.T) {
 			password: test.TestUserPassword,
 			want: &rpc.UserMetadata{
 				UserID:       u.ID,
+				Username:     "user1",
 				MFAType:      u.MFAType,
 				Notification: u.Notification,
 			},

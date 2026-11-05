@@ -25,11 +25,15 @@ import (
 	"github.com/entguard/entguard/service/api/v1"
 )
 
-func (s *Server) authenticate(authFunc func(r *http.Request) (*api.User, error)) gin.HandlerFunc {
+func (s *Server) authenticate(authFunc func(c *gin.Context) (*api.User, error)) gin.HandlerFunc {
 	mwLog := s.logger.WithField("reportCaller", "authenticate middleware")
 	return func(c *gin.Context) {
-		user, err := authFunc(c.Request)
+		user, err := authFunc(c)
 		if err != nil {
+			if errors.Is(err, ErrTooManyAttempts) {
+				c.AbortWithStatusJSON(http.StatusTooManyRequests, api.ErrorResponse{Message: err.Error()})
+				return
+			}
 			if errors.Is(err, ErrAuthenticationFailed) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse{Message: err.Error()})
 				return

@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/entguard/entguard/pkg/conc"
+	"github.com/entguard/entguard/pkg/loginguard"
 	"github.com/entguard/entguard/pkg/test"
 	"github.com/entguard/entguard/pkg/test/grpc"
 	"github.com/entguard/entguard/service/config"
@@ -55,7 +56,8 @@ func TestIntegrationNewServer(t *testing.T) {
 
 	vpnSStatusStore := conc.NewMap[int, error]()
 	hcStatusStore := rpc.NewHealthcheckStatusStore()
-	server, err := rpc.NewServer(ctx, cfg.RPC, vcManager, uManager, vpnSStatusStore, hcStatusStore, q.Logger.Logger)
+	lg := loginguard.New(q.Logger.Logger)
+	server, err := rpc.NewServer(ctx, cfg.RPC, vcManager, uManager, vpnSStatusStore, hcStatusStore, lg, q.Logger.Logger)
 	require.NoError(t, err)
 	require.NotNil(t, server)
 	require.NotNil(t, server.VpnC)

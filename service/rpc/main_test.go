@@ -25,6 +25,7 @@ import (
 	sqlc "github.com/entguard/entguard/db"
 	"github.com/entguard/entguard/pkg/conc"
 	"github.com/entguard/entguard/pkg/db"
+	"github.com/entguard/entguard/pkg/loginguard"
 	"github.com/entguard/entguard/pkg/test"
 	"github.com/entguard/entguard/service/config"
 	"github.com/entguard/entguard/service/rpc"
@@ -66,7 +67,8 @@ func TestMain(m *testing.M) {
 			logger.Fatal("NewSamplePostgresManager: ", err)
 		}
 
-		vpnCServer, err = rpc.NewVpnCServer(uManager, vcManager, logger)
+		lg := loginguard.New(logger)
+		vpnCServer, err = rpc.NewVpnCServer(uManager, vcManager, lg, logger)
 		if err != nil {
 			logger.Fatal("NewVpnCServer: ", err)
 		}

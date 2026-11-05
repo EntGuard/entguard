@@ -473,6 +473,34 @@ For best security, the `VPN_ORCHESTRATOR_PWD_MIN_LEN` should be set to at least
 8, and it is strongly recommended to set it to 15, and the other requirements
 should stay turned off.
 
+### Login Delays
+
+To increase protection against brute force attacks, login attempts are delayed
+(temporarily blocked) after a few repeated failed attempts. The first 3 failed
+attempts are not delayed. After each following failed attempt the user must wait
+twice as long as after the previous one (1 second, 2 seconds, 4 seconds, and so
+on, up to 5 minutes). While a delay lasts, all login attempts are rejected
+immediately, even those with the correct password. The REST API responds with
+HTTP status `429 Too Many Requests` and the number of seconds to wait in the
+`Retry-After` header.
+
+The delays apply to logging in to the Management UI, to the REST API
+(getting a JWT token), and to EG-C connections (password and 2FA code).
+
+The failed attempts are tracked separately for each user name and for each IP
+address. A successful login (including the 2FA code, if required) clears the
+failed attempts of the user, but not of the IP address. Each counter of failed
+attempts is also reset after 30 minutes without a failed attempt for that user
+name or IP address. Restarting EG-O clears the failed attempts of all users and
+IP addresses.
+
+**NOTE:** The IP address of the client is the address EG-O sees on its
+connection. If EG-O is deployed behind a reverse proxy or a load balancer, or if
+many users share a single address (for example behind NAT), all of them share
+the delay of that address. Failed attempts of one of them can then delay the
+others. EG-O deliberately ignores headers like `X-Forwarded-For`, because they
+can be forged by clients.
+
 ### Set Log Level
 
 You can set the log level by assigning to the `VPN_ORCHESTRATOR_LOG_LEVEL` environment variable with one of the following values:
