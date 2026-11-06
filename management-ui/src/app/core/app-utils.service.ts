@@ -14,27 +14,11 @@ export class AppUtilsService {
         private snackBar: MatSnackBar
     ) { }
 
-    // Show a success message in a snackbar
-    showSuccessSnackBar(message: string, duration: number = 3000): void {
-        this.snackBar.open(message, 'Close', {
-            duration: duration,
-            panelClass: ['success-snackbar']
-        });
-    }
-
     // Show an error message in a snackbar
     showErrorSnackBar(message: string, duration: number = 5000): void {
         this.snackBar.open(message, 'Close', {
             duration: duration,
             panelClass: ['error-snackbar']
-        });
-    }
-
-    // Show an info message in a snackbar
-    showInfoSnackBar(message: string, duration: number = 3000): void {
-        this.snackBar.open(message, 'Close', {
-            duration: duration,
-            panelClass: ['info-snackbar']
         });
     }
 

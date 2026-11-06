@@ -1,22 +1,30 @@
 <h2 mat-dialog-title class="mb-2">Sync Results</h2>
 <mat-dialog-content class="overflow-y-auto" style="max-height: 60vh;">
-    <div class="flex flex-column gap-3">
-        <div *ngFor="let item of data | keyvalue" class="flex flex-column">
-            <div class="font-bold mb-1">{{ formatKey(item.key) }}:</div>
-            <div class="ml-2">
-                <ng-container *ngIf="!isArray(item.value)">
-                    {{ item.value !== null ? item.value : 'None' }}
-                </ng-container>
-                <ng-container *ngIf="isArray(item.value)">
-                    <div *ngIf="item.value.length === 0">None</div>
-                    <ul *ngIf="item.value.length > 0">
-                        <li *ngFor="let err of item.value">{{ err }}</li>
-                    </ul>
-                </ng-container>
-            </div>
+  <div class="flex flex-column gap-3">
+    @for (item of data | keyvalue; track item) {
+      <div class="flex flex-column">
+        <div class="font-bold mb-1">{{ formatKey(item.key) }}:</div>
+        <div class="ml-2">
+          @if (!isArray(item.value)) {
+            {{ item.value !== null ? item.value : 'None' }}
+          }
+          @if (isArray(item.value)) {
+            @if (item.value.length === 0) {
+              <div>None</div>
+            }
+            @if (item.value.length > 0) {
+              <ul>
+                @for (err of item.value; track err) {
+                  <li>{{ err }}</li>
+                }
+              </ul>
+            }
+          }
         </div>
-    </div>
+      </div>
+    }
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-    <button mat-button (click)="onClose()">Close</button>
+  <button mat-button (click)="onClose()">Close</button>
 </mat-dialog-actions>

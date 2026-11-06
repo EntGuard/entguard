@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { Subject } from 'rxjs';
 import { finalize, switchMap, takeUntil } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-address-pools',
     templateUrl: './address-pools.component.html',
     styleUrls: ['./address-pools.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddressPoolsComponent implements OnInit, OnDestroy {

@@ -1,10 +1,11 @@
 import {
-    Component,
-    EventEmitter,
-    Inject,
-    OnDestroy,
-    OnInit,
-    ViewChild,
+  Component,
+  EventEmitter,
+  Inject,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {
     FormBuilder,
@@ -29,6 +30,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-server-dialog',
     templateUrl: './add-server-dialog.component.html',
     styleUrls: ['./add-server-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddServerDialogComponent
@@ -205,7 +207,7 @@ export class AddServerDialogComponent
         if (
             address &&
             this.config.interface.addresses.indexOf(address) === -1 &&
-            this.addressFormControl.valid
+            !this.addressFormControl.validator?.(new FormControl(address))
         ) {
             this.config.interface.addresses.push(address);
         } else {
@@ -223,6 +225,9 @@ export class AddServerDialogComponent
     }
 
     submitServer() {
+        if (this.savingServer) {
+            return;
+        }
         const dataObj = {
             name: this.createForm.get('name').value,
             endpoint: this.createForm.get('endpoint').value,

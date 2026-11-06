@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ServerModel } from '../../../shared/models/server-model';
 import { ColDef } from 'ag-grid-community';
 import { MatDialog } from '@angular/material/dialog';
@@ -21,6 +21,7 @@ import { ServerStatusModel } from 'src/app/shared/models/server-status-model';
     selector: 'app-servers',
     templateUrl: './servers-list.component.html',
     styleUrls: ['./servers-list.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ServersListComponent implements OnInit, OnDestroy {
