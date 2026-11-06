@@ -32,6 +32,7 @@ import (
 
 	"github.com/entguard/entguard/pkg/conc"
 	"github.com/entguard/entguard/pkg/limiter"
+	"github.com/entguard/entguard/pkg/loginguard"
 	pbapiv1 "github.com/entguard/entguard/proto/v1"
 	pbapiv2 "github.com/entguard/entguard/proto/v2"
 	"github.com/entguard/entguard/service/api/v1"
@@ -52,14 +53,15 @@ type Server struct {
 
 func NewServer(
 	ctx context.Context, cfg *config.RPCServerConfig, m vcm.VPNConfigManager, u user.Manager,
-	vpnSStatusStore *conc.Map[int, error], hcStatusStore *conc.Map[int, error], l *log.Logger,
+	vpnSStatusStore *conc.Map[int, error], hcStatusStore *conc.Map[int, error], lg *loginguard.LoginGuard,
+	l *log.Logger,
 ) (*Server, error) {
 	s, err := NewVpnSServer(m, vpnSStatusStore, cfg.Features, l)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := NewVpnCServer(u, m, l)
+	c, err := NewVpnCServer(u, m, lg, l)
 	if err != nil {
 		return nil, err
 	}

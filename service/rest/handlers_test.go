@@ -35,6 +35,7 @@ import (
 	"github.com/entguard/entguard/pkg/conc"
 	"github.com/entguard/entguard/pkg/db"
 	"github.com/entguard/entguard/pkg/httpconst"
+	"github.com/entguard/entguard/pkg/loginguard"
 	"github.com/entguard/entguard/pkg/mfa"
 	"github.com/entguard/entguard/pkg/test"
 	"github.com/entguard/entguard/pkg/test/grpc"
@@ -139,7 +140,8 @@ func TestMain(m *testing.M) {
 		}
 
 		hcStatusStore := rpc.NewHealthcheckStatusStore()
-		restServer, err := rest.NewServer(cfg.REST, vcmQ, manager, vpnSStatusStore, hcStatusStore, logger)
+		lg := loginguard.New(logger)
+		restServer, err := rest.NewServer(cfg.REST, vcmQ, manager, vpnSStatusStore, hcStatusStore, lg, logger)
 		if err != nil {
 			logger.Fatal("Create REST service", err)
 		}

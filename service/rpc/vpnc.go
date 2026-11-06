@@ -23,6 +23,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/entguard/entguard/pkg/loginguard"
 	pbapi "github.com/entguard/entguard/proto/v1"
 	"github.com/entguard/entguard/service/session"
 	"github.com/entguard/entguard/service/user"
@@ -38,14 +39,16 @@ type VpnCServer struct {
 
 	um     user.Manager
 	vcm    vcm.VPNConfigManager
+	lg     *loginguard.LoginGuard
 	logger *log.Entry
 }
 
-func NewVpnCServer(u user.Manager, m vcm.VPNConfigManager, l *log.Logger) (*VpnCServer, error) {
+func NewVpnCServer(u user.Manager, m vcm.VPNConfigManager, lg *loginguard.LoginGuard, l *log.Logger) (*VpnCServer, error) {
 	logger := l.WithField("reportCaller", vpnCCaller)
 	return &VpnCServer{
 		um:     u,
 		vcm:    m,
+		lg:     lg,
 		logger: logger,
 	}, nil
 }

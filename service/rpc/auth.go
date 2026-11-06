@@ -21,12 +21,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
+	"net"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
 	"github.com/entguard/entguard/pkg/mfa"
@@ -49,13 +52,30 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 		return nil, status.Error(codes.Unauthenticated, "invalid authorization")
 	}
 
+	ip := clientIP(ctx)
+	wait := s.lg.CheckWait(name, ip)
+	if wait > 0 {
+		s.logger.WithFields(log.Fields{
+			"username": name,
+			"ip":       ip,
+		}).Info("Login attempt temporarily blocked because of too many failed attempts")
+		return nil, status.Errorf(codes.ResourceExhausted,
+			"too many failed login attempts, please retry in %v seconds", int(math.Ceil(wait.Seconds())))
+	}
+
 	u, err := s.um.GetUserByNameAndPassword(ctx, name, password)
 	if err != nil {
 		if err == user.ErrUserNotFound {
+			s.lg.RecordFailedAttempt(name, ip)
 			return nil, status.Error(codes.Unauthenticated, `invalid username or password`)
 		}
 		s.logger.WithError(err).Warn("Failed to authenticate user with password")
 		return nil, status.Error(codes.Internal, "authentication failed")
+	}
+
+	// With MFA the failures are cleared only after the MFA succeeds, otherwise MFA codes could be guessed endlessly.
+	if mfa.AuthenticatorType(u.MFAType) == mfa.NONE {
+		s.lg.RecordSuccessfulAttempt(name)
 	}
 
 	s.logger.WithFields(log.Fields{
@@ -66,6 +86,7 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 
 	userMD := &UserMetadata{
 		UserID:       u.ID,
+		Username:     name,
 		MFAType:      u.MFAType,
 		Notification: u.Notification,
 	}
@@ -106,6 +127,9 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			return nil, st.Err()
 		}
 
+		// calling CheckWait here in MfaAuth would be redundant, because it has
+		// been already called inside BasicAuth
+
 		var authenticated bool
 
 		switch mfa.AuthenticatorType(mfaTyp) {
@@ -133,6 +157,7 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			s.logger.WithError(err).Debug("Failed to authenticate user due to an error")
 		}
 		if err != nil || !authenticated {
+			s.lg.RecordFailedAttempt(md.Username, clientIP(ctx))
 			s.logger.Debug("Failed to authenticate MFA")
 			st := status.Newf(codes.Unauthenticated, "MFA failed")
 			if err != nil {
@@ -144,12 +169,27 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			return nil, st.Err()
 		}
 
+		s.lg.RecordSuccessfulAttempt(md.Username)
+
 		s.logger.WithFields(log.Fields{
 			"userID": md.UserID,
 		}).Debug("User authenticated with MFA")
 	}
 
 	return purgeHeader(ctx, MfaHeaderKey), nil
+}
+
+// clientIP returns the address of the connected peer (without port), or empty string if it is unknown.
+func clientIP(ctx context.Context) string {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	host, _, err := net.SplitHostPort(p.Addr.String())
+	if err != nil {
+		return p.Addr.String()
+	}
+	return host
 }
 
 func withDetails(status *status.Status, errInfo *errdetails.ErrorInfo) *status.Status {
@@ -234,9 +274,10 @@ func purgeHeader(ctx context.Context, header string) context.Context {
 
 type userMDKey struct{}
 
-// UserMetadata contains metadata about a server.
+// UserMetadata contains metadata about a user.
 type UserMetadata struct {
 	UserID       int
+	Username     string
 	MFAType      string
 	Notification string
 }

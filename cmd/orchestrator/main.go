@@ -27,6 +27,7 @@ import (
 	"github.com/entguard/entguard/pkg/conc"
 	"github.com/entguard/entguard/pkg/db"
 	logsetup "github.com/entguard/entguard/pkg/logger"
+	"github.com/entguard/entguard/pkg/loginguard"
 	"github.com/entguard/entguard/service/buildinfo"
 	"github.com/entguard/entguard/service/config"
 	"github.com/entguard/entguard/service/rest"
@@ -117,9 +118,12 @@ func run() error {
 	hcStatusStore := rpc.NewHealthcheckStatusStore()
 	logger.Info("Healthcheck status store successfully created.")
 
+	// loginGuard delays repeated failed logins, it is shared by REST and gRPC services
+	loginGuard := loginguard.New(logger)
+
 	logger.Info("Creating REST service...")
 	restServer, err := rest.NewServer(
-		cfg.REST, vpnConfigManager, userManager, vpnSStatusStore, hcStatusStore, logger,
+		cfg.REST, vpnConfigManager, userManager, vpnSStatusStore, hcStatusStore, loginGuard, logger,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create REST service: %v", err)
@@ -128,7 +132,7 @@ func run() error {
 
 	logger.Info("Creating gRPC service...")
 	rpcServer, err := rpc.NewServer(
-		ctx, cfg.RPC, vpnConfigManager, userManager, vpnSStatusStore, hcStatusStore, logger,
+		ctx, cfg.RPC, vpnConfigManager, userManager, vpnSStatusStore, hcStatusStore, loginGuard, logger,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create RPC service: %v", err)
