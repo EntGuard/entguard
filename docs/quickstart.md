@@ -29,6 +29,11 @@ follow the steps in the [Docker post-installation guide](https://docs.docker.com
 
    > **NOTE:** Do not use self-signed certificates for production deployments.
 
+   > **NOTE:** At startup, EntGuard Orchestrator checks whether its certificate
+   > chains to publicly trusted roots. The check does not validate DNSName because
+   > the orchestrator’s hostname is not available in its configuration. Consequently,
+   > a publicly trusted certificate issued for a different host could pass the check.
+
 2. Generate a database encryption key
 
    ```bash
