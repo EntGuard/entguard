@@ -190,7 +190,7 @@ func NewServer(
 	// Serve Angular app.
 	// [ Workaround Gin router conflicts. See: https://github.com/gin-gonic/gin/issues/2016 ]
 	s.router.NoRoute(func(c *gin.Context) {
-		dir, file := path.Split(c.Request.RequestURI)
+		dir, file := path.Split(c.Request.URL.Path)
 		ext := filepath.Ext(file)
 		if file == "" || ext == "" {
 			// Let Angular app router to do the job.
