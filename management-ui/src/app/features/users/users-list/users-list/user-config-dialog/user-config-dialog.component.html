@@ -2,19 +2,15 @@
     <h3 class="dialog-h t-primary">
         {{ "server-config-dialog.headerEditDeviceTemplate" | translate }}
     </h3>
-    <form
-        [formGroup]="form"
-        novalidate
-        autocomplete="off"
-        class="flex flex-col"
-        id="editInterfaceForm"
-    >
+    <form [formGroup]="form" novalidate autocomplete="off" class="flex flex-col" id="editInterfaceForm">
         <mat-form-field class="mb-2">
             <mat-label>{{ "shared.labelInterfaceName" | translate }}</mat-label>
             <input matInput formControlName="name" id="nameInput" />
-            <mat-error *ngIf="form.get('name').hasError('required')">
-                {{ "shared.errorNameRequired" | translate }}
-            </mat-error>
+            @if (form.get("name").hasError("required")) {
+                <mat-error>
+                    {{ "shared.errorNameRequired" | translate }}
+                </mat-error>
+            }
         </mat-form-field>
 
         <div class="mb-2" id="addressesSelectWrapper">
@@ -29,19 +25,12 @@
         <div class="flex-1 flex">
             <mat-form-field class="mb-2 w-100">
                 <mat-label>
-                    {{
-                        "user-config-dialog.labelListenPortOptional" | translate
-                    }}
+                    {{ "user-config-dialog.labelListenPortOptional" | translate }}
                 </mat-label>
-                <input
-                    matInput
-                    formControlName="listenPort"
-                    id="listenPortInput"
-                    matTooltip="{{ 'user-config-dialog.tooltipListenPort' | translate }}"
-                />
-                <mat-error *ngIf="form.get('listenPort').hasError('pattern')">{{
-                    "shared.errorListenPortFormat" | translate
-                }}</mat-error>
+                <input matInput formControlName="listenPort" id="listenPortInput" matTooltip="{{ 'user-config-dialog.tooltipListenPort' | translate }}" />
+                @if (form.get("listenPort").hasError("pattern")) {
+                    <mat-error>{{ "shared.errorListenPortFormat" | translate }}</mat-error>
+                }
             </mat-form-field>
 
             <div class="wi-15"></div>
@@ -50,22 +39,10 @@
                 <mat-label>
                     {{ "shared.labelMaximumTransmissionUnit" | translate }}
                 </mat-label>
-                <input
-                    matInput
-                    formControlName="mtu"
-                    id="mtuInput"
-                    matTooltip="{{
-                        'shared.tooltipMaximumTransmissionUnit' | translate
-                    }}"
-                />
-                <mat-error
-                    *ngIf="
-                        form.get('mtu').hasError('pattern') ||
-                        form.get('mtu').hasError('min') ||
-                        form.get('mtu').hasError('max')
-                    "
-                    >{{ "shared.errorMtu" | translate }}</mat-error
-                >
+                <input matInput formControlName="mtu" id="mtuInput" matTooltip="{{ 'shared.tooltipMaximumTransmissionUnit' | translate }}" />
+                @if (form.get("mtu").hasError("pattern") || form.get("mtu").hasError("min") || form.get("mtu").hasError("max")) {
+                    <mat-error>{{ "shared.errorMtu" | translate }}</mat-error>
+                }
             </mat-form-field>
         </div>
 
@@ -74,18 +51,14 @@
                 {{ "user-config-dialog.labelDns" | translate }}
             </mat-label>
             <mat-chip-grid #dnsList>
-                <mat-chip-row
-                    *ngFor="let add of template.dns"
-                    [removable]="true"
-                    (removed)="onDNSRemove(add)"
-                >
-                    {{ add }}
-                    <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
-                </mat-chip-row>
+                @for (add of template.dns; track add) {
+                    <mat-chip-row [removable]="true" (removed)="onDNSRemove(add)">
+                        {{ add }}
+                        <mat-icon matChipRemove svgIcon="cancel"></mat-icon>
+                    </mat-chip-row>
+                }
                 <input
-                    placeholder="{{
-                        'user-config-dialog.placeholderNewDns' | translate
-                    }}"
+                    placeholder="{{ 'user-config-dialog.placeholderNewDns' | translate }}"
                     #dnsInput
                     [formControl]="dnsFormControl"
                     [matChipInputFor]="dnsList"
@@ -96,31 +69,17 @@
             </mat-chip-grid>
         </mat-form-field>
 
-        <p class="error" *ngIf="error">{{ error }}</p>
+        @if (error) {
+            <p class="error">{{ error }}</p>
+        }
         <div dir="rtl">
-            <button
-                mat-raised-button
-                [disabled]="form.invalid"
-                type="button"
-                color="primary"
-                (click)="submit()"
-                id="userConfigSubmitBtn"
-            >
-                <mat-progress-spinner
-                    color="white"
-                    mode="indeterminate"
-                    [diameter]="15"
-                    *ngIf="savingProgress"
-                ></mat-progress-spinner>
+            <button mat-raised-button [disabled]="form.invalid" type="button" color="primary" (click)="submit()" id="userConfigSubmitBtn">
+                @if (savingProgress) {
+                    <mat-progress-spinner color="white" mode="indeterminate" [diameter]="15"></mat-progress-spinner>
+                }
                 {{ "shared.buttonSubmit" | translate }}
             </button>
-            <button
-                (click)="close()"
-                class="me-2"
-                mat-raised-button
-                type="button"
-                id="cancelBtn"
-            >
+            <button (click)="close()" class="me-2" mat-raised-button type="button" id="cancelBtn">
                 {{ "shared.buttonCancel" | translate }}
             </button>
             <div class="flex-1"></div>

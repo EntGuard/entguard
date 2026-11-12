@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonFormDialogComponent } from '../../../../../shared/dialogs/common-form-dialog/common-form-dialog.component';
 import {
     FormBuilder,
@@ -22,6 +22,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-user-password-dialog',
     templateUrl: './user-password-dialog.component.html',
     styleUrls: ['./user-password-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserPasswordDialogComponent

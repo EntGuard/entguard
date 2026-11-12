@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -19,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-server-adjacency-dialog',
     templateUrl: './server-adjacency-dialog.component.html',
     styleUrls: ['./server-adjacency-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ServerAdjacencyDialogComponent
@@ -176,7 +177,7 @@ export class ServerAdjacencyDialogComponent
         if (
             address &&
             this[addressesArray].indexOf(address) === -1 &&
-            this[addressFC].valid
+            !this[addressFC].validator?.(new FormControl(address))
         ) {
             this[addressesArray].push(address);
         } else {

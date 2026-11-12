@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7-labs
-FROM node:20 AS frontend
+FROM node:22 AS frontend
 
 WORKDIR /src
 
 COPY ./management-ui/package.json ./management-ui/package-lock.json ./
-RUN npm install
+RUN npm ci
 COPY ./management-ui ./
 RUN npm run build
 
