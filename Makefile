@@ -342,6 +342,8 @@ third-party-licenses:
 	@cd management-ui && npm ci && npm run build
 	@mkdir -p third_party_licenses/management-ui
 	@cp management-ui/dist/3rdpartylicenses.txt third_party_licenses/management-ui/
+	@cp management-ui/src/assets/ASSETS_LICENSES.txt management-ui/src/assets/LICENSE-Apache-2.0.txt \
+		third_party_licenses/management-ui/
 
 # -------------------------------
 # PDF documentation
