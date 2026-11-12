@@ -1,10 +1,10 @@
 import {
-  Component,
-  ElementRef,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-  ChangeDetectionStrategy
+    Component,
+    ElementRef,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+    ChangeDetectionStrategy
 } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { UserModel } from '../../../../shared/models/user-model';

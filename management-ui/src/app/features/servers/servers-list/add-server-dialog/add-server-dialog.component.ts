@@ -1,11 +1,11 @@
 import {
-  Component,
-  EventEmitter,
-  Inject,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-  ChangeDetectionStrategy
+    Component,
+    EventEmitter,
+    Inject,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+    ChangeDetectionStrategy
 } from '@angular/core';
 import {
     FormBuilder,
