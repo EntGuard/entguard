@@ -31,7 +31,7 @@ const IPv4inV6 = String.raw`(${IPv4inV6Part1}${IPv4noCIDR})`
 const IPv6WithZone = String.raw`(${IPv6General}%.+)`
 
 const IPv6noCIDR = String.raw`(${IPv6General}|${IPv4inV6}|${IPv6WithZone})`
-const IPv6CIDR = String.raw`(${IPv6noCIDR}/${cidr6})`
+const IPv6CIDR = String.raw`((${IPv6General}|${IPv4inV6})/${cidr6})`
 const IPv6 = String.raw`(${IPv6noCIDR}(/${cidr6})?)`
 
 export const Patterns = {

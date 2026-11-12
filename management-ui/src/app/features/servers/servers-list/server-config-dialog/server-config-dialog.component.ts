@@ -157,15 +157,13 @@ export class ServerConfigDialogComponent
     }
 
     onAddressAdd(event: any) {
-        const input = event.input;
-        const value = event.value;
-
-        if ((value || '').trim()) {
-            this.addUniqueAddress(value.trim());
+        const value = (event.value || '').trim();
+        if (value && !this.addUniqueAddress(value)) {
+            return;
         }
 
-        if (input) {
-            input.value = '';
+        if (event.input) {
+            event.input.value = '';
         }
 
         this.addressFormControl.setValue(null);
@@ -173,27 +171,22 @@ export class ServerConfigDialogComponent
 
     onAddressesPaste(event: ClipboardEvent): void {
         event.preventDefault();
-        event.clipboardData
+        const rejected = event.clipboardData
             .getData('Text')
             .split(/;|,|\s/)
-            .forEach((address) => {
-                if ((address || '').trim()) {
-                    this.addUniqueAddress(address.trim());
-                }
-            });
-        this.addressFormControl.setValue(null);
+            .map((address) => address.trim())
+            .filter((address) => address && !this.addUniqueAddress(address));
+        this.addressFormControl.setValue(rejected.join(' ') || null);
     }
 
-    private addUniqueAddress(address: string) {
-        if (
-            address &&
-            this.addresses.indexOf(address) === -1 &&
-            !this.addressFormControl.validator?.(new FormControl(address))
-        ) {
-            this.addresses.push(address);
-        } else {
-            this.addressFormControl.setErrors({ incorrect: true });
+    private addUniqueAddress(address: string): boolean {
+        if (this.addressFormControl.validator?.(new FormControl(address))) {
+            return false;
         }
+        if (this.addresses.indexOf(address) === -1) {
+            this.addresses.push(address);
+        }
+        return true;
     }
 
     toggleCharsShow() {
@@ -201,7 +194,9 @@ export class ServerConfigDialogComponent
     }
 
     onBlurAddress() {
-        this.addUniqueAddress(this.addressFormControl.value);
-        this.addressFormControl.setValue('');
+        const value = (this.addressFormControl.value || '').trim();
+        if (!value || this.addUniqueAddress(value)) {
+            this.addressFormControl.setValue('');
+        }
     }
 }

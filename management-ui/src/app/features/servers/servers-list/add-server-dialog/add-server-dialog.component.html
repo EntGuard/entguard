@@ -228,7 +228,7 @@
                     <button
                         mat-raised-button
                         id="submitBtn"
-                        [disabled]="configForm.invalid || (config.interface.addresses.length === 0 && !addressFormControl.value) || createForm.invalid"
+                        [disabled]="configForm.invalid || addressFormControl.hasError('ipv4v6CidrRequired') || (config.interface.addresses.length === 0 && !addressFormControl.value) || createForm.invalid"
                         type="button"
                         color="primary"
                         (click)="submitServer()"

@@ -62,12 +62,12 @@
                         (paste)="onAddressesPaste($event)"
                     />
                 </mat-chip-grid>
-                @if (addressFC.hasError("incorrect")) {
-                    <mat-error>
+                @if (!addressFC.valid && addressFC.value) {
+                    <mat-hint class="mat-mdc-form-field-error" align="start">
                         {{ "shared.errorInterfaceAddressFormat" | translate }}
-                    </mat-error>
+                    </mat-hint>
                 }
-                @if (!addressFC.hasError("incorrect") && addresses.length === 0) {
+                @if (!addressFC.value && addresses.length === 0) {
                     <mat-error>
                         {{ "shared.required" | translate }}
                     </mat-error>

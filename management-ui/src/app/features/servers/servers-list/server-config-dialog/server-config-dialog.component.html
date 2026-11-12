@@ -162,7 +162,7 @@
             <button
                 mat-raised-button
                 id="serverConfigSubmitBtn"
-                [disabled]="form.invalid || (addresses.length === 0 && !addressFormControl.value)"
+                [disabled]="form.invalid || addressFormControl.hasError('ipv4v6CidrRequired') || (addresses.length === 0 && !addressFormControl.value)"
                 type="button"
                 color="primary"
                 (click)="submit()"

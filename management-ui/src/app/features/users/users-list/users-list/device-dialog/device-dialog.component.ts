@@ -78,7 +78,7 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
     }
 
     get isSubmitDisabled(): boolean {
-        return this.savingProgress || this.form.invalid || this.addresses.length === 0;
+        return this.savingProgress || this.form.invalid || this.addressFC.hasError('ipv4v6CidrRequired') || this.addresses.length === 0;
     }
 
     submit() {
@@ -136,31 +136,30 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
     }
 
     onAddressAdd(event: any) {
-        const input = event.input;
-        const value = event.value;
-
-        if ((value || '').trim()) {
-            this.addUniqueAddress(value.trim());
+        const value = (event.value || '').trim();
+        if (value && !this.addUniqueAddress(value)) {
+            return;
         }
 
-        if (input) {
-            input.value = '';
+        if (event.input) {
+            event.input.value = '';
         }
         this.addressFC.setValue(null);
     }
 
-    addUniqueAddress(address: string): void {
-        const valid = !this.addressFC.validator?.(new FormControl(address));
-        if (address && this.addresses.indexOf(address) === -1 && valid) {
-            this.addresses.push(address);
-        } else if (!valid) {
-            this.addressFC.setErrors({ incorrect: true });
+    addUniqueAddress(address: string): boolean {
+        if (this.addressFC.validator?.(new FormControl(address))) {
+            return false;
         }
+        if (this.addresses.indexOf(address) === -1) {
+            this.addresses.push(address);
+        }
+        return true;
     }
 
     onAddressBlur() {
-        if (this.addressFC.value) {
-            this.addUniqueAddress(this.addressFC.value);
+        const value = (this.addressFC.value || '').trim();
+        if (!value || this.addUniqueAddress(value)) {
             this.addressFC.setValue(null);
         }
         (this.chipGrid as any)?._markAsTouched?.();
@@ -168,15 +167,12 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
 
     onAddressesPaste(event: ClipboardEvent): void {
         event.preventDefault();
-        event.clipboardData
+        const rejected = event.clipboardData
             .getData('Text')
             .split(/;|,|\s/)
-            .forEach((address) => {
-                if ((address || '').trim()) {
-                    this.addUniqueAddress(address.trim());
-                }
-            });
-        this.addressFC.setValue(null);
+            .map((address) => address.trim())
+            .filter((address) => address && !this.addUniqueAddress(address));
+        this.addressFC.setValue(rejected.join(' ') || null);
     }
 
     toggleCharsShow(): void {
