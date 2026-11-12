@@ -27,7 +27,7 @@ export class DeviceDialogComponent extends CommonFormDialogComponent implements 
 
     separatorKeysCodes: number[] = [ENTER, COMMA, SEMICOLON, SPACE];
     addresses: string[] = [];
-    addressFC: FormControl = new FormControl(null, this.validatorsService.getIpv4v6CidrValidator());
+    addressFC: FormControl = new FormControl(null, this.validatorsService.getIpv4v6CidrRequiredValidator());
     showPKChars = false;
 
     @ViewChild('chipList') chipGrid: MatChipGrid;

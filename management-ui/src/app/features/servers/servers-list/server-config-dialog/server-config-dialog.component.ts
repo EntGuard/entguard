@@ -35,7 +35,7 @@ export class ServerConfigDialogComponent
         null,
         [
             Validators.required,
-            this.validatorsService.getIpv4v6CidrValidator()
+            this.validatorsService.getIpv4v6CidrRequiredValidator()
         ]
     );
     showPKChars = false;

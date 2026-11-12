@@ -48,7 +48,7 @@ export class AddServerDialogComponent
     separatorKeysCodes: number[] = [ENTER, COMMA, SEMICOLON, SPACE];
     addressFormControl = new FormControl(
         null,
-        this.validatorsService.getIpv4v6CidrValidator()
+        this.validatorsService.getIpv4v6CidrRequiredValidator()
     );
     onAddServer = new EventEmitter();
 

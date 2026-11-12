@@ -30,6 +30,23 @@ export class ValidatorsService {
         };
     }
 
+    getIpv4v6CidrRequiredValidator(): ValidatorFn {
+        return (formControl: FormControl): { [key: string]: any } => {
+            const input = formControl.value;
+
+            if (!input) {
+                return null;
+            }
+            if (
+                !Patterns.IPv4CIDR.test(input) &&
+                !Patterns.IPv6CIDR.test(input)
+            ) {
+                return { ipv4v6CidrRequired: true };
+            }
+            return null;
+        };
+    }
+
     getGroupRequirementValidator(
         form: FormGroup,
         groupMembers: string[]

@@ -64,7 +64,7 @@
                 </mat-chip-grid>
                 @if (addressFC.hasError("incorrect")) {
                     <mat-error>
-                        {{ "shared.errorAddressFormat" | translate }}
+                        {{ "shared.errorInterfaceAddressFormat" | translate }}
                     </mat-error>
                 }
                 @if (!addressFC.hasError("incorrect") && addresses.length === 0) {
