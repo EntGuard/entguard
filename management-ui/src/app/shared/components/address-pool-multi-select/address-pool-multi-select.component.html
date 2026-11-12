@@ -1,99 +1,88 @@
 <mat-form-field class="address-pool-multi-select-field">
-  <mat-label>{{ 'shared.labelAddressRanges' | translate }}</mat-label>
-  <mat-select
-    [formControl]="control"
-    [placeholder]="'shared.placeholderSelectAddressPool' | translate"
-    [compareWith]="comparePools"
-    [disabled]="disabled || loading"
-    [required]="required"
-    multiple
-    panelClass="address-pool-multi-select-panel"
-    (openedChange)="onPanelOpened($event)"
+    <mat-label>{{ "shared.labelAddressRanges" | translate }}</mat-label>
+    <mat-select
+        [formControl]="control"
+        [placeholder]="'shared.placeholderSelectAddressPool' | translate"
+        [compareWith]="comparePools"
+        [disabled]="disabled || loading"
+        [required]="required"
+        multiple
+        panelClass="address-pool-multi-select-panel"
+        (openedChange)="onPanelOpened($event)"
     >
-    <mat-select-trigger>
-      @if (selectedCount > 0) {
-        <div class="trigger-chips-container">
-          <div class="chips-scroll-area">
-            @for (pool of control.value; track trackById($index, pool)) {
-              <div
-                class="address-pool-chip"
-                [matTooltip]="pool.tooltipText"
-                matTooltipPosition="above"
-                matDisableTooltipInteractivity="false"
-                >
-                <span class="chip-name">{{ pool.name }}</span>
-                <button
-                  type="button"
-                  class="chip-remove-btn"
-                  (click)="removePool(pool, $event)"
-                  [disabled]="disabled || loading"
-                  aria-label="Remove"
-                  >
-                  <mat-icon svgIcon="cancel"></mat-icon>
-                </button>
-              </div>
+        <mat-select-trigger>
+            @if (selectedCount > 0) {
+                <div class="trigger-chips-container">
+                    <div class="chips-scroll-area">
+                        @for (pool of control.value; track trackById($index, pool)) {
+                            <div class="address-pool-chip" [matTooltip]="pool.tooltipText" matTooltipPosition="above" matDisableTooltipInteractivity="false">
+                                <span class="chip-name">{{ pool.name }}</span>
+                                <button
+                                    type="button"
+                                    class="chip-remove-btn"
+                                    (click)="removePool(pool, $event)"
+                                    [disabled]="disabled || loading"
+                                    aria-label="Remove"
+                                >
+                                    <mat-icon svgIcon="cancel"></mat-icon>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            } @else {
+                <span class="trigger-text">{{ "shared.placeholderSelectAddressPool" | translate }}</span>
             }
-          </div>
-        </div>
-      } @else {
-        <span class="trigger-text">{{ 'shared.placeholderSelectAddressPool' | translate }}</span>
-      }
-    </mat-select-trigger>
+        </mat-select-trigger>
 
-    @if (loading) {
-      <mat-option disabled class="loading-option">
-        <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
-      </mat-option>
-    }
-
-    @if (vm$ | async; as vm) {
-      <div class="search-row" (click)="onSelectAllClick(vm.filteredPools, $event)">
-        <mat-pseudo-checkbox
-          class="select-all-checkbox"
-          [state]="getSelectAllState(vm.filteredPools)"
-          [disabled]="vm.filteredPools.length === 0"
-        ></mat-pseudo-checkbox>
-        <input
-          #searchInput
-          type="text"
-          class="search-input"
-          [placeholder]="'shared.placeholderSearchAddressPools' | translate"
-          [formControl]="searchControl"
-          (click)="$event.stopPropagation()"
-          />
-        @if (searchControl.value) {
-          <button
-            type="button"
-            class="clear-btn"
-            (click)="clearSearch($event)"
-            >
-            X
-          </button>
+        @if (loading) {
+            <mat-option disabled class="loading-option">
+                <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+            </mat-option>
         }
-      </div>
-      @for (option of vm.options; track trackOptionById($index, option)) {
-        <mat-option
-          [value]="option.pool"
-          [id]="'addressPoolOption_' + option.pool.id"
-          [matTooltip]="option.pool.description || ''"
-          [matTooltipDisabled]="!option.pool.description"
-          [class.hidden-option]="!option.visible"
-          >
-          <div class="option-content">
-            <span class="option-name">{{ option.pool.name }}</span>
-            <span class="option-range">{{ option.pool.addressRange }}</span>
-          </div>
-        </mat-option>
-      }
-      @if (!loading && vm.filteredPools.length === 0) {
-        <mat-option disabled>
-          {{ 'shared.messageNoResults' | translate }}
-        </mat-option>
-      }
-    }
-  </mat-select>
 
-  @if (showError) {
-    <mat-error>{{ 'shared.errorAddress' | translate }}</mat-error>
-  }
+        @if (vm$ | async; as vm) {
+            <div class="search-row" (click)="onSelectAllClick(vm.filteredPools, $event)">
+                <mat-pseudo-checkbox
+                    class="select-all-checkbox"
+                    [state]="getSelectAllState(vm.filteredPools)"
+                    [disabled]="vm.filteredPools.length === 0"
+                ></mat-pseudo-checkbox>
+                <input
+                    #searchInput
+                    type="text"
+                    class="search-input"
+                    [placeholder]="'shared.placeholderSearchAddressPools' | translate"
+                    [formControl]="searchControl"
+                    (click)="$event.stopPropagation()"
+                />
+                @if (searchControl.value) {
+                    <button type="button" class="clear-btn" (click)="clearSearch($event)">X</button>
+                }
+            </div>
+            @for (option of vm.options; track trackOptionById($index, option)) {
+                <mat-option
+                    [value]="option.pool"
+                    [id]="'addressPoolOption_' + option.pool.id"
+                    [matTooltip]="option.pool.description || ''"
+                    [matTooltipDisabled]="!option.pool.description"
+                    [class.hidden-option]="!option.visible"
+                >
+                    <div class="option-content">
+                        <span class="option-name">{{ option.pool.name }}</span>
+                        <span class="option-range">{{ option.pool.addressRange }}</span>
+                    </div>
+                </mat-option>
+            }
+            @if (!loading && vm.filteredPools.length === 0) {
+                <mat-option disabled>
+                    {{ "shared.messageNoResults" | translate }}
+                </mat-option>
+            }
+        }
+    </mat-select>
+
+    @if (showError) {
+        <mat-error>{{ "shared.errorAddress" | translate }}</mat-error>
+    }
 </mat-form-field>
