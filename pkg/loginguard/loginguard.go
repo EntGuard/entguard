@@ -31,8 +31,9 @@ const (
 	baseDelay    = time.Second      // delay after the first non-free failure, doubled with each next failure
 	maxDelay     = 5 * time.Minute  // upper bound of the delay
 	resetAfter   = 30 * time.Minute // failure counter is reset after this time without a failure
-	ipv6Bits     = 64               // IPv6 addresses are tracked by their network prefix of this length
 	maxEntries   = 100000           // upper bound of tracked keys per map (protection against memory exhaustion)
+	ipv6Bits     = 64               // IPv6 addresses are tracked by their network prefix of this length
+	warnInterval = time.Minute      // minimal time between two warnings about a full map
 )
 
 // ipToKey returns the key under which the IP address is tracked. An IPv6 address is replaced by its network
@@ -75,6 +76,8 @@ type LoginGuard struct {
 
 	now    func() time.Time
 	logger *log.Logger
+	// lastWarn is the time of the last warning about a full map
+	lastWarn time.Time
 }
 
 // New creates a new LoginGuard.
@@ -141,24 +144,30 @@ func (lg *LoginGuard) checkWait(username, ipKey string, isMFA bool) time.Duratio
 
 func (lg *LoginGuard) recordFailedAttempt(username, ipKey string, isMFA bool) {
 	now := lg.now()
-	bruteForceMsg := "Detected attempts to log in %s. This likely means " +
-		"an ongoing brute force or resource exhaustion attack."
 
-	var success bool
+	var mapFull bool
 	if isMFA {
-		success = recordFailedAttemptIntoMap(lg.userMFAs, username, now)
+		mapFull = recordFailedAttemptIntoMap(lg.userMFAs, username, now)
 	} else {
-		success = recordFailedAttemptIntoMap(lg.userPasswords, username, now)
+		mapFull = recordFailedAttemptIntoMap(lg.userPasswords, username, now)
 	}
-	if !success {
-		lg.logger.Warnf(bruteForceMsg, "with too many usernames")
+	if mapFull {
+		lg.logAttackWarning("with too many usernames")
 	}
 
 	if ipKey != "" {
-		success = recordFailedAttemptIntoMap(lg.ips, ipKey, now)
-		if !success {
-			lg.logger.Warnf(bruteForceMsg, "from too many IP addresses")
+		mapFull = recordFailedAttemptIntoMap(lg.ips, ipKey, now)
+		if mapFull {
+			lg.logAttackWarning("from too many IP addresses")
 		}
+	}
+}
+
+func (lg *LoginGuard) logAttackWarning(msg string) {
+	if lg.lastWarn.Add(warnInterval).Before(lg.now()) {
+		lg.lastWarn = lg.now()
+		lg.logger.Warn("Detected attempts to log in " + msg + ". This likely means " +
+			"an ongoing brute force or resource exhaustion attack.")
 	}
 }
 
@@ -214,23 +223,26 @@ func revertAttemptInMap(entries map[string]entry, key string) {
 }
 
 // recordFailedAttemptIntoMap records a failure under the given key and sets the delay for the next attempt.
-// It returns false if the login attempt could not be recorded because the map is full.
-func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.Time) (success bool) {
+// It returns true if the oldest attempt is forgotten because the map is full.
+func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.Time) (mapFull bool) {
 	prev, ok := entries[key]
 	if !ok {
+		oldestRemoved := false
 		// if map is full, try to make room for the new entry
 		if len(entries) >= maxEntries {
-			removeExpired(entries, now)
+			removeExpiredInMap(entries, now)
 		}
+		// if map is still full, remove the oldest entry
 		if len(entries) >= maxEntries {
-			return false
+			removeOldestInMap(entries)
+			oldestRemoved = true
 		}
 		entries[key] = entry{
 			failures:     1,
 			lastFail:     now,
 			blockedUntil: now,
 		}
-		return true
+		return oldestRemoved
 	}
 
 	failures := prev.failures + 1
@@ -249,13 +261,37 @@ func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.T
 		lastFail:     now,
 		blockedUntil: blockedUntil,
 	}
-	return true
+	return false
 }
 
-func removeExpired(entries map[string]entry, now time.Time) {
+func removeExpiredInMap(entries map[string]entry, now time.Time) {
 	for k, entry := range entries {
 		if now.Sub(entry.lastFail) > resetAfter {
 			delete(entries, k)
 		}
 	}
+}
+
+func removeOldestInMap(entries map[string]entry) {
+	if len(entries) == 0 {
+		return
+	}
+
+	var oldestKey string
+	var oldestValue entry
+
+	// set initial values, so in the following "real" cycle we do not have to deal with empty values
+	for k, entry := range entries {
+		oldestKey = k
+		oldestValue = entry
+		break
+	}
+
+	for k, entry := range entries {
+		if entry.lastFail.Before(oldestValue.lastFail) {
+			oldestKey = k
+			oldestValue = entry
+		}
+	}
+	delete(entries, oldestKey)
 }

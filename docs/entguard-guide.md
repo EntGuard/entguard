@@ -672,7 +672,7 @@ for detailed instructions.
 NOTES:
 
 - The `previous-db` directory can contain **only one** `.sql` file and no other files.
-- If the `previous-db` directory is emtpy, EG-O will start with a clean database with default admin user.
+- If the `previous-db` directory is empty, EG-O will start with a clean database with default admin user.
 - If the `previous-db` directory contains the `.sql` dump file (from step 4.),
   it will be automatically imported into database during starting your
   containers. Then a database migration script will be automatically executed
