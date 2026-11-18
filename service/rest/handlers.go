@@ -296,7 +296,7 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			return
 		}
 
-		wait := s.loginGuard.CheckWait(reqBody.Username, c.ClientIP())
+		wait := s.loginGuard.CheckWait(reqBody.Username, c.ClientIP(), false)
 		if wait > 0 {
 			hndlLog.WithFields(log.Fields{
 				"username": reqBody.Username,
@@ -313,10 +313,10 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			var msg string
 
 			if err == user.ErrUserNotFound {
-				s.loginGuard.RecordFailedAttempt(reqBody.Username, c.ClientIP())
 				status = http.StatusBadRequest
 				msg = errTokenNotCreated
 			} else {
+				s.loginGuard.RevertAttempt(reqBody.Username, c.ClientIP(), false)
 				hndlLog.WithError(err).Warn("Failed to create a token")
 				status = http.StatusInternalServerError
 				msg = errGeneric
@@ -326,7 +326,7 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			return
 		}
 
-		s.loginGuard.RecordSuccessfulAttempt(reqBody.Username)
+		s.loginGuard.RecordSuccessfulAttempt(reqBody.Username, c.ClientIP(), false)
 		c.JSON(http.StatusOK, api.JWT{Token: token})
 	}
 }

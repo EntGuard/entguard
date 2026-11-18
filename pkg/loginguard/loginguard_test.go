@@ -41,11 +41,11 @@ func advanceTime(lg *LoginGuard, d time.Duration) {
 
 func recordNFailedAttempts(lg *LoginGuard, n int, username, ip string) {
 	for range n {
-		lg.RecordFailedAttempt(username, ip)
+		lg.recordFailedAttempt(username, ip, false)
 	}
 }
 
-func TestCheck(t *testing.T) {
+func TestBegin(t *testing.T) {
 	type check struct {
 		username string
 		ip       string
@@ -166,7 +166,7 @@ func TestCheck(t *testing.T) {
 			name: "success clears user and keeps IP",
 			setup: func(lg *LoginGuard) {
 				recordNFailedAttempts(lg, freeAttempts+1, "alice", "1.1.1.1")
-				lg.RecordSuccessfulAttempt("alice")
+				lg.RecordSuccessfulAttempt("alice", "1.1.1.1", false)
 			},
 			checks: []check{
 				{"alice", "1.1.1.1", baseDelay},
@@ -204,7 +204,7 @@ func TestCheck(t *testing.T) {
 			lg := newTestLoginGuard(log.New())
 			tc.setup(lg)
 			for _, c := range tc.checks {
-				require.Equal(t, c.want, lg.CheckWait(c.username, c.ip), "user %q, IP %q", c.username, c.ip)
+				require.Equal(t, c.want, lg.CheckWait(c.username, c.ip, false), "user %q, IP %q", c.username, c.ip)
 			}
 		})
 	}
@@ -268,7 +268,7 @@ func TestFullMap(t *testing.T) {
 			}
 			if tc.fullUsernameMap {
 				for i := range maxEntries {
-					lg.users["user"+strconv.Itoa(i)] = entry{failures: 1, lastFail: lastFail}
+					lg.userPasswords["user"+strconv.Itoa(i)] = entry{failures: 1, lastFail: lastFail}
 				}
 			}
 			if tc.fullIPMap {
@@ -277,22 +277,22 @@ func TestFullMap(t *testing.T) {
 				}
 			}
 
-			lg.RecordFailedAttempt(tc.username, tc.ip)
+			lg.recordFailedAttempt(tc.username, tc.ip, false)
 
 			if tc.expired {
-				require.Len(t, lg.users, 1)
+				require.Len(t, lg.userPasswords, 1)
 				require.Len(t, lg.ips, 1)
-				require.Contains(t, lg.users, tc.username)
+				require.Contains(t, lg.userPasswords, tc.username)
 				require.Contains(t, lg.ips, tc.ip)
 				require.Empty(t, hook.Entries)
 				return
 			}
 
 			if tc.fullUsernameMap {
-				require.Len(t, lg.users, maxEntries)
-				require.NotContains(t, lg.users, tc.username)
+				require.Len(t, lg.userPasswords, maxEntries)
+				require.NotContains(t, lg.userPasswords, tc.username)
 			} else {
-				require.Len(t, lg.users, 1)
+				require.Len(t, lg.userPasswords, 1)
 			}
 			if tc.fullIPMap {
 				require.Len(t, lg.ips, maxEntries)
@@ -312,10 +312,10 @@ func TestFullMap(t *testing.T) {
 			// If map is full, already tracked keys are still updated and do not cause a warning.
 			// (And if the map is not full, the following assertions pass anyway.)
 			hook.Reset()
-			initialUsernameFailures := lg.users["user0"].failures
+			initialUsernameFailures := lg.userPasswords["user0"].failures
 			initialIPFailures := lg.ips["ip0"].failures
-			lg.RecordFailedAttempt("user0", "ip0")
-			require.Equal(t, initialUsernameFailures+1, lg.users["user0"].failures)
+			lg.recordFailedAttempt("user0", "ip0", false)
+			require.Equal(t, initialUsernameFailures+1, lg.userPasswords["user0"].failures)
 			require.Equal(t, initialIPFailures+1, lg.ips["ip0"].failures)
 			require.Empty(t, hook.Entries)
 		})

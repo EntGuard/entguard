@@ -41,77 +41,152 @@ type entry struct {
 
 // LoginGuard tracks failed login attempts per username and per IP address.
 type LoginGuard struct {
-	mu    sync.Mutex
-	users map[string]entry
-	ips   map[string]entry
-	now   func() time.Time
+	mu sync.Mutex
 
+	// userPasswords is keyed on usernames and tracks failed password attempts for the user
+	userPasswords map[string]entry
+	// userMFAs is also keyed on usernames and tracks failed MFA attempts for the user
+	userMFAs map[string]entry
+	// ips is keyed on IP addresses and tracks any (password/MFA) failed attempts from the IP
+	ips map[string]entry
+
+	now    func() time.Time
 	logger *log.Logger
 }
 
 // New creates a new LoginGuard.
 func New(l *log.Logger) *LoginGuard {
 	return &LoginGuard{
-		users: make(map[string]entry),
-		ips:   make(map[string]entry),
-		now:   time.Now,
+		userPasswords: make(map[string]entry),
+		userMFAs:      make(map[string]entry),
+		ips:           make(map[string]entry),
 
+		now:    time.Now,
 		logger: l,
 	}
 }
 
-// CheckWait returns how long the caller must wait before the next login attempt is allowed (0 means allowed).
-// It must be called before the credentials are checked.
-func (lg *LoginGuard) CheckWait(username, ip string) time.Duration {
+// CheckWait returns how long the caller must wait before the next login attempt
+// is allowed (0 means allowed). It must be called before the credentials are
+// checked.
+//
+// CheckWait also records the attempt as failed, before the actual
+// authentication. It performs the check-and-record atomically. This provides
+// protection against parallel login requests.
+//
+// After authenticaion, the caller should call RecordSuccessfulAttempt (after
+// successful authentication), RevertAttempt (after authentication error) or
+// nothing (after failed authentication) (if authentication fails, the function
+// recordFailedAttempt had already been called beforehand by CheckWait).
+//
+// isMFA must be false for password attempts and true for MFA attempts.
+func (lg *LoginGuard) CheckWait(username, ip string, isMFA bool) time.Duration {
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
+	wait := lg.checkWait(username, ip, isMFA)
+	if wait > 0 {
+		return wait
+	}
+
+	lg.recordFailedAttempt(username, ip, isMFA)
+	return 0
+}
+
+func (lg *LoginGuard) checkWait(username, ip string, isMFA bool) time.Duration {
 	now := lg.now()
 	wait := time.Duration(0)
-	if entry, ok := lg.users[username]; ok {
-		wait = max(wait, entry.blockedUntil.Sub(now))
+
+	if isMFA {
+		if entry, ok := lg.userMFAs[username]; ok {
+			wait = max(wait, entry.blockedUntil.Sub(now))
+		}
+	} else {
+		if entry, ok := lg.userPasswords[username]; ok {
+			wait = max(wait, entry.blockedUntil.Sub(now))
+		}
 	}
+
 	if entry, ok := lg.ips[ip]; ok {
 		wait = max(wait, entry.blockedUntil.Sub(now))
 	}
+
 	return wait
 }
 
-// RecordFailedAttempt records a failed login attempt. It must be called only
-// for attempts where the credentials have been actually checked (it must NOT be
-// called for attempts blocked by CheckWait).
-func (lg *LoginGuard) RecordFailedAttempt(username, ip string) {
-	lg.mu.Lock()
-	defer lg.mu.Unlock()
-
+func (lg *LoginGuard) recordFailedAttempt(username, ip string, isMFA bool) {
 	now := lg.now()
 	bruteForceMsg := "Detected attempts to log in %s. This likely means " +
 		"an ongoing brute force or resource exhaustion attack."
 
-	success := recordFailedAttempt(lg.users, username, now)
+	var success bool
+	if isMFA {
+		success = recordFailedAttemptIntoMap(lg.userMFAs, username, now)
+	} else {
+		success = recordFailedAttemptIntoMap(lg.userPasswords, username, now)
+	}
 	if !success {
 		lg.logger.Warnf(bruteForceMsg, "with too many usernames")
 	}
+
 	if ip != "" {
-		success = recordFailedAttempt(lg.ips, ip, now)
+		success = recordFailedAttemptIntoMap(lg.ips, ip, now)
 		if !success {
 			lg.logger.Warnf(bruteForceMsg, "from too many IP addresses")
 		}
 	}
 }
 
-// RecordSuccessfulAttempt forgets failures of the given user. IP failures are kept, so a successful login
-// does not clear the history of an address that is guessing passwords of other users.
-func (lg *LoginGuard) RecordSuccessfulAttempt(username string) {
+// RecordSuccessfulAttempt forgets failures of the given user. IP failures are
+// kept, so a successful login does not clear the history of an address that is
+// guessing passwords of other users. But IP failures are reverted, in order to
+// revert the "failed" attempt that has been recorded by CheckWait.
+func (lg *LoginGuard) RecordSuccessfulAttempt(username, ip string, isMFA bool) {
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
-	delete(lg.users, username)
+	if isMFA {
+		delete(lg.userMFAs, username)
+	} else {
+		delete(lg.userPasswords, username)
+	}
+
+	revertAttemptInMap(lg.ips, ip)
 }
 
-// recordFailedAttempt records a failure under the given key and sets the delay for the next attempt.
+// RevertAttempt reverts one failed attempt. It should be called when the login
+// attempt could not be authenticated because an error happened during
+// authentication.
+func (lg *LoginGuard) RevertAttempt(username, ip string, isMFA bool) {
+	lg.mu.Lock()
+	defer lg.mu.Unlock()
+
+	if isMFA {
+		revertAttemptInMap(lg.userMFAs, username)
+	} else {
+		revertAttemptInMap(lg.userPasswords, username)
+	}
+
+	revertAttemptInMap(lg.ips, ip)
+}
+
+func revertAttemptInMap(entries map[string]entry, key string) {
+	entry, ok := entries[key]
+	if ok {
+		if entry.failures >= 1 {
+			entry.failures--
+		}
+		// There is a small chance that this gets run after a parallel
+		// unsuccessful attempt. However the security implication is minimal and
+		// it is not worth overengineering around this
+		entry.blockedUntil = time.Time{}
+		entries[key] = entry
+	}
+}
+
+// recordFailedAttemptIntoMap records a failure under the given key and sets the delay for the next attempt.
 // It returns false if the login attempt could not be recorded because the map is full.
-func recordFailedAttempt(entries map[string]entry, key string, now time.Time) (success bool) {
+func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.Time) (success bool) {
 	prev, ok := entries[key]
 	if !ok {
 		// if map is full, try to make room for the new entry

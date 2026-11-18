@@ -48,7 +48,7 @@ func (s *Server) basicAuth(c *gin.Context) (*api.User, error) {
 		return nil, fmt.Errorf("%w: invalid or missing basicAuth", ErrAuthenticationFailed)
 	}
 
-	wait := s.loginGuard.CheckWait(username, c.ClientIP())
+	wait := s.loginGuard.CheckWait(username, c.ClientIP(), false)
 	if wait > 0 {
 		s.logger.WithFields(log.Fields{
 			"username": username,
@@ -61,12 +61,12 @@ func (s *Server) basicAuth(c *gin.Context) (*api.User, error) {
 	u, err := s.userManager.GetUserByNameAndPassword(c.Request.Context(), username, password)
 	if err != nil {
 		if err == user.ErrUserNotFound {
-			s.loginGuard.RecordFailedAttempt(username, c.ClientIP())
 			return nil, fmt.Errorf("%w: unknown user name or bad password", ErrAuthenticationFailed)
 		}
+		s.loginGuard.RevertAttempt(username, c.ClientIP(), false)
 		return nil, err
 	}
-	s.loginGuard.RecordSuccessfulAttempt(username)
+	s.loginGuard.RecordSuccessfulAttempt(username, c.ClientIP(), false)
 	return u, nil
 }
 

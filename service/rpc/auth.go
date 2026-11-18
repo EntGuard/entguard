@@ -53,7 +53,7 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 	}
 
 	ip := clientIP(ctx)
-	wait := s.lg.CheckWait(name, ip)
+	wait := s.lg.CheckWait(name, ip, false)
 	if wait > 0 {
 		s.logger.WithFields(log.Fields{
 			"username": name,
@@ -66,18 +66,14 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 	u, err := s.um.GetUserByNameAndPassword(ctx, name, password)
 	if err != nil {
 		if err == user.ErrUserNotFound {
-			s.lg.RecordFailedAttempt(name, ip)
 			return nil, status.Error(codes.Unauthenticated, `invalid username or password`)
 		}
+		s.lg.RevertAttempt(name, ip, false)
 		s.logger.WithError(err).Warn("Failed to authenticate user with password")
 		return nil, status.Error(codes.Internal, "authentication failed")
 	}
 
-	// With MFA the failures are cleared only after the MFA succeeds, otherwise MFA codes could be guessed endlessly.
-	if mfa.AuthenticatorType(u.MFAType) == mfa.NONE {
-		s.lg.RecordSuccessfulAttempt(name)
-	}
-
+	s.lg.RecordSuccessfulAttempt(name, ip, false)
 	s.logger.WithFields(log.Fields{
 		"userID": u.ID,
 	}).Debug("User authenticated with credentials")
@@ -127,18 +123,31 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			return nil, st.Err()
 		}
 
-		// calling CheckWait here in MfaAuth would be redundant, because it has
-		// been already called inside BasicAuth
-
 		var authenticated bool
 
 		switch mfa.AuthenticatorType(mfaTyp) {
 		case mfa.TOTP:
+			wait := s.lg.CheckWait(md.Username, clientIP(ctx), true)
+			if wait > 0 {
+				s.logger.WithFields(log.Fields{
+					"username": md.Username,
+					"ip":       clientIP(ctx),
+				}).Info("MFA Login attempt temporarily blocked because of too many failed attempts")
+				return nil, status.Errorf(codes.ResourceExhausted,
+					"too many failed login attempts, please retry in %v seconds", int(math.Ceil(wait.Seconds())))
+			}
+
 			s.logger.Debugf("Trying to authenticate user with %v", mfa.TOTP)
 
 			authenticated, err = s.um.MFAAuthenticate(ctx, md.UserID, mfa.TOTP, &mfa.TOTPCredentials{
 				Password: mfaData,
 			})
+			if err != nil {
+				s.lg.RevertAttempt(md.Username, clientIP(ctx), true)
+			}
+			if err == nil && authenticated {
+				s.lg.RecordSuccessfulAttempt(md.Username, clientIP(ctx), true)
+			}
 		case mfa.CERT:
 			s.logger.Debugf("Trying to authenticate user with %v", mfa.CERT)
 
@@ -157,7 +166,6 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			s.logger.WithError(err).Debug("Failed to authenticate user due to an error")
 		}
 		if err != nil || !authenticated {
-			s.lg.RecordFailedAttempt(md.Username, clientIP(ctx))
 			s.logger.Debug("Failed to authenticate MFA")
 			st := status.Newf(codes.Unauthenticated, "MFA failed")
 			if err != nil {
@@ -168,8 +176,6 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 			st = withDetails(st, errInfo)
 			return nil, st.Err()
 		}
-
-		s.lg.RecordSuccessfulAttempt(md.Username)
 
 		s.logger.WithFields(log.Fields{
 			"userID": md.UserID,
