@@ -19,6 +19,7 @@ package loginguard
 
 import (
 	"math"
+	"net/netip"
 	"sync"
 	"time"
 
@@ -30,8 +31,30 @@ const (
 	baseDelay    = time.Second      // delay after the first non-free failure, doubled with each next failure
 	maxDelay     = 5 * time.Minute  // upper bound of the delay
 	resetAfter   = 30 * time.Minute // failure counter is reset after this time without a failure
+	ipv6Bits     = 64               // IPv6 addresses are tracked by their network prefix of this length
 	maxEntries   = 100000           // upper bound of tracked keys per map (protection against memory exhaustion)
 )
+
+// ipToKey returns the key under which the IP address is tracked. An IPv6 address is replaced by its network
+// prefix, because a single client usually controls a whole prefix and can choose any of its addresses.
+// An address that cannot be parsed is returned unchanged.
+func ipToKey(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return ip
+	}
+	addr = addr.Unmap().WithZone("")
+
+	if addr.Is4() {
+		return addr.String()
+	}
+
+	prefix, err := addr.Prefix(ipv6Bits)
+	if err != nil {
+		return addr.String()
+	}
+	return prefix.String()
+}
 
 type entry struct {
 	failures     int
@@ -81,19 +104,21 @@ func New(l *log.Logger) *LoginGuard {
 //
 // isMFA must be false for password attempts and true for MFA attempts.
 func (lg *LoginGuard) CheckWait(username, ip string, isMFA bool) time.Duration {
+	ipKey := ipToKey(ip)
+
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
-	wait := lg.checkWait(username, ip, isMFA)
+	wait := lg.checkWait(username, ipKey, isMFA)
 	if wait > 0 {
 		return wait
 	}
 
-	lg.recordFailedAttempt(username, ip, isMFA)
+	lg.recordFailedAttempt(username, ipKey, isMFA)
 	return 0
 }
 
-func (lg *LoginGuard) checkWait(username, ip string, isMFA bool) time.Duration {
+func (lg *LoginGuard) checkWait(username, ipKey string, isMFA bool) time.Duration {
 	now := lg.now()
 	wait := time.Duration(0)
 
@@ -107,14 +132,14 @@ func (lg *LoginGuard) checkWait(username, ip string, isMFA bool) time.Duration {
 		}
 	}
 
-	if entry, ok := lg.ips[ip]; ok {
+	if entry, ok := lg.ips[ipKey]; ok {
 		wait = max(wait, entry.blockedUntil.Sub(now))
 	}
 
 	return wait
 }
 
-func (lg *LoginGuard) recordFailedAttempt(username, ip string, isMFA bool) {
+func (lg *LoginGuard) recordFailedAttempt(username, ipKey string, isMFA bool) {
 	now := lg.now()
 	bruteForceMsg := "Detected attempts to log in %s. This likely means " +
 		"an ongoing brute force or resource exhaustion attack."
@@ -129,8 +154,8 @@ func (lg *LoginGuard) recordFailedAttempt(username, ip string, isMFA bool) {
 		lg.logger.Warnf(bruteForceMsg, "with too many usernames")
 	}
 
-	if ip != "" {
-		success = recordFailedAttemptIntoMap(lg.ips, ip, now)
+	if ipKey != "" {
+		success = recordFailedAttemptIntoMap(lg.ips, ipKey, now)
 		if !success {
 			lg.logger.Warnf(bruteForceMsg, "from too many IP addresses")
 		}
@@ -142,6 +167,8 @@ func (lg *LoginGuard) recordFailedAttempt(username, ip string, isMFA bool) {
 // guessing passwords of other users. But IP failures are reverted, in order to
 // revert the "failed" attempt that has been recorded by CheckWait.
 func (lg *LoginGuard) RecordSuccessfulAttempt(username, ip string, isMFA bool) {
+	ipKey := ipToKey(ip)
+
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
@@ -151,13 +178,15 @@ func (lg *LoginGuard) RecordSuccessfulAttempt(username, ip string, isMFA bool) {
 		delete(lg.userPasswords, username)
 	}
 
-	revertAttemptInMap(lg.ips, ip)
+	revertAttemptInMap(lg.ips, ipKey)
 }
 
 // RevertAttempt reverts one failed attempt. It should be called when the login
 // attempt could not be authenticated because an error happened during
 // authentication.
 func (lg *LoginGuard) RevertAttempt(username, ip string, isMFA bool) {
+	ipKey := ipToKey(ip)
+
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
@@ -167,7 +196,7 @@ func (lg *LoginGuard) RevertAttempt(username, ip string, isMFA bool) {
 		revertAttemptInMap(lg.userPasswords, username)
 	}
 
-	revertAttemptInMap(lg.ips, ip)
+	revertAttemptInMap(lg.ips, ipKey)
 }
 
 func revertAttemptInMap(entries map[string]entry, key string) {
