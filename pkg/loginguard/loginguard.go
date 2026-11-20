@@ -27,13 +27,14 @@ import (
 )
 
 const (
-	freeAttempts = 3                // failures allowed before the first delay
-	baseDelay    = time.Second      // delay after the first non-free failure, doubled with each next failure
-	maxDelay     = 5 * time.Minute  // upper bound of the delay
-	resetAfter   = 30 * time.Minute // failure counter is reset after this time without a failure
-	maxEntries   = 100000           // upper bound of tracked keys per map (protection against memory exhaustion)
-	ipv6Bits     = 64               // IPv6 addresses are tracked by their network prefix of this length
-	warnInterval = time.Minute      // minimal time between two warnings about a full map
+	freeAttempts           = 3                   // failures allowed before the first delay
+	baseDelay              = time.Second         // delay after the first non-free failure, doubled with each next failure
+	maxDelay               = 5 * time.Minute     // upper bound of the delay
+	resetAfter             = 30 * time.Minute    // failure counter is reset after this time without a failure
+	maxEntries             = 100000              // upper bound of tracked keys per map (protection against memory exhaustion)
+	knownClientTrustPeriod = 30 * 24 * time.Hour // client is considered as known for this time after its last successful login
+	ipv6Bits               = 64                  // IPv6 addresses are tracked by their network prefix of this length
+	warnInterval           = time.Minute         // minimal time between two warnings about a full map
 )
 
 // ipToKey returns the key under which the IP address is tracked. An IPv6 address is replaced by its network
@@ -61,9 +62,26 @@ type entry struct {
 	failures     int
 	lastFail     time.Time
 	blockedUntil time.Time
+	lastSuccess  time.Time // used only by entries of known clients
 }
 
+type knownClient struct {
+	username string
+	ipKey    string
+}
+
+type mapKey interface{ string | knownClient }
+
 // LoginGuard tracks failed login attempts per username and per IP address.
+//
+// DOS prevention: A user who has successfully logged in from an address gets
+// tracked as a known client (username-ip pair). Attempts of a known client are
+// not limited by the failures of its username (which can be caused by anybody
+// who knows the username). They are limited by failures of the client itself
+// instead. So an attacker guessing the password of a user from elsewhere does
+// not lock out the user at the places where the user has logged in before.
+// Known clients are tracked separately for password and MFA attempts, the same
+// way as usernames.
 type LoginGuard struct {
 	mu sync.Mutex
 
@@ -71,14 +89,27 @@ type LoginGuard struct {
 	userPasswords map[string]entry
 	// userMFAs is also keyed on usernames and tracks failed MFA attempts for the user
 	userMFAs map[string]entry
-	// ips is keyed on IP addresses and tracks any (password/MFA) failed attempts from the IP
+	// ips is keyed on IP addresses (see ipToKey) and tracks any (password/MFA) failed attempts from the IP
 	ips map[string]entry
+
+	// knownClientPasswords tracks known clients and their failed password attempts
+	knownClientPasswords map[knownClient]entry
+	// knownClientMFAs tracks known clients and their failed MFA attempts
+	knownClientMFAs map[knownClient]entry
 
 	now    func() time.Time
 	logger *log.Logger
-	// lastWarn is the time of the last warning about a full map
-	lastWarn time.Time
+	// following variables are the times of the last warnings about a full map
+	lastWarnUsernames    time.Time
+	lastWarnIPs          time.Time
+	lastWarnKnownClients time.Time
 }
+
+const (
+	warnUsernames = iota
+	warnIPs
+	warnKnownClients
+)
 
 // New creates a new LoginGuard.
 func New(l *log.Logger) *LoginGuard {
@@ -86,6 +117,9 @@ func New(l *log.Logger) *LoginGuard {
 		userPasswords: make(map[string]entry),
 		userMFAs:      make(map[string]entry),
 		ips:           make(map[string]entry),
+
+		knownClientPasswords: make(map[knownClient]entry),
+		knownClientMFAs:      make(map[knownClient]entry),
 
 		now:    time.Now,
 		logger: l,
@@ -125,7 +159,16 @@ func (lg *LoginGuard) checkWait(username, ipKey string, isMFA bool) time.Duratio
 	now := lg.now()
 	wait := time.Duration(0)
 
-	if isMFA {
+	isKnown := lg.isClientKnown(username, ipKey, isMFA)
+	if isKnown && isMFA {
+		if entry, ok := lg.knownClientMFAs[knownClient{username, ipKey}]; ok {
+			wait = max(wait, entry.blockedUntil.Sub(now))
+		}
+	} else if isKnown {
+		if entry, ok := lg.knownClientPasswords[knownClient{username, ipKey}]; ok {
+			wait = max(wait, entry.blockedUntil.Sub(now))
+		}
+	} else if isMFA {
 		if entry, ok := lg.userMFAs[username]; ok {
 			wait = max(wait, entry.blockedUntil.Sub(now))
 		}
@@ -142,49 +185,102 @@ func (lg *LoginGuard) checkWait(username, ipKey string, isMFA bool) time.Duratio
 	return wait
 }
 
+func (lg *LoginGuard) isClientKnown(username, ipKey string, isMFA bool) bool {
+	if isMFA {
+		return isClientKnownInMap(lg.knownClientMFAs, knownClient{username, ipKey}, lg.now())
+	}
+	return isClientKnownInMap(lg.knownClientPasswords, knownClient{username, ipKey}, lg.now())
+}
+
+func isClientKnownInMap(entries map[knownClient]entry, key knownClient, now time.Time) bool {
+	entry, ok := entries[key]
+	if !ok {
+		return false
+	}
+	if now.Sub(entry.lastSuccess) > knownClientTrustPeriod {
+		delete(entries, key)
+		return false
+	}
+	return true
+}
+
 func (lg *LoginGuard) recordFailedAttempt(username, ipKey string, isMFA bool) {
 	now := lg.now()
 
+	isKnown := lg.isClientKnown(username, ipKey, isMFA)
 	var mapFull bool
-	if isMFA {
+	if isKnown && isMFA {
+		mapFull = recordFailedAttemptIntoMap(lg.knownClientMFAs, knownClient{username, ipKey}, now)
+	} else if isKnown {
+		mapFull = recordFailedAttemptIntoMap(lg.knownClientPasswords, knownClient{username, ipKey}, now)
+	} else if isMFA {
 		mapFull = recordFailedAttemptIntoMap(lg.userMFAs, username, now)
 	} else {
 		mapFull = recordFailedAttemptIntoMap(lg.userPasswords, username, now)
 	}
 	if mapFull {
-		lg.logAttackWarning("with too many usernames")
+		lg.logAttackWarning(warnUsernames)
 	}
 
 	if ipKey != "" {
 		mapFull = recordFailedAttemptIntoMap(lg.ips, ipKey, now)
 		if mapFull {
-			lg.logAttackWarning("from too many IP addresses")
+			lg.logAttackWarning(warnIPs)
 		}
 	}
 }
 
-func (lg *LoginGuard) logAttackWarning(msg string) {
-	if lg.lastWarn.Add(warnInterval).Before(lg.now()) {
-		lg.lastWarn = lg.now()
-		lg.logger.Warn("Detected attempts to log in " + msg + ". This likely means " +
-			"an ongoing brute force or resource exhaustion attack.")
+func (lg *LoginGuard) logAttackWarning(msg int) {
+	switch msg {
+	case warnUsernames:
+		if lg.now().Sub(lg.lastWarnUsernames) > warnInterval {
+			lg.lastWarnUsernames = lg.now()
+			lg.logger.Warn("Detected attempts to log in with too many usernames. This likely means " +
+				"an ongoing brute force or resource exhaustion attack.")
+		}
+	case warnIPs:
+		if lg.now().Sub(lg.lastWarnIPs) > warnInterval {
+			lg.lastWarnIPs = lg.now()
+			lg.logger.Warn("Detected attempts to log in from too many IP addresses. This likely means " +
+				"an ongoing brute force or resource exhaustion attack.")
+		}
+	case warnKnownClients:
+		if lg.now().Sub(lg.lastWarnKnownClients) > warnInterval {
+			lg.lastWarnKnownClients = lg.now()
+			lg.logger.Warn("Detected successful logins with too many clients. This likely means " +
+				"a rogue insider or an attacker with correctly guessed password is performing resource exhaustion attack.")
+		}
 	}
 }
 
-// RecordSuccessfulAttempt forgets failures of the given user. IP failures are
-// kept, so a successful login does not clear the history of an address that is
-// guessing passwords of other users. But IP failures are reverted, in order to
-// revert the "failed" attempt that has been recorded by CheckWait.
+// RecordSuccessfulAttempt forgets failures of the given user and adds/updates
+// the client (username-ip pair) in known clients map.
+//
+// IP failures are kept, so a successful login does not clear the history of an
+// address that is guessing passwords of other users. But IP failures are
+// reverted, in order to revert the "failed" attempt that has been recorded by
+// CheckWait.
 func (lg *LoginGuard) RecordSuccessfulAttempt(username, ip string, isMFA bool) {
 	ipKey := ipToKey(ip)
 
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
+	isKnown := lg.isClientKnown(username, ipKey, isMFA)
+	var mapFull bool
 	if isMFA {
-		delete(lg.userMFAs, username)
+		if !isKnown {
+			delete(lg.userMFAs, username)
+		}
+		mapFull = addKnownClientIntoMap(lg.knownClientMFAs, knownClient{username, ipKey}, lg.now())
 	} else {
-		delete(lg.userPasswords, username)
+		if !isKnown {
+			delete(lg.userPasswords, username)
+		}
+		mapFull = addKnownClientIntoMap(lg.knownClientPasswords, knownClient{username, ipKey}, lg.now())
+	}
+	if mapFull {
+		lg.logAttackWarning(warnKnownClients)
 	}
 
 	revertAttemptInMap(lg.ips, ipKey)
@@ -199,7 +295,12 @@ func (lg *LoginGuard) RevertAttempt(username, ip string, isMFA bool) {
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
-	if isMFA {
+	isKnown := lg.isClientKnown(username, ipKey, isMFA)
+	if isKnown && isMFA {
+		revertAttemptInMap(lg.knownClientMFAs, knownClient{username, ipKey})
+	} else if isKnown {
+		revertAttemptInMap(lg.knownClientPasswords, knownClient{username, ipKey})
+	} else if isMFA {
 		revertAttemptInMap(lg.userMFAs, username)
 	} else {
 		revertAttemptInMap(lg.userPasswords, username)
@@ -208,7 +309,7 @@ func (lg *LoginGuard) RevertAttempt(username, ip string, isMFA bool) {
 	revertAttemptInMap(lg.ips, ipKey)
 }
 
-func revertAttemptInMap(entries map[string]entry, key string) {
+func revertAttemptInMap[T mapKey](entries map[T]entry, key T) {
 	entry, ok := entries[key]
 	if ok {
 		if entry.failures >= 1 {
@@ -224,19 +325,10 @@ func revertAttemptInMap(entries map[string]entry, key string) {
 
 // recordFailedAttemptIntoMap records a failure under the given key and sets the delay for the next attempt.
 // It returns true if the oldest attempt is forgotten because the map is full.
-func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.Time) (mapFull bool) {
+func recordFailedAttemptIntoMap[T mapKey](entries map[T]entry, key T, now time.Time) (mapFull bool) {
 	prev, ok := entries[key]
 	if !ok {
-		oldestRemoved := false
-		// if map is full, try to make room for the new entry
-		if len(entries) >= maxEntries {
-			removeExpiredInMap(entries, now)
-		}
-		// if map is still full, remove the oldest entry
-		if len(entries) >= maxEntries {
-			removeOldestInMap(entries)
-			oldestRemoved = true
-		}
+		oldestRemoved := makeRoomInMap(entries, now)
 		entries[key] = entry{
 			failures:     1,
 			lastFail:     now,
@@ -260,11 +352,47 @@ func recordFailedAttemptIntoMap(entries map[string]entry, key string, now time.T
 		failures:     failures,
 		lastFail:     now,
 		blockedUntil: blockedUntil,
+		lastSuccess:  prev.lastSuccess,
 	}
 	return false
 }
 
-func removeExpiredInMap(entries map[string]entry, now time.Time) {
+// addKnownClientIntoMap adds or updates a known client entry.
+// It returns true if some known client is forgotten because the map is full.
+func addKnownClientIntoMap(entries map[knownClient]entry, key knownClient, now time.Time) (mapFull bool) {
+	if key.ipKey == "" {
+		return
+	}
+	oldestRemoved := false
+
+	_, ok := entries[key]
+	if !ok {
+		oldestRemoved = makeRoomInMap(entries, now)
+	}
+	entries[key] = entry{
+		lastSuccess: now,
+	}
+	return oldestRemoved
+}
+
+func makeRoomInMap[T mapKey](entries map[T]entry, now time.Time) (oldestRemoved bool) {
+	_, isKnownClient := any(entries).(map[knownClient]entry)
+
+	if len(entries) >= maxEntries {
+		if isKnownClient {
+			removeStaleKnownClients(entries, now)
+		} else {
+			removeExpiredInMap(entries, now)
+		}
+	}
+	if len(entries) >= maxEntries {
+		removeOldestInMap(entries)
+		return true
+	}
+	return false
+}
+
+func removeExpiredInMap[T mapKey](entries map[T]entry, now time.Time) {
 	for k, entry := range entries {
 		if now.Sub(entry.lastFail) > resetAfter {
 			delete(entries, k)
@@ -272,12 +400,20 @@ func removeExpiredInMap(entries map[string]entry, now time.Time) {
 	}
 }
 
-func removeOldestInMap(entries map[string]entry) {
+func removeStaleKnownClients[T mapKey](entries map[T]entry, now time.Time) {
+	for k, entry := range entries {
+		if now.Sub(entry.lastSuccess) > knownClientTrustPeriod {
+			delete(entries, k)
+		}
+	}
+}
+
+func removeOldestInMap[T mapKey](entries map[T]entry) {
 	if len(entries) == 0 {
 		return
 	}
 
-	var oldestKey string
+	var oldestKey T
 	var oldestValue entry
 
 	// set initial values, so in the following "real" cycle we do not have to deal with empty values
