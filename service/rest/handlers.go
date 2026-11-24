@@ -296,7 +296,7 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			return
 		}
 
-		wait := s.loginGuard.CheckWait(reqBody.Username, c.ClientIP(), false)
+		wait := s.loginGuard.CheckWaitAndRecordFailedAttempt(reqBody.Username, c.ClientIP(), false)
 		if wait > 0 {
 			hndlLog.WithFields(log.Fields{
 				"username": reqBody.Username,

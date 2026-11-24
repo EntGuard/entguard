@@ -48,7 +48,7 @@ func (s *Server) basicAuth(c *gin.Context) (*api.User, error) {
 		return nil, fmt.Errorf("%w: invalid or missing basicAuth", ErrAuthenticationFailed)
 	}
 
-	wait := s.loginGuard.CheckWait(username, c.ClientIP(), false)
+	wait := s.loginGuard.CheckWaitAndRecordFailedAttempt(username, c.ClientIP(), false)
 	if wait > 0 {
 		s.logger.WithFields(log.Fields{
 			"username": username,

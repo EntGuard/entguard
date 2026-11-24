@@ -485,14 +485,11 @@ HTTP status `429 Too Many Requests` and the number of seconds to wait in the
 `Retry-After` header.
 
 The delays apply to logging in to the Management UI, to the REST API
-(getting a JWT token), and to EG-C connections (password and 2FA code).
+(getting a JWT token), and to EG-C connections (password and TOTP 2FA code).
+2FA failures are tracked separately from password failures.
 
-The failed attempts are tracked separately for each user name and for each IP
-address. A successful login (including the 2FA code, if required) clears the
-failed attempts of the user, but not of the IP address. Each counter of failed
-attempts is also reset after 30 minutes without a failed attempt for that user
-name or IP address. Restarting EG-O clears the failed attempts of all users and
-IP addresses.
+The failed attempts are tracked both for user names and for IP addresses
+(IPv6 addresses are tracked by their `/64` network prefix).
 
 **NOTE:** The IP address of the client is the address EG-O sees on its
 connection. If EG-O is deployed behind a reverse proxy or a load balancer, or if
@@ -500,6 +497,26 @@ many users share a single address (for example behind NAT), all of them share
 the delay of that address. Failed attempts of one of them can then delay the
 others. EG-O deliberately ignores headers like `X-Forwarded-For`, because they
 can be forged by clients.
+
+A successful password clears the failed password attempts of the user, and a
+successful 2FA code clears the failed 2FA attempts of the user. Successful
+logins do not clear the failed attempts of the IP address. Each counter of
+failed attempts (including those of IP addresses) is also reset after 30 minutes
+without a failed attempt for that user name or IP address. Restarting EG-O
+also clears the failed attempts of all users and IP addresses.
+
+To prevent denial of service attacks, a user who has successfully logged in from
+an IP address is remembered as a known client of that address for 30 days after
+the last successful login there. Login attempts of a known client are not
+delayed by failed attempts made with the same user name from other addresses,
+they are delayed only by the failed attempts of the known client itself and by
+the failed attempts of its IP address.
+
+EG-O keeps the failed attempts and the known clients in memory. To protect
+against memory exhaustion, failures for at most 100,000 identifiers (user names,
+IP addresses) are tracked in each category. When a limit is reached, the entry
+with the oldest activity is forgotten and a warning is logged. Such a warning
+usually means an ongoing brute force or resource exhaustion attack.
 
 ### Set Log Level
 

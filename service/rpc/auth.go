@@ -53,7 +53,7 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 	}
 
 	ip := clientIP(ctx)
-	wait := s.lg.CheckWait(name, ip, false)
+	wait := s.lg.CheckWaitAndRecordFailedAttempt(name, ip, false)
 	if wait > 0 {
 		s.logger.WithFields(log.Fields{
 			"username": name,
@@ -127,7 +127,7 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 
 		switch mfa.AuthenticatorType(mfaTyp) {
 		case mfa.TOTP:
-			wait := s.lg.CheckWait(md.Username, clientIP(ctx), true)
+			wait := s.lg.CheckWaitAndRecordFailedAttempt(md.Username, clientIP(ctx), true)
 			if wait > 0 {
 				s.logger.WithFields(log.Fields{
 					"username": md.Username,

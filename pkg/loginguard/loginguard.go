@@ -128,21 +128,23 @@ func New(l *log.Logger) *LoginGuard {
 	}
 }
 
-// CheckWait returns how long the caller must wait before the next login attempt
-// is allowed (0 means allowed). It must be called before the credentials are
-// checked.
+// CheckWaitAndRecordFailedAttempt returns how long the caller must wait before
+// the next login attempt is allowed (0 means allowed). It must be called before
+// the credentials are checked.
 //
-// CheckWait also records the attempt as failed, before the actual
-// authentication. It performs the check-and-record atomically. This provides
-// protection against parallel login requests.
+// CheckWaitAndRecordFailedAttempt also records the attempt as failed, before
+// the caller can actually perform the authentication.
+// CheckWaitAndRecordFailedAttempt performs the check-and-record atomically.
+// This provides protection against parallel login requests.
 //
-// After authenticaion, the caller should call RecordSuccessfulAttempt (after
+// After authentication, the caller should call RecordSuccessfulAttempt (after
 // successful authentication), RevertAttempt (after authentication error) or
 // nothing (after failed authentication) (if authentication fails, the function
-// recordFailedAttempt had already been called beforehand by CheckWait).
+// recordFailedAttempt had already been called beforehand by
+// CheckWaitAndRecordFailedAttempt).
 //
 // isMFA must be false for password attempts and true for MFA attempts.
-func (lg *LoginGuard) CheckWait(username, ip string, isMFA bool) time.Duration {
+func (lg *LoginGuard) CheckWaitAndRecordFailedAttempt(username, ip string, isMFA bool) time.Duration {
 	ipK := ipToIpKey(ip)
 
 	lg.mu.Lock()
@@ -261,7 +263,7 @@ func (lg *LoginGuard) logAttackWarning(msg int) {
 // IP failures are kept, so a successful login does not clear the history of an
 // address that is guessing passwords of other users. But IP failures are
 // reverted, in order to revert the "failed" attempt that has been recorded by
-// CheckWait.
+// CheckWaitAndRecordFailedAttempt.
 func (lg *LoginGuard) RecordSuccessfulAttempt(username, ip string, isMFA bool) {
 	ipK := ipToIpKey(ip)
 
