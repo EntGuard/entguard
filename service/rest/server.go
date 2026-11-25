@@ -28,6 +28,7 @@ import (
 	"github.com/entguard/entguard/pkg/conc"
 	"github.com/entguard/entguard/pkg/jwt"
 	"github.com/entguard/entguard/pkg/limiter"
+	"github.com/entguard/entguard/pkg/loginguard"
 	"github.com/entguard/entguard/service/api/v1"
 	"github.com/entguard/entguard/service/config"
 	"github.com/entguard/entguard/service/user"
@@ -51,14 +52,15 @@ type Server struct {
 	vcm            vcm.VPNConfigManager
 	vpnStatusStore *conc.Map[int, error]
 	hcStatusStore  *conc.Map[int, error]
-	logger         *log.Logger
 	tokenProvider  TokenProvider
+	loginGuard     *loginguard.LoginGuard
+	logger         *log.Logger
 }
 
 // NewServer returns a new configured Server.
 func NewServer(
 	cfg *config.RESTServerConfig, m vcm.VPNConfigManager, um user.Manager, vpnSStatusStore *conc.Map[int, error],
-	hcStatusStore *conc.Map[int, error], l *log.Logger,
+	hcStatusStore *conc.Map[int, error], lg *loginguard.LoginGuard, l *log.Logger,
 ) (*Server, error) {
 	tokenProvider, err := jwt.NewTokenProvider(cfg.TokenExpiration)
 	if err != nil {
@@ -76,8 +78,15 @@ func NewServer(
 		vcm:            m,
 		vpnStatusStore: vpnSStatusStore,
 		hcStatusStore:  hcStatusStore,
-		logger:         l,
 		tokenProvider:  tokenProvider,
+		loginGuard:     lg,
+		logger:         l,
+	}
+
+	// Client IP must come from the connection itself, because forwarded headers can be spoofed
+	err = s.router.SetTrustedProxies(nil)
+	if err != nil {
+		return nil, err
 	}
 
 	s.router.Use(gin.Logger())

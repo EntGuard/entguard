@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -295,6 +296,17 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			return
 		}
 
+		wait := s.loginGuard.CheckWaitAndRecordFailedAttempt(reqBody.Username, c.ClientIP(), false)
+		if wait > 0 {
+			hndlLog.WithFields(log.Fields{
+				"username": reqBody.Username,
+				"ip":       c.ClientIP(),
+			}).Info("Login attempt temporarily blocked because of too many failed attempts")
+			c.Header("Retry-After", strconv.Itoa(int(math.Ceil(wait.Seconds()))))
+			c.JSON(http.StatusTooManyRequests, api.ErrorResponse{Message: ErrTooManyAttempts.Error()})
+			return
+		}
+
 		token, err := s.getTokenForUser(c, reqBody.Username, reqBody.Password)
 		if err != nil {
 			var status int
@@ -304,6 +316,7 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 				status = http.StatusBadRequest
 				msg = errTokenNotCreated
 			} else {
+				s.loginGuard.RevertAttempt(reqBody.Username, c.ClientIP(), false)
 				hndlLog.WithError(err).Warn("Failed to create a token")
 				status = http.StatusInternalServerError
 				msg = errGeneric
@@ -313,6 +326,7 @@ func (s *Server) handleGetJWT() gin.HandlerFunc {
 			return
 		}
 
+		s.loginGuard.RecordSuccessfulAttempt(reqBody.Username, c.ClientIP(), false)
 		c.JSON(http.StatusOK, api.JWT{Token: token})
 	}
 }

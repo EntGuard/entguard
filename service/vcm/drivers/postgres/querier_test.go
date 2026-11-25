@@ -1212,7 +1212,7 @@ func TestIntegrationDeleteUsedTags(t *testing.T) {
 	err = q.InsertUsedTag(ctx, sampleTag2b, server2.ID)
 	require.NoError(t, err)
 
-	// make sure the table is non-emtpy, to avoid false passing test
+	// make sure the table is non-empty, to avoid false passing test
 	count := test.CountTableRows(t, conn, "tags")
 	require.Equal(t, 3, count)
 

@@ -21,12 +21,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
+	"net"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
 	"github.com/entguard/entguard/pkg/mfa"
@@ -49,15 +52,28 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 		return nil, status.Error(codes.Unauthenticated, "invalid authorization")
 	}
 
+	ip := clientIP(ctx)
+	wait := s.lg.CheckWaitAndRecordFailedAttempt(name, ip, false)
+	if wait > 0 {
+		s.logger.WithFields(log.Fields{
+			"username": name,
+			"ip":       ip,
+		}).Info("Login attempt temporarily blocked because of too many failed attempts")
+		return nil, status.Errorf(codes.ResourceExhausted,
+			"too many failed login attempts, please retry in %v seconds", int(math.Ceil(wait.Seconds())))
+	}
+
 	u, err := s.um.GetUserByNameAndPassword(ctx, name, password)
 	if err != nil {
 		if err == user.ErrUserNotFound {
 			return nil, status.Error(codes.Unauthenticated, `invalid username or password`)
 		}
+		s.lg.RevertAttempt(name, ip, false)
 		s.logger.WithError(err).Warn("Failed to authenticate user with password")
 		return nil, status.Error(codes.Internal, "authentication failed")
 	}
 
+	s.lg.RecordSuccessfulAttempt(name, ip, false)
 	s.logger.WithFields(log.Fields{
 		"userID": u.ID,
 	}).Debug("User authenticated with credentials")
@@ -66,6 +82,7 @@ func (s *VpnCServer) BasicAuth(ctx context.Context) (context.Context, error) {
 
 	userMD := &UserMetadata{
 		UserID:       u.ID,
+		Username:     name,
 		MFAType:      u.MFAType,
 		Notification: u.Notification,
 	}
@@ -110,11 +127,27 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 
 		switch mfa.AuthenticatorType(mfaTyp) {
 		case mfa.TOTP:
+			wait := s.lg.CheckWaitAndRecordFailedAttempt(md.Username, clientIP(ctx), true)
+			if wait > 0 {
+				s.logger.WithFields(log.Fields{
+					"username": md.Username,
+					"ip":       clientIP(ctx),
+				}).Info("MFA Login attempt temporarily blocked because of too many failed attempts")
+				return nil, status.Errorf(codes.ResourceExhausted,
+					"too many failed login attempts, please retry in %v seconds", int(math.Ceil(wait.Seconds())))
+			}
+
 			s.logger.Debugf("Trying to authenticate user with %v", mfa.TOTP)
 
 			authenticated, err = s.um.MFAAuthenticate(ctx, md.UserID, mfa.TOTP, &mfa.TOTPCredentials{
 				Password: mfaData,
 			})
+			if err != nil {
+				s.lg.RevertAttempt(md.Username, clientIP(ctx), true)
+			}
+			if err == nil && authenticated {
+				s.lg.RecordSuccessfulAttempt(md.Username, clientIP(ctx), true)
+			}
 		case mfa.CERT:
 			s.logger.Debugf("Trying to authenticate user with %v", mfa.CERT)
 
@@ -150,6 +183,19 @@ func (s *VpnCServer) MfaAuth(ctx context.Context) (context.Context, error) {
 	}
 
 	return purgeHeader(ctx, MfaHeaderKey), nil
+}
+
+// clientIP returns the address of the connected peer (without port), or empty string if it is unknown.
+func clientIP(ctx context.Context) string {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	host, _, err := net.SplitHostPort(p.Addr.String())
+	if err != nil {
+		return p.Addr.String()
+	}
+	return host
 }
 
 func withDetails(status *status.Status, errInfo *errdetails.ErrorInfo) *status.Status {
@@ -234,9 +280,10 @@ func purgeHeader(ctx context.Context, header string) context.Context {
 
 type userMDKey struct{}
 
-// UserMetadata contains metadata about a server.
+// UserMetadata contains metadata about a user.
 type UserMetadata struct {
 	UserID       int
+	Username     string
 	MFAType      string
 	Notification string
 }
