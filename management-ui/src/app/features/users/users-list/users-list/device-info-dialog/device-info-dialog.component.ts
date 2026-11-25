@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DeviceModel } from '../../../../../shared/models/device.model';
 
@@ -6,6 +6,7 @@ import { DeviceModel } from '../../../../../shared/models/device.model';
     selector: 'app-device-info-dialog',
     templateUrl: './device-info-dialog.component.html',
     styleUrls: ['./device-info-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DeviceInfoDialogComponent {

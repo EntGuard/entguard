@@ -3,6 +3,9 @@ import angularTemplate from '@angular-eslint/eslint-plugin-template';
 import tsParser from '@typescript-eslint/parser';
 import angularTemplateParser from '@angular-eslint/template-parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import angularEslint from 'angular-eslint';
+
+const rulesOf = (configs) => Object.assign({}, ...configs.map((c) => c.rules ?? {}));
 
 export default [
   {
@@ -25,7 +28,7 @@ export default [
       '@typescript-eslint': tsPlugin,
     },
     rules: {
-      ...angular.configs.recommended.rules,
+      ...rulesOf(angularEslint.configs.tsRecommended),
       '@angular-eslint/directive-selector': [
         'error',
         {
@@ -46,6 +49,7 @@ export default [
       ],
       '@angular-eslint/prefer-standalone': 'off',
       '@angular-eslint/prefer-inject': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
     },
   },
   // HTML template files configuration
@@ -58,7 +62,7 @@ export default [
       '@angular-eslint/template': angularTemplate,
     },
     rules: {
-      ...angularTemplate.configs.recommended.rules,
+      ...rulesOf(angularEslint.configs.templateRecommended),
     },
   },
 ];

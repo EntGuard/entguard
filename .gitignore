@@ -10,7 +10,6 @@ entguard-release*
 /provisioning/docker/info.json
 __debug_*
 .vscode
-.angular
 
 govulncheck-results.txt
 osv-results.txt

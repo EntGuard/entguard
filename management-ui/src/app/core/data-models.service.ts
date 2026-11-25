@@ -69,30 +69,6 @@ export class DataModelsService {
     }
 
     /**
-     * Can be used when as a response is expected array of data objects, which should be converted to models objects
-     */
-    // tslint:disable-next-line:ban-types
-    protected getListOfModelsWithPostMethod<T>(
-        restURI: string,
-        modelType: new (value: any) => T,
-        dataObject: Object
-    ): Observable<T[]> {
-        return this.httpClient
-            .post(environment.REST_BASE_URL + restURI, dataObject, {
-                withCredentials: true,
-            })
-            .pipe(
-                map(
-                    // tslint:disable-next-line:ban-types
-                    (arrayData: Object[]) =>
-                        arrayData.map(
-                            (modelData: Object) => new modelType(modelData)
-                        )
-                )
-            );
-    }
-
-    /**
      * Can be used when as a response is expected single data object, which should be converted to model object
      */
     protected getOneModel<T>(

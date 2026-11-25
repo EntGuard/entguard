@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -24,6 +24,7 @@ import { finalize, takeUntil } from 'rxjs/operators';
     selector: 'app-user-config-dialog',
     templateUrl: './ldaptemplate-interface-dialog.component.html',
     styleUrls: ['./ldaptemplate-interface-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LDAPTemplateInterfaceDialogComponent

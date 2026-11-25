@@ -1,24 +1,25 @@
-# Cnf
+# EntGuard management UI
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.3.
+Angular web UI for the EntGuard orchestrator. The orchestrator serves the built app from `dist/`.
+
+## Requirements
+
+Node.js 22.22.3 or later, or 24.15 or later (required by Angular 22). Run `npm ci` to install the dependencies.
 
 ## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Run `npm start` and open `http://localhost:4300/`. Requests to `/api/v1` are proxied to an orchestrator on `localhost:8080` (see `src/proxy.conf.json`).
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Run `npm run build`. The production build is written to `dist/`.
 
-## Running unit tests
+## Lint
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Run `npm run lint`.
 
+## Dependency overrides
 
-## Further help
+`package.json` overrides `minimatch` to `^11.0.4` to clear GHSA-g3hv-75wg-m249 (minimatch below 11.0.1). ESLint, typescript-eslint and angular-eslint still declare minimatch `^10`.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+TODO: remove the override once those packages depend on minimatch 11. Check with `npm ls minimatch` after removing it.

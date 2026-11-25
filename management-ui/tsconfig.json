@@ -21,15 +21,12 @@
       "typeRoots": [
         "node_modules/@types"
       ],
-      "lib": [
-        "ES2022",
-        "dom"
-      ],
       "resolveJsonModule": true,
       "esModuleInterop": true,
       "allowSyntheticDefaultImports": true,
       "useDefineForClassFields": false,
       "skipLibCheck": true,
+      "strict": false,
     },
     "angularCompilerOptions": {
         "strictInjectionParameters": true,

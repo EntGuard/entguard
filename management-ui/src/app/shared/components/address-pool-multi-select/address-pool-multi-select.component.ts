@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange, MatPseudoCheckboxState } from '@angular/material/core';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
@@ -19,6 +19,7 @@ interface AddressPoolSelectViewModel {
     selector: 'app-address-pool-multi-select',
     templateUrl: './address-pool-multi-select.component.html',
     styleUrls: ['./address-pool-multi-select.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddressPoolMultiSelectComponent implements OnDestroy {

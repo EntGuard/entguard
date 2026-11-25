@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserModel } from '../../../../../shared/models/user-model';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { Subject } from 'rxjs';
     selector: 'app-user-dialog',
     templateUrl: './user-dialog.component.html',
     styleUrls: ['./user-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserDialogComponent extends CommonFormDialogComponent implements OnInit, OnDestroy {

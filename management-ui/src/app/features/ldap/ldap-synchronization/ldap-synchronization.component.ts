@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { LDAPService } from 'src/app/features/ldap/ldap.service';
@@ -10,6 +10,7 @@ import { LDAPErrorsComponent } from './ldap-errors/ldap-errors.component';
     selector: 'app-ldap-synchronization',
     templateUrl: './ldap-synchronization.component.html',
     styleUrls: ['./ldap-synchronization.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LdapSynchronizationComponent implements OnInit, OnDestroy {
@@ -18,6 +19,7 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
     syncStatus: LdapSyncModel;
     syncError: any;
     syncProgress = false;
+    private pollTimer: ReturnType<typeof setTimeout>;
 
     constructor(private dataService: LDAPService, private dialog: MatDialog) { }
 
@@ -36,9 +38,8 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
                 (status: LdapSyncModel) => {
                     this.syncStatus = status;
                     if (status.inProgress) {
-                        setTimeout(() => {
-                            return this.refreshSyncStatus();
-                        }, 500);
+                        clearTimeout(this.pollTimer);
+                        this.pollTimer = setTimeout(() => this.refreshSyncStatus(), 500);
                     } else {
                         this.syncError = null;
                     }
@@ -72,6 +73,7 @@ export class LdapSynchronizationComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        clearTimeout(this.pollTimer);
         this.componentDestroyed.next();
     }
 

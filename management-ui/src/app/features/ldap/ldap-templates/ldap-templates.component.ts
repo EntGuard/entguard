@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { ColDef } from 'ag-grid-community';
@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
     selector: 'app-ldap-templates',
     templateUrl: './ldap-templates.component.html',
     styleUrls: ['./ldap-templates.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LdapTemplatesComponent implements OnInit, OnDestroy {

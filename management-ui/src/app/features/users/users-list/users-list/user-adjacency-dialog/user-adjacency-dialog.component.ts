@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -22,6 +22,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-user-adjacency-dialog',
     templateUrl: './user-adjacency-dialog.component.html',
     styleUrls: ['./user-adjacency-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserAdjacencyDialogComponent
@@ -162,7 +163,7 @@ export class UserAdjacencyDialogComponent
         if (
             address &&
             this.addresses.indexOf(address) === -1 &&
-            this.allowedAddressFC.valid
+            !this.allowedAddressFC.validator?.(new FormControl(address))
         ) {
             this.addresses.push(address);
             this.isAddressDirty = true;

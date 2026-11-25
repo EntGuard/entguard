@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { FeaturesModel } from '../../shared/models/features-model';
 import { Subject } from 'rxjs';
@@ -8,6 +8,7 @@ import { takeUntil } from 'rxjs/operators';
     selector: 'app-header',
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class HeaderComponent implements OnInit, OnDestroy {

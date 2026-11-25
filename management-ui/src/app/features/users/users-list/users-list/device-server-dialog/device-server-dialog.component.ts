@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { UsersDataService } from '../../../users-data.service';
@@ -38,6 +38,7 @@ export class DeviceServerAdjacencyModel {
     selector: 'app-device-server-dialog',
     templateUrl: './device-server-dialog.component.html',
     styleUrls: ['./device-server-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class DeviceServerDialogComponent extends CommonFormDialogComponent implements OnInit {
@@ -220,9 +221,10 @@ export class DeviceServerDialogComponent extends CommonFormDialogComponent imple
     }
 
     addUniqueAddress(address: string, list: string[], fc: FormControl): void {
-        if (address && list.indexOf(address) === -1 && fc.valid) {
+        const valid = !fc.validator?.(new FormControl(address));
+        if (address && list.indexOf(address) === -1 && valid) {
             list.push(address);
-        } else if (!fc.valid) {
+        } else if (!valid) {
             fc.setErrors({ incorrect: true });
         }
     }

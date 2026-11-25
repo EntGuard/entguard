@@ -1,10 +1,11 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-mfa-certificates-issuer-dialog',
     templateUrl: './mfa-certificates-issuer-dialog.component.html',
     styleUrls: ['./mfa-certificates-issuer-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MfaCertificatesIssuerDialogComponent implements OnInit {

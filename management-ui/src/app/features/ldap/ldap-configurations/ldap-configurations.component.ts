@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { ColDef } from 'ag-grid-community';
@@ -14,6 +14,7 @@ import { LDAPConfigDialogComponent } from './ldapconfig-dialog/ldapconfig-dialog
     selector: 'app-ldap-configurations',
     templateUrl: './ldap-configurations.component.html',
     styleUrls: ['./ldap-configurations.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LdapConfigurationsComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Observable, Subject } from 'rxjs';
@@ -14,6 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-mfa-certificate-dialog',
     templateUrl: './mfa-certificate-dialog.component.html',
     styleUrls: ['./mfa-certificate-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MfaCertificateDialogComponent extends CommonFormDialogComponent implements OnDestroy, OnInit {

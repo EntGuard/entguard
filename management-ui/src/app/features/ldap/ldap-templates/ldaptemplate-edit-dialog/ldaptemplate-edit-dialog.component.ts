@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { LDAPService } from '../../ldap.service';
@@ -13,6 +13,7 @@ import { Subject } from 'rxjs';
     selector: 'app-ldaptemplate-edit-dialog',
     templateUrl: './ldaptemplate-edit-dialog.component.html',
     styleUrls: ['./ldaptemplate-edit-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LDAPTemplateEditDialogComponent

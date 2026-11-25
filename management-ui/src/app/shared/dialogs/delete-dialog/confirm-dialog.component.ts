@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -8,6 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-confirm-dialog',
     templateUrl: './confirm-dialog.component.html',
     styleUrls: ['./confirm-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ConfirmDialogComponent implements OnDestroy {
@@ -37,6 +38,9 @@ export class ConfirmDialogComponent implements OnDestroy {
     }
 
     submit() {
+        if (this.savingProgress) {
+            return;
+        }
         this.initProgress();
 
         if (this.actionToBePerformed) {

@@ -26,20 +26,10 @@ export class AuthGuard implements CanActivate {
             map(() => {
                 return true;
             }),
-            catchError((error: Response) => {
-                if (error.status === 401 || error.status === 403) {
-                    this.router.navigate(['/login']);
-                } else {
-                    // todo: implement some UX error handling
-                    console.error(error);
-                }
+            catchError(() => {
                 this.authenticationService.logout();
                 return of(false);
             })
         );
-
-        // not logged in so redirect to login page with the return url
-        // this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-        // return of(false);
     }
 }

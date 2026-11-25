@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { LdapTemplateModel } from '../../models/ldap-template-model';
 import { LdapInterfaceModel } from '../../models/ldap-template-interface-model';
@@ -19,6 +19,7 @@ import { Location } from '@angular/common';
     selector: 'app-ldaptemplate-detail',
     templateUrl: './ldaptemplate-detail.component.html',
     styleUrls: ['./ldaptemplate-detail.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LDAPTemplateDetailComponent implements OnInit, OnDestroy {
